@@ -7,12 +7,6 @@ export enum Action {
     delete = "DEL"
 }
 
-const createRequest = (orbit: string, action: Action, pk: string, pkh: string, cid: string): string => {
-    return `Tezos Signed Message: ${orbit}.kepler.net ${Date.now()} ${pk} ${pkh} ${action} ${cid}`
-}
-
-const makePath = (url: string, orbit: string, cid: string) => url + "/" + orbit + "/" + cid
-
 export class Kepler<S extends Signer> {
     constructor(
         private url: string,
@@ -22,7 +16,7 @@ export class Kepler<S extends Signer> {
 
     public async get<T>(orbit: string, cid: string): Promise<T> {
         return await this.http.createRequest({
-            url: makePath(this.url, orbit, cid),
+            url: makeContentPath(this.url, orbit, cid),
             method: 'GET',
             headers: {
                 Authorization: await this.createAuth(orbit, cid, Action.get)
@@ -32,7 +26,7 @@ export class Kepler<S extends Signer> {
 
     public async put<T>(content: T, orbit: string, cid: string): Promise<string> {
         return await this.http.createRequest<string>({
-            url: makePath(this.url, orbit, cid),
+            url: makeOrbitPath(this.url, orbit),
             // @ts-ignore, taquito http-utils doesnt officially support PUT yet but this still works
             method: 'PUT',
             json: false,
@@ -44,7 +38,7 @@ export class Kepler<S extends Signer> {
 
     public async del(orbit: string, cid: string): Promise<void> {
         return await this.http.createRequest({
-            url: makePath(this.url, orbit, cid),
+            url: makeContentPath(this.url, orbit, cid),
             // @ts-ignore, taquito http-utils doesnt officially support DELETE yet but this still works
             method: 'DELETE',
             headers: {
@@ -59,7 +53,7 @@ export class Kepler<S extends Signer> {
     }
 
     private async createAuth(orbit: string, cid: string, action: Action): Promise<string> {
-        const auth = createRequest(orbit, action, await this.signer.publicKey(), await this.signer.publicKeyHash(), cid);
+        const auth = createTzAuthMessage(orbit, await this.signer.publicKey(), await this.signer.publicKeyHash(), action, cid);
         const { prefixSig } = await this.signer.sign(stringEncoder(auth));
         return auth + " " + prefixSig
     }
@@ -88,11 +82,14 @@ export class Orbit<S extends Signer> {
     }
 }
 
-const toPaddedHex = (n: number, padLen: number = 8, padChar: string = '0'): string => {
-    return n.toString(16).padStart(padLen, padChar)
-}
-
 export const stringEncoder = (s: string): string => {
     const bytes = Buffer.from(s, 'utf8');
     return `0501${toPaddedHex(bytes.length)}${bytes.toString('hex')}`
 }
+
+const toPaddedHex = (n: number, padLen: number = 8, padChar: string = '0'): string =>
+    n.toString(16).padStart(padLen, padChar)
+const createTzAuthMessage = (orbit: string, pk: string, pkh: string, action: Action, cid: string): string =>
+    `Tezos Signed Message: ${orbit}.kepler.net ${Date.now()} ${pk} ${pkh} ${action} ${cid}`
+const makeOrbitPath = (url: string, orbit: string): string => url + "/" + orbit
+const makeContentPath = (url: string, orbit: string, cid: string): string => makeOrbitPath(url, orbit) + "/" + cid
