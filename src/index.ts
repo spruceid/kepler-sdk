@@ -1,11 +1,7 @@
-import {
-    Signer
-} from '@taquito/taquito';
-import {
-    HttpBackend
-} from '@taquito/http-utils';
+import { Signer } from '@taquito/taquito';
+import { HttpBackend } from '@taquito/http-utils';
 
-enum Action {
+export enum Action {
     get = "GET",
     put = "PUT",
     delete = "DEL"
@@ -34,10 +30,11 @@ export class Kepler<S extends Signer> {
         })
     }
 
-    public async put<T>(content: T, orbit: string, cid?: string): Promise<void> {
+    public async put<T>(content: T, orbit: string, cid: string): Promise<string> {
         return await this.http.createRequest<string>({
             url: makePath(this.url, orbit, cid),
             method: 'POST',
+            json: false,
             headers: {
                 Authorization: await this.createAuth(orbit, cid, Action.put)
             }
@@ -47,6 +44,7 @@ export class Kepler<S extends Signer> {
     public async del(orbit: string, cid: string): Promise<void> {
         return await this.http.createRequest({
             url: makePath(this.url, orbit, cid),
+            // @ts-ignore, taquito http-utils doesnt officially support DELETE yet but this still works
             method: 'DELETE',
             headers: {
                 Authorization: await this.createAuth(orbit, cid, Action.delete)
@@ -55,14 +53,13 @@ export class Kepler<S extends Signer> {
 
     }
 
-    public orbit(orbit: string) {
+    public orbit(orbit: string): Orbit<S> {
         return new Orbit(this, orbit);
     }
 
     private async createAuth(orbit: string, cid: string, action: Action): Promise<string> {
         const auth = createRequest(orbit, action, await this.signer.publicKey(), await this.signer.publicKeyHash(), cid);
-        const { prefixSig } = await this.signer.sign({ string: auth });
-
+        const { prefixSig } = await this.signer.sign(stringEncoder(auth));
         return auth + " " + prefixSig
     }
 }
@@ -73,7 +70,7 @@ export class Orbit<S extends Signer> {
         private orbitId: string
     ) { }
 
-    public get orbit() {
+    public get orbit(): string {
         return this.orbitId
     }
 
@@ -81,11 +78,20 @@ export class Orbit<S extends Signer> {
         return await this.kepler.get<T>(this.orbit, cid)
     }
 
-    public async put<T>(content: T, cid?: string): Promise<void> {
+    public async put<T>(content: T, cid: string): Promise<string> {
         return await this.kepler.put<T>(content, this.orbit, cid)
     }
 
     public async del(cid: string): Promise<void> {
         return await this.kepler.del(this.orbit, cid)
     }
+}
+
+const toPaddedHex = (n: number, padLen: number = 8, padChar: string = '0'): string => {
+    return n.toString(16).padStart(padLen, padChar)
+}
+
+export const stringEncoder = (s: string): string => {
+    const bytes = Buffer.from(s, 'utf8');
+    return `0501${toPaddedHex(bytes.length)}${bytes.toString('hex')}`
 }
