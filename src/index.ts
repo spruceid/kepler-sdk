@@ -8,7 +8,7 @@ export enum Action {
 }
 
 const createRequest = (orbit: string, action: Action, pk: string, pkh: string, cid: string): string => {
-    return `Tezos Signed Message: ${orbit}.kepler.net ${Date.now()} ${pk} ${pkh} ${cid}`
+    return `Tezos Signed Message: ${orbit}.kepler.net ${Date.now()} ${pk} ${pkh} ${action} ${cid}`
 }
 
 const makePath = (url: string, orbit: string, cid: string) => url + "/" + orbit + "/" + cid
@@ -33,7 +33,8 @@ export class Kepler<S extends Signer> {
     public async put<T>(content: T, orbit: string, cid: string): Promise<string> {
         return await this.http.createRequest<string>({
             url: makePath(this.url, orbit, cid),
-            method: 'POST',
+            // @ts-ignore, taquito http-utils doesnt officially support PUT yet but this still works
+            method: 'PUT',
             json: false,
             headers: {
                 Authorization: await this.createAuth(orbit, cid, Action.put)
