@@ -7,62 +7,50 @@ export enum Action {
     delete = "DEL"
 }
 
-export class Kepler<S extends Signer> {
-    constructor(
-        private url: string,
-        private signer: S,
-        private http: HttpBackend = new HttpBackend()
-    ) { }
+export interface Authenticator {
+    authenticate: (orbit: string, cid: string, action: Action) => Promise<string>;
+}
 
-    public async get<T>(orbit: string, cid: string): Promise<T> {
-        return await this.http.createRequest({
-            url: makeContentPath(this.url, orbit, cid),
-            method: 'GET',
-            headers: {
-                Authorization: await this.createAuth(orbit, cid, Action.get)
-            }
-        })
-    }
+export class TezosAuthenticator<S extends Signer> implements Authenticator {
+    constructor( private signer: S ) {  }
 
-    public async put<T>(content: T, orbit: string, cid: string): Promise<string> {
-        return await this.http.createRequest<string>({
-            url: makeOrbitPath(this.url, orbit),
-            // @ts-ignore, taquito http-utils doesnt officially support PUT yet but this still works
-            method: 'PUT',
-            json: false,
-            headers: {
-                Authorization: await this.createAuth(orbit, cid, Action.put)
-            }
-        }, content)
-    }
-
-    public async del(orbit: string, cid: string): Promise<void> {
-        return await this.http.createRequest({
-            url: makeContentPath(this.url, orbit, cid),
-            // @ts-ignore, taquito http-utils doesnt officially support DELETE yet but this still works
-            method: 'DELETE',
-            headers: {
-                Authorization: await this.createAuth(orbit, cid, Action.delete)
-            }
-        })
-
-    }
-
-    public orbit(orbit: string): Orbit<S> {
-        return new Orbit(this, orbit);
-    }
-
-    private async createAuth(orbit: string, cid: string, action: Action): Promise<string> {
+    public async authenticate(orbit: string, cid: string, action: Action): Promise<string> {
         const auth = createTzAuthMessage(orbit, await this.signer.publicKey(), await this.signer.publicKeyHash(), action, cid);
         const { prefixSig } = await this.signer.sign(stringEncoder(auth));
         return auth + " " + prefixSig
     }
 }
 
-export class Orbit<S extends Signer> {
+export class Kepler<A extends Authenticator> {
     constructor(
-        private kepler: Kepler<S>,
-        private orbitId: string
+        private url: string,
+        private auth: A,
+        private http: HttpBackend = new HttpBackend()
+    ) { }
+
+    public async get<T>(orbit: string, cid: string): Promise<T> {
+        return await this.orbit(orbit).get(cid)
+    }
+
+    public async put<T>(orbit: string, content: T): Promise<string> {
+        return await this.orbit(orbit).put(content)
+    }
+
+    public async del(orbit: string, cid: string): Promise<void> {
+        return await this.orbit(orbit).del(cid)
+    }
+
+    public orbit(orbit: string): Orbit {
+        return new Orbit(this.url, orbit, this.auth, this.http);
+    }
+}
+
+export class Orbit {
+    constructor(
+        private url: string,
+        private orbitId: string,
+        private auth: Authenticator,
+        private http: HttpBackend = new HttpBackend()
     ) { }
 
     public get orbit(): string {
@@ -70,15 +58,35 @@ export class Orbit<S extends Signer> {
     }
 
     public async get<T>(cid: string): Promise<T> {
-        return await this.kepler.get<T>(this.orbit, cid)
+        return await this.http.createRequest({
+            url: makeContentPath(this.url, this.orbit, cid),
+            method: 'GET',
+            headers: {
+                Authorization: await this.auth.authenticate(this.orbit, cid, Action.get)
+            }
+        })
     }
 
-    public async put<T>(content: T, cid: string): Promise<string> {
-        return await this.kepler.put<T>(content, this.orbit, cid)
+    public async put<T>(content: T): Promise<string> {
+        return await this.http.createRequest({
+            url: makeOrbitPath(this.url, this.orbit),
+            // @ts-ignore, taquito http-utils doesnt officially support PUT yet but this still works
+            method: 'PUT',
+            headers: {
+                Authorization: await this.auth.authenticate(this.orbit, "none", Action.put)
+            }
+        })
     }
 
     public async del(cid: string): Promise<void> {
-        return await this.kepler.del(this.orbit, cid)
+        return await this.http.createRequest({
+            url: makeContentPath(this.url, this.orbit, cid),
+            // @ts-ignore, taquito http-utils doesnt officially support DELETE yet but this still works
+            method: 'DELETE',
+            headers: {
+                Authorization: await this.auth.authenticate(this.orbit, cid, Action.delete)
+            }
+        })
     }
 }
 
