@@ -75,7 +75,7 @@ export class Orbit {
             headers: {
                 Authorization: await this.auth.authenticate(this.orbit, "none", Action.put)
             }
-        })
+        }, content)
     }
 
     public async del(cid: string): Promise<void> {
