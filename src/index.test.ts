@@ -9,19 +9,21 @@ describe('Kepler Client', () => {
     it('Creates auth tokens', async () => {
         const cid = 'uAYAEHiB0uGRNPXEMdA9L-lXR2MKIZzKlgW1z6Ug4fSv3LRSPfQ';
         const orbit = 'uAYAEHiB_A0nLzANfXNkW5WCju51Td_INJ6UacFK7qY6zejzKoA';
-        let auth = await authn.authenticate(orbit , cid, Action.get)
-        console.log(auth)
+        const auth = await authn.authenticate(orbit , cid, Action.get)
     })
 
     it('naive integration test', async () => {
-        let kepler = new Kepler('http://localhost:8000', authn);
-        const cid = 'uAYAEHiB0uGRNPXEMdA9L-lXR2MKIZzKlgW1z6Ug4fSv3LRSPfQ';
-        const orbit = 'uAYAEHiB_A0nLzANfXNkW5WCju51Td_INJ6UacFK7qY6zejzKoA';
+        const kepler = new Kepler('https://1cee80b0acd8.ngrok.io', authn);
+        const orbit = kepler.orbit('uAYAEHiB_A0nLzANfXNkW5WCju51Td_INJ6UacFK7qY6zejzKoA');
+        const fakeCid = "not_a_cid";
 
         const json = { hello: 'hey' };
 
-        await kepler.put(orbit, json);
+        await expect(orbit.get(fakeCid)).rejects.toBeDefined();
 
-        return await expect(kepler.get(orbit, cid)).resolves.toEqual(json)
+        const cid = await orbit.put(json);
+
+        await expect(orbit.get(cid)).resolves.toEqual(json)
+        return await expect(orbit.del(cid)).resolves.not.toThrow()
     })
 })

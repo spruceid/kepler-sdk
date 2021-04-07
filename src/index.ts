@@ -60,7 +60,7 @@ export class Orbit {
     public async get<T>(cid: string): Promise<T> {
         return await this.http.get(makeContentPath(this.orbit, cid), {
             headers: await this.headers(cid, Action.get)
-        })
+        }).then(res => res.data.data)
     }
 
     public async put<T>(content: T): Promise<string> {
@@ -68,13 +68,13 @@ export class Orbit {
         return await this.http.put(makeOrbitPath(this.orbit), {
             headers: await this.headers(cid, Action.put),
             data: content
-        })
+        }).then(res => res.data)
     }
 
     public async del(cid: string): Promise<void> {
-        return await this.http.put(makeContentPath(this.orbit, cid), {
+        return await this.http.delete(makeContentPath(this.orbit, cid), {
             headers: await this.headers(cid, Action.put)
-        })
+        }).then(_ => {  })
     }
  
     private async headers(cid: string, action: Action) {
