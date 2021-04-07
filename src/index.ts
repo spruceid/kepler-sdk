@@ -1,5 +1,5 @@
 import { Signer } from '@taquito/taquito';
-import { HttpBackend } from '@taquito/http-utils';
+import axios, { AxiosInstance } from 'axios';
 
 export enum Action {
     get = "GET",
@@ -25,7 +25,7 @@ export class Kepler<A extends Authenticator> {
     constructor(
         private url: string,
         private auth: A,
-        private http: HttpBackend = new HttpBackend()
+        private http: AxiosInstance = axios.create({ baseURL: url })
     ) { }
 
     public async get<T>(orbit: string, cid: string): Promise<T> {
@@ -50,7 +50,7 @@ export class Orbit {
         private url: string,
         private orbitId: string,
         private auth: Authenticator,
-        private http: HttpBackend = new HttpBackend()
+        private http: AxiosInstance = axios.create({ baseURL: url }),
     ) { }
 
     public get orbit(): string {
@@ -58,35 +58,30 @@ export class Orbit {
     }
 
     public async get<T>(cid: string): Promise<T> {
-        return await this.http.createRequest({
-            url: makeContentPath(this.url, this.orbit, cid),
-            method: 'GET',
-            headers: {
-                Authorization: await this.auth.authenticate(this.orbit, cid, Action.get)
-            }
+        return await this.http.get(makeContentPath(this.orbit, cid), {
+            headers: await this.headers(cid, Action.get)
         })
     }
 
     public async put<T>(content: T): Promise<string> {
-        return await this.http.createRequest({
-            url: makeOrbitPath(this.url, this.orbit),
-            // @ts-ignore, taquito http-utils doesnt officially support PUT yet but this still works
-            method: 'PUT',
-            headers: {
-                Authorization: await this.auth.authenticate(this.orbit, "none", Action.put)
-            }
-        }, content)
+        let cid = "dummy_cid";
+        return await this.http.put(makeOrbitPath(this.orbit), {
+            headers: await this.headers(cid, Action.put),
+            data: content
+        })
     }
 
     public async del(cid: string): Promise<void> {
-        return await this.http.createRequest({
-            url: makeContentPath(this.url, this.orbit, cid),
-            // @ts-ignore, taquito http-utils doesnt officially support DELETE yet but this still works
-            method: 'DELETE',
-            headers: {
-                Authorization: await this.auth.authenticate(this.orbit, cid, Action.delete)
-            }
+        return await this.http.put(makeContentPath(this.orbit, cid), {
+            headers: await this.headers(cid, Action.put)
         })
+    }
+ 
+    private async headers(cid: string, action: Action) {
+        return {
+            'Authorization': await this.auth.authenticate(this.orbit, cid, action),
+            ...this.http.defaults.headers
+        }
     }
 }
 
@@ -98,6 +93,6 @@ export const stringEncoder = (s: string): string => {
 const toPaddedHex = (n: number, padLen: number = 8, padChar: string = '0'): string =>
     n.toString(16).padStart(padLen, padChar)
 const createTzAuthMessage = (orbit: string, pk: string, pkh: string, action: Action, cid: string): string =>
-    `Tezos Signed Message: ${orbit}.kepler.net ${Date.now()} ${pk} ${pkh} ${action} ${cid}`
-const makeOrbitPath = (url: string, orbit: string): string => url + "/" + orbit
-const makeContentPath = (url: string, orbit: string, cid: string): string => makeOrbitPath(url, orbit) + "/" + cid
+    `Tezos Signed Message: ${orbit}.kepler.net ${(new Date()).toISOString()} ${pk} ${pkh} ${action} ${cid}`
+const makeOrbitPath = (orbit: string): string => "/" + orbit
+const makeContentPath = (orbit: string, cid: string): string => makeOrbitPath(orbit) + "/" + cid
