@@ -1,7 +1,7 @@
-import { Kepler, Orbit, Action, TezosAuthenticator, stringEncoder } from './';
+import { Kepler, Orbit, Action, taquitoAuthenticator, stringEncoder } from './';
 import { InMemorySigner } from '@taquito/signer'
 
-const authn = new TezosAuthenticator(new InMemorySigner('edsk2gL9deG8idefWJJWNNtKXeszWR4FrEdNFM5622t1PkzH66oH3r'));
+const authn = taquitoAuthenticator(new InMemorySigner('edsk2gL9deG8idefWJJWNNtKXeszWR4FrEdNFM5622t1PkzH66oH3r'));
 
 describe('Kepler Client', () => {
     it('Encodes strings correctly', () => expect(stringEncoder('message')).toBe('0501000000076d657373616765'))
@@ -9,7 +9,7 @@ describe('Kepler Client', () => {
     it('Creates auth tokens', async () => {
         const cid = 'uAYAEHiB0uGRNPXEMdA9L-lXR2MKIZzKlgW1z6Ug4fSv3LRSPfQ';
         const orbit = 'uAYAEHiB_A0nLzANfXNkW5WCju51Td_INJ6UacFK7qY6zejzKoA';
-        const auth = await authn.authenticate(orbit , cid, Action.get)
+        const auth = await authn(orbit , cid, Action.get)
     })
 
     it('naive integration test', async () => {
