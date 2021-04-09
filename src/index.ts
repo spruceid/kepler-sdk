@@ -23,7 +23,19 @@ export const taquitoAuthenticator: AuthFactory<Signer> = signer =>
         const { prefixSig } = await signer.sign(stringEncoder(auth));
         return auth + " " + prefixSig
     }
-}
+
+export const templeAuthenticator: AuthFactory<TempleWallet> = wallet =>
+    async (orbit: string, cid: string, action: Action): Promise<string> => {
+        const auth = createTzAuthMessage(orbit, await wallet.getPKH(), action, cid);
+        return auth + " " + await wallet.sign(stringEncoder(auth));
+    }
+
+export const kukaiEmbedAuthenticator: AuthFactory<KukaiEmbed> = embed =>
+    async (orbit: string, cid: string, action: Action): Promise<string> => {
+        const pkh = wallet.user ? wallet.user.pkh : throw new Error("User Not Logged In");
+        const auth = createTzAuthMessage(orbit, pkh, action, cid);
+        return auth + " " + await wallet.sign(auth);
+    }
 
 export class Kepler<A extends Authenticator> {
     constructor(
