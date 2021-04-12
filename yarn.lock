@@ -565,6 +565,13 @@
     bs58check "^2.1.2"
     buffer "^5.6.0"
 
+"@temple-wallet/dapp@^2.2.3":
+  version "2.2.3"
+  resolved "https://registry.yarnpkg.com/@temple-wallet/dapp/-/dapp-2.2.3.tgz#c2b330b2798c520045926dcf3077ca9864ecf8d5"
+  integrity sha512-zViPI06qFjC4AhQNaGcFR0o7+zZ5cuigkTmB6jCaAt0Dfohn4BuI+KPwC0n+a0qrTRTjvg+xXdskiUh1E9Le6Q==
+  dependencies:
+    nanoid "^3.1.10"
+
 "@types/babel__core@^7.0.0", "@types/babel__core@^7.1.7":
   version "7.1.14"
   resolved "https://registry.yarnpkg.com/@types/babel__core/-/babel__core-7.1.14.tgz#faaeefc4185ec71c389f4501ee5ec84b170cc402"
@@ -2615,6 +2622,11 @@ kleur@^3.0.3:
   resolved "https://registry.yarnpkg.com/kleur/-/kleur-3.0.3.tgz#a79c9ecc86ee1ce3fa6206d1216c501f147fc07e"
   integrity sha512-eTIzlVOSUR+JxdDFepEYcBMtZ9Qqdef+rnzWdRZuMbOywu5tO2w2N7rqjoANZ5k9vywhL6Br1VRjUIgTQx4E8w==
 
+kukai-embed@^0.6.1:
+  version "0.6.1"
+  resolved "https://registry.yarnpkg.com/kukai-embed/-/kukai-embed-0.6.1.tgz#5d13ab5633e9c692d32a4e275dae7faba9677a85"
+  integrity sha512-aDvkKnUOcRK7xTRmbBbdrSqoW9lAlmMFFJEoPmsfQgvTd2URzWqW5ec5js9QV/ifIlsj1jO/Vx/YKoTdQu0TeQ==
+
 leven@^3.1.0:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/leven/-/leven-3.1.0.tgz#77891de834064cccba82ae7842bb6b14a13ed7f2"
@@ -2797,6 +2809,11 @@ ms@2.1.2:
   version "2.1.2"
   resolved "https://registry.yarnpkg.com/ms/-/ms-2.1.2.tgz#d09d1f357b443f493382a8eb3ccd183872ae6009"
   integrity sha512-sGkPx+VjMtmA6MX27oA4FBFELFCZZ4S4XqeGOXCv68tT+jb3vk/RyaKWP0PTKyWtmLSM0b+adUTEvbs1PEaH2w==
+
+nanoid@^3.1.10:
+  version "3.1.22"
+  resolved "https://registry.yarnpkg.com/nanoid/-/nanoid-3.1.22.tgz#b35f8fb7d151990a8aebd5aa5015c03cf726f844"
+  integrity sha512-/2ZUaJX2ANuLtTvqTlgqBQNJoQO398KyJgZloL0PZkC0dpysjncRUPsFe3DUPzz/y3h+u7C46np8RMuvF3jsSQ==
 
 nanomatch@^1.2.9:
   version "1.2.13"
