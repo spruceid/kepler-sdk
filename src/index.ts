@@ -55,8 +55,8 @@ export class Kepler<A extends Authenticator> {
     }
 
     // typed so that it takes at least 1 element
-    public async put<T>(orbit: string, single: T, ...more: T[]): Promise<string> {
-        return await this.orbit(orbit).put(single, ...more)
+    public async put<T>(orbit: string, first: T, ...rest: T[]): Promise<string> {
+        return await this.orbit(orbit).put(first, ...rest)
     }
 
     public async del(orbit: string, cid: string): Promise<void> {
@@ -86,22 +86,22 @@ export class Orbit<A extends Authenticator> {
         }).then(res => res.data.data)
     }
 
-    public async put<T>(single: T, ...more: T[]): Promise<string> {
-        if (more.length >= 1) {
-            const form = new FormData();
-            form.append(await makeJsonCid(single), new Blob([ JSON.stringify(single) ], { type: 'application/json' }))
-            for (const c of more) {
-                form.append(await makeJsonCid(c), new Blob([ JSON.stringify(c) ], { type: 'application/json' }))
+    public async put<T>(first: T, ...rest: T[]): Promise<string> {
+        if (rest.length >= 1) {
+            const data = new FormData();
+            data.append(await makeJsonCid(first), new Blob([ JSON.stringify(rest) ], { type: 'application/json' }))
+            for (const content of rest) {
+                data.append(await makeJsonCid(content), new Blob([ JSON.stringify(content) ], { type: 'application/json' }))
             }
             return await this.http.put(makeOrbitPath(this.orbit), {
                 // @ts-ignore, TODO ensure this behaves well in browser
-                headers: { ...await this.headers(await makeJsonCid(single), Action.put), ...form.getHeaders?.() },
-                data: form
+                headers: { ...await this.headers(await makeJsonCid(first), Action.put), ...form.getHeaders?.() },
+                data
             }).then(res => res.data)
         } else {
             return await this.http.put(makeOrbitPath(this.orbit), {
-                headers: await this.headers(await makeJsonCid(single), Action.put),
-                data: single
+                headers: await this.headers(await makeJsonCid(first), Action.put),
+                data: first
             }).then(res => res.data)    
         }
     }
