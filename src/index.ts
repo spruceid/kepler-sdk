@@ -54,8 +54,9 @@ export class Kepler<A extends Authenticator> {
         return await this.orbit(orbit).get(cid)
     }
 
-    public async put<T>(orbit: string, content: T): Promise<string> {
-        return await this.orbit(orbit).put(content)
+    // typed so that it takes at least 1 element
+    public async put<T>(orbit: string, single: T, ...more: T[]): Promise<string> {
+        return await this.orbit(orbit).put(single, ...more)
     }
 
     public async del(orbit: string, cid: string): Promise<void> {
@@ -85,12 +86,23 @@ export class Orbit<A extends Authenticator> {
         }).then(res => res.data.data)
     }
 
-    public async put<T>(content: T): Promise<string> {
-        let cid = "dummy_cid";
-        return await this.http.put(makeOrbitPath(this.orbit), {
-            headers: await this.headers(cid, Action.put),
-            data: content
-        }).then(res => res.data)
+    public async put<T>(single: T, ...more: T[]): Promise<string> {
+        if (more.length >= 1) {
+            const form = new FormData();
+            form.append(await makeJsonCid(single), new Blob([ JSON.stringify(single) ], { type: 'application/json' }))
+            for (const c of more) {
+                form.append(await makeJsonCid(c), new Blob([ JSON.stringify(c) ], { type: 'application/json' }))
+            }
+            return await this.http.put(makeOrbitPath(this.orbit), {
+                headers: { ...await this.headers(await makeJsonCid(single), Action.put), ...form.getHeaders() },
+                data: form
+            }).then(res => res.data)
+        } else {
+            return await this.http.put(makeOrbitPath(this.orbit), {
+                headers: await this.headers(await makeJsonCid(single), Action.put),
+                data: single
+            }).then(res => res.data)    
+        }
     }
 
     public async del(cid: string): Promise<void> {
