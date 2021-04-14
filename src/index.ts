@@ -2,7 +2,9 @@ import { Signer } from '@taquito/taquito';
 import { TempleWallet } from '@temple-wallet/dapp';
 import { KukaiEmbed } from 'kukai-embed';
 import axios, { AxiosInstance } from 'axios';
-import formData from 'form-data';
+import FormData from 'form-data';
+// @ts-ignore
+import Blob from 'blob';
 import CID from 'cids';
 import multihashing from 'multihashing-async';
 
@@ -89,10 +91,8 @@ export class Orbit<A extends Authenticator> {
     public async put<T>(first: T, ...rest: T[]): Promise<string> {
         if (rest.length >= 1) {
             const data = new FormData();
-            data.append(await makeJsonCid(first), new Blob([ JSON.stringify(rest) ], { type: 'application/json' }))
-            for (const content of rest) {
-                data.append(await makeJsonCid(content), new Blob([ JSON.stringify(content) ], { type: 'application/json' }))
-            }
+            await addContent(data, first)
+            for (const content of rest) { await addContent(data, content) }
             return await this.http.post(makeOrbitPath(this.orbit), {
                 headers: {
                     ...await this.headers(await makeJsonCid(first), Action.put),
@@ -127,7 +127,16 @@ export const stringEncoder = (s: string): string => {
     const bytes = Buffer.from(s, 'utf8');
     return `0501${toPaddedHex(bytes.length)}${bytes.toString('hex')}`
 }
-const makeJsonCid = async <T>(content: T): Promise<string> => new CID(1, 'json', await multihashing(new TextEncoder().encode(JSON.stringify(content)), 'blake3')).toString('base64')
+
+const addContent = async <T>(form: FormData, content: T) => {
+    form.append(
+        await makeJsonCid(content),
+        // @ts-ignore
+        new Blob([ JSON.stringify(content) ], { type: 'application/json' })
+    );
+}
+
+const makeJsonCid = async <T>(content: T): Promise<string> => new CID(1, 'json', await multihashing(new TextEncoder().encode(JSON.stringify(content)), 'sha3-256')).toString('base64')
 const toPaddedHex = (n: number, padLen: number = 8, padChar: string = '0'): string =>
     n.toString(16).padStart(padLen, padChar)
 const createTzAuthMessage = (orbit: string, pkh: string, action: Action, cid: string): string =>

@@ -26,4 +26,21 @@ describe('Kepler Client', () => {
         await expect(orbit.get(cid)).resolves.toEqual(json)
         return await expect(orbit.del(cid)).resolves.not.toThrow()
     })
+
+    it('naive integration multipart test', async () => {
+        const kepler = new Kepler('https://b946c5ccaf03.ngrok.io', authn);
+        const orbit = kepler.orbit('uAYAEHiB_A0nLzANfXNkW5WCju51Td_INJ6UacFK7qY6zejzKoA');
+        const fakeCid = "not_a_cid";
+
+        const json1 = { hello: 'hey' };
+        const json2 = { hello: 'hey again' };
+
+        await expect(orbit.get(fakeCid)).rejects.toBeDefined();
+
+        const cids = await orbit.put(json1, json2);
+        console.log(cids)
+
+        // await expect(orbit.get(cid)).resolves.toEqual(json)
+        // return await expect(orbit.del(cid)).resolves.not.toThrow()
+    })
 })
