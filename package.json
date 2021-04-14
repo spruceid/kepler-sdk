@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "main": "index.js",
   "license": "MIT",
+  "scripts": {
+    "build": "tsc -p .",
+    "test": "jest"
+  },
   "devDependencies": {
     "@taquito/signer": "^8.1.0",
     "@taquito/taquito": "^8.1.0",

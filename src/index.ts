@@ -40,7 +40,7 @@ export const kukaiEmbedAuthenticator: AuthFactory<KukaiEmbed> = embed =>
         }
         const pkh = embed.user.pkh;
         const auth = createTzAuthMessage(orbit, pkh, action, cid);
-        return auth + " " + await embed.sign(auth);
+        return auth + " " + await embed.signMessage(auth);
     }
 
 export class Kepler<A extends Authenticator> {
@@ -94,7 +94,8 @@ export class Orbit<A extends Authenticator> {
                 form.append(await makeJsonCid(c), new Blob([ JSON.stringify(c) ], { type: 'application/json' }))
             }
             return await this.http.put(makeOrbitPath(this.orbit), {
-                headers: { ...await this.headers(await makeJsonCid(single), Action.put), ...form.getHeaders() },
+                // @ts-ignore, TODO ensure this behaves well in browser
+                headers: { ...await this.headers(await makeJsonCid(single), Action.put), ...form.getHeaders?.() },
                 data: form
             }).then(res => res.data)
         } else {
