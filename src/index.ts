@@ -19,22 +19,29 @@ export interface AuthFactory<B> {
 
 export const taquitoAuthenticator: AuthFactory<Signer> = signer =>
     async (orbit: string, cid: string, action: Action): Promise<string> => {
-        const auth = createTzAuthMessage(orbit, await signer.publicKeyHash(), action, cid);
+        const auth = createTzAuthMessage(orbit, await signer.publicKey(), await signer.publicKeyHash(), action, cid);
         const { prefixSig } = await signer.sign(stringEncoder(auth));
         return auth + " " + prefixSig
     }
 
+// use taquito/beacon wallet: requestPermissions()
 export const templeAuthenticator: AuthFactory<TempleWallet> = wallet =>
     async (orbit: string, cid: string, action: Action): Promise<string> => {
-        const auth = createTzAuthMessage(orbit, await wallet.getPKH(), action, cid);
+        const perms = await TempleWallet.getCurrentPermission();
+        if (perms === null) {
+            throw new Error("User Not Logged In")
+        }
+        const auth = createTzAuthMessage(orbit, perms.publicKey, perms.pkh, action, cid);
         return auth + " " + await wallet.sign(stringEncoder(auth));
     }
 
 export const kukaiEmbedAuthenticator: AuthFactory<KukaiEmbed> = embed =>
     async (orbit: string, cid: string, action: Action): Promise<string> => {
-        const pkh = wallet.user ? wallet.user.pkh : throw new Error("User Not Logged In");
-        const auth = createTzAuthMessage(orbit, pkh, action, cid);
-        return auth + " " + await wallet.sign(auth);
+        if (embed.user === null) {
+            throw new Error("User Not Logged In")
+        }
+        const auth = createTzAuthMessage(orbit, embed.user.pk, embed.user.pkh, action, cid);
+        return auth + " " + await embed.signMessage(auth);
     }
 
 export class Kepler<A extends Authenticator> {
@@ -108,7 +115,7 @@ export const stringEncoder = (s: string): string => {
 
 const toPaddedHex = (n: number, padLen: number = 8, padChar: string = '0'): string =>
     n.toString(16).padStart(padLen, padChar)
-const createTzAuthMessage = (orbit: string, pkh: string, action: Action, cid: string): string =>
-    `Tezos Signed Message: ${orbit}.kepler.net ${(new Date()).toISOString()} ${pkh} ${action} ${cid}`
+const createTzAuthMessage = (orbit: string, pk: string, pkh: string, action: Action, cid: string): string =>
+    `Tezos Signed Message: ${orbit}.kepler.net ${(new Date()).toISOString()} ${pk} ${pkh} ${action} ${cid}`
 const makeOrbitPath = (orbit: string): string => "/" + orbit
 const makeContentPath = (orbit: string, cid: string): string => makeOrbitPath(orbit) + "/" + cid
