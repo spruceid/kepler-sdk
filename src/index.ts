@@ -2,6 +2,9 @@ import { Signer } from '@taquito/taquito';
 import { TempleWallet } from '@temple-wallet/dapp';
 import { KukaiEmbed } from 'kukai-embed';
 import axios, { AxiosInstance } from 'axios';
+import formData from 'form-data';
+import CID from 'cids';
+import multihashing from 'multihashing-async';
 
 export enum Action {
     get = "GET",
@@ -32,9 +35,12 @@ export const templeAuthenticator: AuthFactory<TempleWallet> = wallet =>
 
 export const kukaiEmbedAuthenticator: AuthFactory<KukaiEmbed> = embed =>
     async (orbit: string, cid: string, action: Action): Promise<string> => {
-        const pkh = wallet.user ? wallet.user.pkh : throw new Error("User Not Logged In");
+        if (embed.user === null) {
+            throw new Error("User Not Logged In")
+        }
+        const pkh = embed.user.pkh;
         const auth = createTzAuthMessage(orbit, pkh, action, cid);
-        return auth + " " + await wallet.sign(auth);
+        return auth + " " + await embed.sign(auth);
     }
 
 export class Kepler<A extends Authenticator> {
@@ -56,16 +62,16 @@ export class Kepler<A extends Authenticator> {
         return await this.orbit(orbit).del(cid)
     }
 
-    public orbit(orbit: string): Orbit {
+    public orbit(orbit: string): Orbit<A> {
         return new Orbit(this.url, orbit, this.auth, this.http);
     }
 }
 
-export class Orbit {
+export class Orbit<A extends Authenticator> {
     constructor(
         private url: string,
         private orbitId: string,
-        private auth: Authenticator,
+        private auth: A,
         private http: AxiosInstance = axios.create({ baseURL: url }),
     ) { }
 
@@ -105,7 +111,7 @@ export const stringEncoder = (s: string): string => {
     const bytes = Buffer.from(s, 'utf8');
     return `0501${toPaddedHex(bytes.length)}${bytes.toString('hex')}`
 }
-
+const makeJsonCid = async <T>(content: T): Promise<string> => new CID(1, 'json', await multihashing(new TextEncoder().encode(JSON.stringify(content)), 'blake3')).toString('base64')
 const toPaddedHex = (n: number, padLen: number = 8, padChar: string = '0'): string =>
     n.toString(16).padStart(padLen, padChar)
 const createTzAuthMessage = (orbit: string, pkh: string, action: Action, cid: string): string =>
