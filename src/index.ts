@@ -93,13 +93,16 @@ export class Orbit<A extends Authenticator> {
             for (const content of rest) {
                 data.append(await makeJsonCid(content), new Blob([ JSON.stringify(content) ], { type: 'application/json' }))
             }
-            return await this.http.put(makeOrbitPath(this.orbit), {
-                // @ts-ignore, TODO ensure this behaves well in browser
-                headers: { ...await this.headers(await makeJsonCid(first), Action.put), ...form.getHeaders?.() },
+            return await this.http.post(makeOrbitPath(this.orbit), {
+                headers: {
+                    ...await this.headers(await makeJsonCid(first), Action.put),
+                    // @ts-ignore, TODO ensure this behaves well in browser
+                    ...(form.getHeaders ? form.getHeaders?.() : { 'Content-Type': 'multipart/form-data' })
+                },
                 data
             }).then(res => res.data)
         } else {
-            return await this.http.put(makeOrbitPath(this.orbit), {
+            return await this.http.post(makeOrbitPath(this.orbit), {
                 headers: await this.headers(await makeJsonCid(first), Action.put),
                 data: first
             }).then(res => res.data)    
