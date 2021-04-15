@@ -1,8 +1,23 @@
-import { Kepler, Orbit, Action, authenticator, stringEncoder } from './';
+import { Kepler, Orbit, Action, Authenticator, authenticator, stringEncoder } from './';
 import { DAppClient } from '@airgap/beacon-sdk';
+import { InMemorySigner } from '@taquito/signer';
 
-describe('Kepler Client', async () => {
-    const authn = await authenticator(new DAppClient({ name: "Test Client" }));
+const ims = new InMemorySigner('edsk2gL9deG8idefWJJWNNtKXeszWR4FrEdNFM5622t1PkzH66oH3r');
+const mockAccount = jest.fn(async () => ({ accountInfo: { publicKey: await ims.publicKey(), address: await ims.publicKeyHash() } }))
+const mockSign = jest.fn(async ({ payload }) => ({ signature: await ims.sign(payload).then(res => res.prefixSig) }))
+
+// @ts-ignore, mock DAppClient account info
+DAppClient.prototype.requestPermissions = mockAccount;
+
+// @ts-ignore, mock DAppClient signing implementation
+DAppClient.prototype.requestSignPayload = mockSign;
+
+describe('Kepler Client', () => {
+    let authn: Authenticator;
+
+    beforeAll(async () => {
+        authn = await authenticator(new DAppClient({ name: "Test Client" }));
+    })
 
     it('Encodes strings correctly', () => expect(stringEncoder('message')).toBe('0501000000076d657373616765'))
 
