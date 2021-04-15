@@ -1,5 +1,5 @@
 import { DAppClient, SigningType, PermissionScope } from '@airgap/beacon-sdk'; 
-import axios, { AxiosInstance } from 'axios';
+import fetch, { Response } from 'cross-fetch';
 import FormData from 'form-data';
 import Blob from 'cross-blob';
 import CID from 'cids';
@@ -36,7 +36,6 @@ export class Kepler<A extends Authenticator> {
     constructor(
         private url: string,
         private auth: A,
-        private http: AxiosInstance = axios.create({ baseURL: url })
     ) { }
 
     public async get<T>(orbit: string, cid: string): Promise<T> {
@@ -53,7 +52,7 @@ export class Kepler<A extends Authenticator> {
     }
 
     public orbit(orbit: string): Orbit<A> {
-        return new Orbit(this.url, orbit, this.auth, this.http);
+        return new Orbit(this.url, orbit, this.auth);
     }
 }
 
@@ -62,7 +61,6 @@ export class Orbit<A extends Authenticator> {
         private url: string,
         private orbitId: string,
         private auth: A,
-        private http: AxiosInstance = axios.create({ baseURL: url }),
     ) { }
 
     public get orbit(): string {
@@ -70,9 +68,13 @@ export class Orbit<A extends Authenticator> {
     }
 
     public async get<T>(cid: string): Promise<T> {
-        return await this.http.get(makeContentPath(this.orbit, cid), {
-            headers: await this.headers(cid, Action.get)
-        }).then(res => res.data.data)
+        return await fetch(makeContentPath(this.url, this.orbit, cid), {
+            method: "GET",
+            headers: { "Authorization": await this.auth(this.orbit, cid, Action.get) }
+        }).then(async (res) => {
+            if (res.status === 200) { return await res.json() }
+            else { throw new Error(`Error: ${res.status} ${res.statusText}`) }
+        })
     }
 
     public async put<T>(first: T, ...rest: T[]): Promise<string> {
@@ -80,33 +82,38 @@ export class Orbit<A extends Authenticator> {
             const data = new FormData();
             await addContent(data, first)
             for (const content of rest) { await addContent(data, content) }
-            return await this.http.post(makeOrbitPath(this.orbit), {
-                headers: {
-                    ...await this.headers(await makeJsonCid(first), Action.put),
-                    // @ts-ignore, TODO ensure this behaves well in browser
-                    ...(form.getHeaders ? form.getHeaders?.() : { 'Content-Type': 'multipart/form-data' })
-                },
-                data
-            }).then(res => res.data)
+            return await fetch(makeOrbitPath(this.url, this.orbit), {
+                method: "POST",
+                // @ts-ignore
+                body: data,
+                headers: { "Authorization": await this.auth(this.orbit, await makeJsonCid(first), Action.put) }
+            }).then(async (res) => {
+                if (res.status == 200) { return await res.text() }
+                else { throw new Error(`Error: ${res.status} ${res.statusText}`) }
+            })
         } else {
-            return await this.http.post(makeOrbitPath(this.orbit), {
-                headers: await this.headers(await makeJsonCid(first), Action.put),
-                data: first
-            }).then(res => res.data)    
+            return await fetch(makeOrbitPath(this.url, this.orbit), {
+                method: "POST",
+                body: JSON.stringify(first),
+                headers: {
+                    "Authorization": await this.auth(this.orbit, await makeJsonCid(first), Action.put),
+                    "Content-Type": "application/json"
+                }
+            }).then(async (res) => {
+                if (res.status == 200) { return await res.text() }
+                else { throw new Error(`Error: ${res.status} ${res.statusText}`) }
+            })
         }
     }
 
     public async del(cid: string): Promise<void> {
-        return await this.http.delete(makeContentPath(this.orbit, cid), {
-            headers: await this.headers(cid, Action.put)
-        }).then(_ => {  })
-    }
- 
-    private async headers(cid: string, action: Action) {
-        return {
-            'Authorization': await this.auth(this.orbit, cid, action),
-            ...this.http.defaults.headers
-        }
+        return await fetch(makeContentPath(this.url, this.orbit, cid), {
+            method: 'DELETE',
+            headers: { 'Authorization': await this.auth(this.orbit, cid, Action.delete) }
+        }).then(res => {
+            if (res.status == 200) { return }
+            else { throw new Error(`Error: ${res.status} ${res.statusText}`) }
+        })
     }
 }
 
@@ -127,5 +134,5 @@ const toPaddedHex = (n: number, padLen: number = 8, padChar: string = '0'): stri
     n.toString(16).padStart(padLen, padChar)
 const createTzAuthMessage = (orbit: string, pk: string, pkh: string, action: Action, cid: string): string =>
     `Tezos Signed Message: ${orbit}.kepler.net ${(new Date()).toISOString()} ${pk} ${pkh} ${action} ${cid}`
-const makeOrbitPath = (orbit: string): string => "/" + orbit
-const makeContentPath = (orbit: string, cid: string): string => makeOrbitPath(orbit) + "/" + cid
+const makeOrbitPath = (url: string, orbit: string): string => url + "/" + orbit
+const makeContentPath = (url: string, orbit: string, cid: string): string => makeOrbitPath(url, orbit) + "/" + cid
