@@ -1,6 +1,5 @@
-import { Signer } from '@taquito/taquito';
-import { TempleWallet } from '@temple-wallet/dapp';
-import { KukaiEmbed } from 'kukai-embed';
+import { BeaconWallet } from '@taquito/beacon-wallet';
+import { SigningType, PermissionScope } from '@airgap/beacon-sdk'; 
 import axios, { AxiosInstance } from 'axios';
 
 export enum Action {
@@ -17,31 +16,19 @@ export interface AuthFactory<B> {
     <S extends B>(signer: S): Authenticator;
 }
 
-export const taquitoAuthenticator: AuthFactory<Signer> = signer =>
+export const authenticator: AuthFactory<BeaconWallet> = wallet =>
     async (orbit: string, cid: string, action: Action): Promise<string> => {
-        const auth = createTzAuthMessage(orbit, await signer.publicKey(), await signer.publicKeyHash(), action, cid);
-        const { prefixSig } = await signer.sign(stringEncoder(auth));
-        return auth + " " + prefixSig
-    }
-
-// use taquito/beacon wallet: requestPermissions()
-export const templeAuthenticator: AuthFactory<TempleWallet> = wallet =>
-    async (orbit: string, cid: string, action: Action): Promise<string> => {
-        const perms = await TempleWallet.getCurrentPermission();
-        if (perms === null) {
-            throw new Error("User Not Logged In")
+        const perms = await wallet.requestPermissions({ scopes: [ PermissionScope.SIGN ] });
+        const account = await wallet.client.getActiveAccount();
+        if (account === undefined) {
+            throw new Error("No Active Account")
         }
-        const auth = createTzAuthMessage(orbit, perms.publicKey, perms.pkh, action, cid);
-        return auth + " " + await wallet.sign(stringEncoder(auth));
-    }
-
-export const kukaiEmbedAuthenticator: AuthFactory<KukaiEmbed> = embed =>
-    async (orbit: string, cid: string, action: Action): Promise<string> => {
-        if (embed.user === null) {
-            throw new Error("User Not Logged In")
-        }
-        const auth = createTzAuthMessage(orbit, embed.user.pk, embed.user.pkh, action, cid);
-        return auth + " " + await embed.signMessage(auth);
+        const auth = createTzAuthMessage(orbit, account.publicKey, await wallet.getPKH(), action, cid);
+        const { signature } = await wallet.client.requestSignPayload({
+            signingType: SigningType.MICHELINE,
+            payload: stringEncoder(auth)
+        });
+        return auth + " " + signature
     }
 
 export class Kepler<A extends Authenticator> {
