@@ -1,5 +1,4 @@
-import { BeaconWallet } from '@taquito/beacon-wallet';
-import { SigningType, PermissionScope } from '@airgap/beacon-sdk'; 
+import { DAppClient, SigningType, PermissionScope } from '@airgap/beacon-sdk'; 
 import axios, { AxiosInstance } from 'axios';
 
 export enum Action {
@@ -13,23 +12,21 @@ export interface Authenticator {
 }
 
 export interface AuthFactory<B> {
-    <S extends B>(signer: S): Authenticator;
+    <S extends B>(signer: S): Promise<Authenticator>;
 }
 
-export const authenticator: AuthFactory<BeaconWallet> = wallet =>
-    async (orbit: string, cid: string, action: Action): Promise<string> => {
-        const perms = await wallet.requestPermissions({ scopes: [ PermissionScope.SIGN ] });
-        const account = await wallet.client.getActiveAccount();
-        if (account === undefined) {
-            throw new Error("No Active Account")
-        }
-        const auth = createTzAuthMessage(orbit, account.publicKey, await wallet.getPKH(), action, cid);
-        const { signature } = await wallet.client.requestSignPayload({
+export const authenticator: AuthFactory<DAppClient> = async (client) => {
+    const { accountInfo: { publicKey: pk, address: pkh } } = await client.requestPermissions({ scopes: [ PermissionScope.SIGN ] });
+
+    return async (orbit: string, cid: string, action: Action): Promise<string> => {
+        const auth = createTzAuthMessage(orbit, pk, pkh, action, cid);
+        const { signature } = await client.requestSignPayload({
             signingType: SigningType.MICHELINE,
             payload: stringEncoder(auth)
         });
         return auth + " " + signature
     }
+}
 
 export class Kepler<A extends Authenticator> {
     constructor(

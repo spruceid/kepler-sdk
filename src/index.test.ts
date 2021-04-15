@@ -1,9 +1,9 @@
-import { Kepler, Orbit, Action, taquitoAuthenticator, stringEncoder } from './';
-import { InMemorySigner } from '@taquito/signer'
+import { Kepler, Orbit, Action, authenticator, stringEncoder } from './';
+import { DAppClient } from '@airgap/beacon-sdk';
 
-const authn = taquitoAuthenticator(new InMemorySigner('edsk2gL9deG8idefWJJWNNtKXeszWR4FrEdNFM5622t1PkzH66oH3r'));
+describe('Kepler Client', async () => {
+    const authn = await authenticator(new DAppClient({ name: "Test Client" }));
 
-describe('Kepler Client', () => {
     it('Encodes strings correctly', () => expect(stringEncoder('message')).toBe('0501000000076d657373616765'))
 
     it('Creates auth tokens', async () => {
