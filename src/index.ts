@@ -3,8 +3,7 @@ import { TempleWallet } from '@temple-wallet/dapp';
 import { KukaiEmbed } from 'kukai-embed';
 import axios, { AxiosInstance } from 'axios';
 import FormData from 'form-data';
-// @ts-ignore
-import Blob from 'blob';
+import Blob from 'cross-blob';
 import CID from 'cids';
 import multihashing from 'multihashing-async';
 
@@ -135,7 +134,6 @@ export const stringEncoder = (s: string): string => {
 const addContent = async <T>(form: FormData, content: T) => {
     form.append(
         await makeJsonCid(content),
-        // @ts-ignore
         new Blob([ JSON.stringify(content) ], { type: 'application/json' })
     );
 }
