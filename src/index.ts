@@ -17,10 +17,14 @@ export interface AuthFactory<B> {
     <S extends B>(signer: S): Promise<Authenticator>;
 }
 
-export const authenticator: AuthFactory<DAppClient> = async (client) => {
-    const { accountInfo: { publicKey: pk, address: pkh } } = await client.requestPermissions({ scopes: [ PermissionScope.SIGN ] });
-
-    return async (orbit: string, cid: string, action: Action): Promise<string> => {
+export const authenticator: AuthFactory<DAppClient> = async (client) =>
+    async (orbit: string, cid: string, action: Action): Promise<string> => {
+        const { publicKey: pk, address: pkh } = await client.getActiveAccount().then(acc => {
+            if (acc === undefined) {
+                throw new Error("No Active Account")
+            }
+            return acc
+        });
         const auth = createTzAuthMessage(orbit, pk, pkh, action, cid);
         const { signature } = await client.requestSignPayload({
             signingType: SigningType.MICHELINE,
@@ -28,7 +32,6 @@ export const authenticator: AuthFactory<DAppClient> = async (client) => {
         });
         return auth + " " + signature
     }
-}
 
 export class Kepler<A extends Authenticator> {
     constructor(
