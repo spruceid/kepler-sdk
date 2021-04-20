@@ -39,8 +39,8 @@ export class Kepler<A extends Authenticator> {
         private auth: A,
     ) { }
 
-    public async get<T>(orbit: string, cid: string): Promise<T> {
-        return await this.orbit(orbit).get(cid)
+    public async get<T>(orbit: string, cid: string, authenticate: string = true): Promise<T> {
+        return await this.orbit(orbit).get(cid, authenticate)
     }
 
     // typed so that it takes at least 1 element
@@ -68,10 +68,10 @@ export class Orbit<A extends Authenticator> {
         return this.orbitId
     }
 
-    public async get<T>(cid: string): Promise<T> {
+    public async get<T>(cid: string, authenticate: boolean = true): Promise<T> {
         return await fetch(makeContentPath(this.url, this.orbit, cid), {
             method: "GET",
-            headers: { "Authorization": await this.auth(this.orbit, cid, Action.get) }
+            headers: authenticate ? { "Authorization": await this.auth(this.orbit, cid, Action.get) } : undefined
         }).then(async (res) => {
             if (res.status === 200) { return await res.json() }
             else { throw new Error(`Error: ${res.status} ${res.statusText}`) }
