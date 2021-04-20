@@ -3,11 +3,11 @@ import { DAppClient } from '@airgap/beacon-sdk';
 import { InMemorySigner } from '@taquito/signer';
 
 const ims = new InMemorySigner('edsk2gL9deG8idefWJJWNNtKXeszWR4FrEdNFM5622t1PkzH66oH3r');
-const mockAccount = jest.fn(async () => ({ accountInfo: { publicKey: await ims.publicKey(), address: await ims.publicKeyHash() } }))
+const mockAccount = jest.fn(async () => ({ publicKey: await ims.publicKey(), address: await ims.publicKeyHash() }))
 const mockSign = jest.fn(async ({ payload }) => ({ signature: await ims.sign(payload).then(res => res.prefixSig) }))
 
 // @ts-ignore, mock DAppClient account info
-DAppClient.prototype.requestPermissions = mockAccount;
+DAppClient.prototype.getActiveAccount = mockAccount;
 
 // @ts-ignore, mock DAppClient signing implementation
 DAppClient.prototype.requestSignPayload = mockSign;
@@ -28,7 +28,7 @@ describe('Kepler Client', () => {
     })
 
     it('naive integration test', async () => {
-        const kepler = new Kepler('https://1cee80b0acd8.ngrok.io', authn);
+        const kepler = new Kepler('https://faad7ca90d6c.ngrok.io', authn);
         const orbit = kepler.orbit('uAYAEHiB_A0nLzANfXNkW5WCju51Td_INJ6UacFK7qY6zejzKoA');
         const fakeCid = "not_a_cid";
 
@@ -43,7 +43,7 @@ describe('Kepler Client', () => {
     })
 
     it('naive integration multipart test', async () => {
-        const kepler = new Kepler('https://b946c5ccaf03.ngrok.io', authn);
+        const kepler = new Kepler('https://faad7ca90d6c.ngrok.io', authn);
         const orbit = kepler.orbit('uAYAEHiB_A0nLzANfXNkW5WCju51Td_INJ6UacFK7qY6zejzKoA');
         const fakeCid = "not_a_cid";
 

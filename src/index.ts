@@ -17,10 +17,14 @@ export interface AuthFactory<B> {
     <S extends B>(signer: S): Promise<Authenticator>;
 }
 
-export const authenticator: AuthFactory<DAppClient> = async (client) => {
-    const { accountInfo: { publicKey: pk, address: pkh } } = await client.requestPermissions({ scopes: [ PermissionScope.SIGN ] });
-
-    return async (orbit: string, cid: string, action: Action): Promise<string> => {
+export const authenticator: AuthFactory<DAppClient> = async (client) =>
+    async (orbit: string, cid: string, action: Action): Promise<string> => {
+        const { publicKey: pk, address: pkh } = await client.getActiveAccount().then(acc => {
+            if (acc === undefined) {
+                throw new Error("No Active Account")
+            }
+            return acc
+        });
         const auth = createTzAuthMessage(orbit, pk, pkh, action, cid);
         const { signature } = await client.requestSignPayload({
             signingType: SigningType.MICHELINE,
@@ -28,7 +32,6 @@ export const authenticator: AuthFactory<DAppClient> = async (client) => {
         });
         return auth + " " + signature
     }
-}
 
 export class Kepler<A extends Authenticator> {
     constructor(
@@ -36,8 +39,8 @@ export class Kepler<A extends Authenticator> {
         private auth: A,
     ) { }
 
-    public async get<T>(orbit: string, cid: string): Promise<T> {
-        return await this.orbit(orbit).get(cid)
+    public async get<T>(orbit: string, cid: string, authenticate: boolean = true): Promise<T> {
+        return await this.orbit(orbit).get(cid, authenticate)
     }
 
     // typed so that it takes at least 1 element
@@ -65,10 +68,10 @@ export class Orbit<A extends Authenticator> {
         return this.orbitId
     }
 
-    public async get<T>(cid: string): Promise<T> {
+    public async get<T>(cid: string, authenticate: boolean = true): Promise<T> {
         return await fetch(makeContentPath(this.url, this.orbit, cid), {
             method: "GET",
-            headers: { "Authorization": await this.auth(this.orbit, cid, Action.get) }
+            headers: authenticate ? { "Authorization": await this.auth(this.orbit, cid, Action.get) } : undefined
         }).then(async (res) => {
             if (res.status === 200) { return await res.json() }
             else { throw new Error(`Error: ${res.status} ${res.statusText}`) }
