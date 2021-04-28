@@ -39,6 +39,17 @@ export class Kepler<A extends Authenticator> {
         private auth: A,
     ) { }
 
+    public async resolve<T>(keplerUri: string, authenticate: boolean = true): Promise<T> {
+        if (!keplerUri.startsWith("kepler://")) throw new Error("Invalid Kepler URI");
+
+        let [versionedOrbit, cid] = keplerUri.split("/").slice(-2);
+        let orbit = versionedOrbit.split(":").pop();
+
+        if (!orbit || !cid) throw new Error("Invalid Kepler URI");
+
+        return await this.get(orbit, cid, authenticate)
+    }
+
     public async get<T>(orbit: string, cid: string, authenticate: boolean = true): Promise<T> {
         return await this.orbit(orbit).get(cid, authenticate)
     }
