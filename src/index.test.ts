@@ -24,7 +24,7 @@ describe('Kepler Client', () => {
     it('Creates auth tokens', async () => {
         const cid = 'uAYAEHiB0uGRNPXEMdA9L-lXR2MKIZzKlgW1z6Ug4fSv3LRSPfQ';
         const orbit = 'uAYAEHiB_A0nLzANfXNkW5WCju51Td_INJ6UacFK7qY6zejzKoA';
-        const auth = await authn(orbit , cid, Action.get)
+        const auth = await authn(orbit, cid, Action.get)
     })
 
     it('naive integration test', async () => {
@@ -36,10 +36,10 @@ describe('Kepler Client', () => {
 
         await expect(orbit.get(fakeCid)).rejects.toBeDefined();
 
-        const cid = await orbit.put(json);
+        const cid = await orbit.put(json).then(async (res) => await res.text());
 
-        await expect(orbit.get(cid)).resolves.toEqual(json)
-        return await expect(orbit.del(cid)).resolves.not.toThrow()
+        await expect(orbit.get(cid).then(async (res) => await res.json())).resolves.toEqual(json)
+        return await expect(orbit.del(cid).then(res => res.status)).resolves.toEqual(200)
     })
 
     it('naive integration multipart test', async () => {
@@ -50,7 +50,7 @@ describe('Kepler Client', () => {
         const json1 = { hello: 'hey' };
         const json2 = { hello: 'hey again' };
 
-        await expect(orbit.get(fakeCid)).rejects.toBeDefined();
+        await expect(orbit.get(fakeCid).then(res => res.status)).resolves.toEqual(200);
 
         const cids = await orbit.put(json1, json2);
         console.log(cids)

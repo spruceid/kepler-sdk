@@ -1,4 +1,4 @@
-import { DAppClient, SigningType, PermissionScope } from '@airgap/beacon-sdk'; 
+import { DAppClient, SigningType } from '@airgap/beacon-sdk';
 import fetch, { Response } from 'cross-fetch';
 import CID from 'cids';
 import multihashing from 'multihashing-async';
@@ -39,7 +39,7 @@ export class Kepler<A extends Authenticator> {
         private auth: A,
     ) { }
 
-    public async resolve<T>(keplerUri: string, authenticate: boolean = true): Promise<T> {
+    public async resolve(keplerUri: string, authenticate: boolean = true): Promise<Response> {
         if (!keplerUri.startsWith("kepler://")) throw new Error("Invalid Kepler URI");
 
         let [versionedOrbit, cid] = keplerUri.split("/").slice(-2);
@@ -50,16 +50,16 @@ export class Kepler<A extends Authenticator> {
         return await this.get(orbit, cid, authenticate)
     }
 
-    public async get<T>(orbit: string, cid: string, authenticate: boolean = true): Promise<T> {
+    public async get(orbit: string, cid: string, authenticate: boolean = true): Promise<Response> {
         return await this.orbit(orbit).get(cid, authenticate)
     }
 
     // typed so that it takes at least 1 element
-    public async put<T>(orbit: string, first: T, ...rest: T[]): Promise<string> {
+    public async put<T>(orbit: string, first: T, ...rest: T[]): Promise<Response> {
         return await this.orbit(orbit).put(first, ...rest)
     }
 
-    public async del(orbit: string, cid: string): Promise<void> {
+    public async del(orbit: string, cid: string): Promise<Response> {
         return await this.orbit(orbit).del(cid)
     }
 
@@ -79,17 +79,14 @@ export class Orbit<A extends Authenticator> {
         return this.orbitId
     }
 
-    public async get<T>(cid: string, authenticate: boolean = true): Promise<T> {
+    public async get(cid: string, authenticate: boolean = true): Promise<Response> {
         return await fetch(makeContentPath(this.url, this.orbit, cid), {
             method: "GET",
             headers: authenticate ? { "Authorization": await this.auth(this.orbit, cid, Action.get) } : undefined
-        }).then(async (res) => {
-            if (res.status === 200) { return await res.json() }
-            else { throw new Error(`Error: ${res.status} ${res.statusText}`) }
         })
     }
 
-    public async put<T>(first: T, ...rest: T[]): Promise<string> {
+    public async put<T>(first: T, ...rest: T[]): Promise<Response> {
         if (rest.length >= 1) {
             const data = new FormData();
             await addContent(data, first)
@@ -99,9 +96,6 @@ export class Orbit<A extends Authenticator> {
                 // @ts-ignore
                 body: data,
                 headers: { "Authorization": await this.auth(this.orbit, await makeJsonCid(first), Action.put) }
-            }).then(async (res) => {
-                if (res.status == 200) { return await res.text() }
-                else { throw new Error(`Error: ${res.status} ${res.statusText}`) }
             })
         } else {
             return await fetch(makeOrbitPath(this.url, this.orbit), {
@@ -111,20 +105,14 @@ export class Orbit<A extends Authenticator> {
                     "Authorization": await this.auth(this.orbit, await makeJsonCid(first), Action.put),
                     "Content-Type": "application/json"
                 }
-            }).then(async (res) => {
-                if (res.status == 200) { return await res.text() }
-                else { throw new Error(`Error: ${res.status} ${res.statusText}`) }
             })
         }
     }
 
-    public async del(cid: string): Promise<void> {
+    public async del(cid: string): Promise<Response> {
         return await fetch(makeContentPath(this.url, this.orbit, cid), {
             method: 'DELETE',
             headers: { 'Authorization': await this.auth(this.orbit, cid, Action.delete) }
-        }).then(res => {
-            if (res.status == 200) { return }
-            else { throw new Error(`Error: ${res.status} ${res.statusText}`) }
         })
     }
 }
@@ -137,7 +125,7 @@ export const stringEncoder = (s: string): string => {
 const addContent = async <T>(form: FormData, content: T) => {
     form.append(
         await makeJsonCid(content),
-        new Blob([ JSON.stringify(content) ], { type: 'application/json' })
+        new Blob([JSON.stringify(content)], { type: 'application/json' })
     );
 }
 
