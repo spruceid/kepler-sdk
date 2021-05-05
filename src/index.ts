@@ -33,10 +33,10 @@ export const authenticator: AuthFactory<DAppClient> = async (client) =>
         return auth + " " + signature
     }
 
-export class Kepler<A extends Authenticator> {
+export class Kepler {
     constructor(
         private url: string,
-        private auth: A,
+        private auth: Authenticator,
     ) { }
 
     public async resolve(keplerUri: string, authenticate: boolean = true): Promise<Response> {
