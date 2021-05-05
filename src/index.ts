@@ -10,28 +10,41 @@ export enum Action {
 }
 
 export interface Authenticator {
-    (orbit: string, cid: string, action: Action): Promise<string>;
+    content: (orbit: string, cids: string[], action: Action) => Promise<string>;
+    createOrbit: (cids: string[]) => Promise<string>;
 }
 
 export interface AuthFactory<B> {
-    <S extends B>(signer: S): Promise<Authenticator>;
+    <S extends B>(signer: S, domain: string): Promise<Authenticator>;
 }
 
-export const authenticator: AuthFactory<DAppClient> = async (client) =>
-    async (orbit: string, cid: string, action: Action): Promise<string> => {
-        const { publicKey: pk, address: pkh } = await client.getActiveAccount().then(acc => {
-            if (acc === undefined) {
-                throw new Error("No Active Account")
-            }
-            return acc
-        });
-        const auth = createTzAuthMessage(orbit, pk, pkh, action, cid);
-        const { signature } = await client.requestSignPayload({
-            signingType: SigningType.MICHELINE,
-            payload: stringEncoder(auth)
-        });
-        return auth + " " + signature
+export const authenticator: AuthFactory<DAppClient> = async (client, domain: string) => {
+    const { publicKey: pk, address: pkh } = await client.getActiveAccount().then(acc => {
+        if (acc === undefined) {
+            throw new Error("No Active Account")
+        }
+        return acc
+    });
+
+    return {
+        content: async (orbit: string, cids: string[], action: Action): Promise<string> => {
+            const auth = createTzAuthContentMessage(orbit, pk, pkh, action, cids);
+            const { signature } = await client.requestSignPayload({
+                signingType: SigningType.MICHELINE,
+                payload: stringEncoder(auth)
+            });
+            return auth + " " + signature
+        },
+        createOrbit: async (cids: string[]): Promise<string> => {
+            const auth = await createTzAuthCreationMessage(pk, pkh, cids, 'TZProfiles')
+            const { signature } = await client.requestSignPayload({
+                signingType: SigningType.MICHELINE,
+                payload: stringEncoder(auth)
+            });
+            return auth + " " + signature
+        }
     }
+}
 
 export class Kepler<A extends Authenticator> {
     constructor(
@@ -82,24 +95,25 @@ export class Orbit<A extends Authenticator> {
     public async get(cid: string, authenticate: boolean = true): Promise<Response> {
         return await fetch(makeContentPath(this.url, this.orbit, cid), {
             method: "GET",
-            headers: authenticate ? { "Authorization": await this.auth(this.orbit, cid, Action.get) } : undefined
+            headers: authenticate ? { "Authorization": await this.auth.content(this.orbit, [cid], Action.get) } : undefined
         })
     }
 
     public async put<T>(first: T, ...rest: T[]): Promise<Response> {
+        const auth = await this.auth.content(this.orbit, await Promise.all([first, ...rest].map(async (c) => await makeCid(c))), Action.put)
         if (rest.length >= 1) {
             return await fetch(makeOrbitPath(this.url, this.orbit), {
                 method: "POST",
                 // @ts-ignore
-                headers: { "Authorization": await this.auth(this.orbit, await makeJsonCid(first), Action.put) }
                 body: await makeFormRequest([first, ...rest]),
+                headers: { "Authorization": auth }
             })
         } else {
             return await fetch(makeOrbitPath(this.url, this.orbit), {
                 method: "POST",
                 body: JSON.stringify(first),
                 headers: {
-                    "Authorization": await this.auth(this.orbit, await makeJsonCid(first), Action.put),
+                    "Authorization": auth,
                     "Content-Type": "application/json"
                 }
             })
@@ -109,7 +123,7 @@ export class Orbit<A extends Authenticator> {
     public async del(cid: string): Promise<Response> {
         return await fetch(makeContentPath(this.url, this.orbit, cid), {
             method: 'DELETE',
-            headers: { 'Authorization': await this.auth(this.orbit, cid, Action.delete) }
+            headers: { 'Authorization': await this.auth.content(this.orbit, [cid], Action.delete) }
         })
     }
 }

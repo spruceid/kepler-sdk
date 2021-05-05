@@ -16,7 +16,7 @@ describe('Kepler Client', () => {
     let authn: Authenticator;
 
     beforeAll(async () => {
-        authn = await authenticator(new DAppClient({ name: "Test Client" }));
+        authn = await authenticator(new DAppClient({ name: "Test Client" }), 'test-domain');
     })
 
     it('Encodes strings correctly', () => expect(stringEncoder('message')).toBe('0501000000076d657373616765'))
@@ -24,7 +24,7 @@ describe('Kepler Client', () => {
     it('Creates auth tokens', async () => {
         const cid = 'uAYAEHiB0uGRNPXEMdA9L-lXR2MKIZzKlgW1z6Ug4fSv3LRSPfQ';
         const orbit = 'uAYAEHiB_A0nLzANfXNkW5WCju51Td_INJ6UacFK7qY6zejzKoA';
-        const auth = await authn(orbit, cid, Action.get)
+        const auth = await authn.content(orbit, [cid], Action.get)
     })
 
     it('naive integration test', async () => {
