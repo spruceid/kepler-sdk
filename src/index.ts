@@ -36,7 +36,7 @@ export const authenticator: AuthFactory<DAppClient> = async (client, domain: str
             return auth + " " + signature
         },
         createOrbit: async (cids: string[]): Promise<string> => {
-            const auth = await createTzAuthCreationMessage(pk, pkh, cids, 'TZProfiles')
+            const auth = await createTzAuthCreationMessage(pk, pkh, cids, domain)
             const { signature } = await client.requestSignPayload({
                 signingType: SigningType.MICHELINE,
                 payload: stringEncoder(auth)
@@ -68,7 +68,7 @@ export class Kepler {
     }
 
     // typed so that it takes at least 1 element
-    public async put<T>(orbit: string, first: T, ...rest: T[]): Promise<Response> {
+    public async put(orbit: string, first: any, ...rest: any[]): Promise<Response> {
         return await this.orbit(orbit).put(first, ...rest)
     }
 
@@ -80,7 +80,7 @@ export class Kepler {
         return new Orbit(this.url, orbit, this.auth);
     }
 
-    public async createOrbit<T>(first: T, ...rest: T[]): Promise<Response> {
+    public async createOrbit(first: any, ...rest: any[]): Promise<Response> {
         const auth = await this.auth.createOrbit(await Promise.all([first, ...rest].map(async (c) => await makeCid(c))))
         if (rest.length >= 1) {
             return await fetch(this.url, {
@@ -119,7 +119,7 @@ export class Orbit<A extends Authenticator> {
         })
     }
 
-    public async put<T>(first: T, ...rest: T[]): Promise<Response> {
+    public async put(first: any, ...rest: any[]): Promise<Response> {
         const auth = await this.auth.content(this.orbit, await Promise.all([first, ...rest].map(async (c) => await makeCid(c))), Action.put)
         if (rest.length >= 1) {
             return await fetch(makeOrbitPath(this.url, this.orbit), {
