@@ -88,14 +88,11 @@ export class Orbit<A extends Authenticator> {
 
     public async put<T>(first: T, ...rest: T[]): Promise<Response> {
         if (rest.length >= 1) {
-            const data = new FormData();
-            await addContent(data, first)
-            for (const content of rest) { await addContent(data, content) }
             return await fetch(makeOrbitPath(this.url, this.orbit), {
                 method: "POST",
                 // @ts-ignore
-                body: data,
                 headers: { "Authorization": await this.auth(this.orbit, await makeJsonCid(first), Action.put) }
+                body: await makeFormRequest([first, ...rest]),
             })
         } else {
             return await fetch(makeOrbitPath(this.url, this.orbit), {
@@ -124,15 +121,32 @@ export const stringEncoder = (s: string): string => {
 
 const addContent = async <T>(form: FormData, content: T) => {
     form.append(
-        await makeJsonCid(content),
+        await makeCid(content),
         new Blob([JSON.stringify(content)], { type: 'application/json' })
     );
 }
 
-const makeJsonCid = async <T>(content: T): Promise<string> => new CID(1, 'json', await multihashing(new TextEncoder().encode(JSON.stringify(content)), 'sha3-256')).toString('base64')
+const makeCid = async <T>(content: T, codec: string = 'json'): Promise<string> => new CID(1, codec, await multihashing(new TextEncoder().encode(JSON.stringify(content)), 'sha3-256')).toString('base64')
+
 const toPaddedHex = (n: number, padLen: number = 8, padChar: string = '0'): string =>
     n.toString(16).padStart(padLen, padChar)
-const createTzAuthMessage = (orbit: string, pk: string, pkh: string, action: Action, cid: string): string =>
-    `Tezos Signed Message: ${orbit}.kepler.net ${(new Date()).toISOString()} ${pk} ${pkh} ${action} ${cid}`
+
+export const getOrbitId = async (pkh: string, domain: string, nonce: number = 0): Promise<string> =>
+    await makeCid(`${pkh}:${domain}:${nonce}`, 'raw')
+
+const createTzAuthContentMessage = (orbit: string, pk: string, pkh: string, action: Action, cids: string[]): string =>
+    `Tezos Signed Message: kepler.net ${(new Date()).toISOString()} ${pk} ${pkh} ${orbit} ${action} ${cids.join(' ')}`
+
+const createTzAuthCreationMessage = async (pk: string, pkh: string, cids: string[], domain: string, nonce: number = 0): Promise<string> =>
+    `Tezos Signed Message: kepler.net %{(new Date()).toISOString()} ${pk} ${pkh} ${await getOrbitId(pkh, domain, nonce)} CREATE ${domain}:${nonce} ${cids.join(' ')}`
+
 const makeOrbitPath = (url: string, orbit: string): string => url + "/" + orbit
+
 const makeContentPath = (url: string, orbit: string, cid: string): string => makeOrbitPath(url, orbit) + "/" + cid
+
+const makeFormRequest = async <T>(first: T, ...rest: T[]): Promise<FormData> => {
+    const data = new FormData();
+    await addContent(data, first)
+    for (const content of rest) { await addContent(data, content) }
+    return data
+}
