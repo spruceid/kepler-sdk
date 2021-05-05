@@ -79,6 +79,26 @@ export class Kepler {
     public orbit(orbit: string): Orbit<A> {
         return new Orbit(this.url, orbit, this.auth);
     }
+
+    public async createOrbit<T>(first: T, ...rest: T[]): Promise<Response> {
+        const auth = await this.auth.createOrbit(await Promise.all([first, ...rest].map(async (c) => await makeCid(c))))
+        if (rest.length >= 1) {
+            return await fetch(this.url, {
+                method: 'POST',
+                body: await makeFormRequest([first, ...rest]),
+                headers: { 'Authorization': auth}
+            });
+        } else {
+            return await fetch(this.url, {
+                method: 'POST',
+                body: JSON.stringify(first),
+                headers: {
+                    'Authorization': auth,
+                    'Content-Type': 'application/json'
+                }
+            })
+        }
+    }
 }
 
 export class Orbit<A extends Authenticator> {
