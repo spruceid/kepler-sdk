@@ -76,7 +76,7 @@ export class Kepler {
         return await this.orbit(orbit).del(cid)
     }
 
-    public orbit(orbit: string): Orbit<A> {
+    public orbit(orbit: string): Orbit {
         return new Orbit(this.url, orbit, this.auth);
     }
 
@@ -101,11 +101,11 @@ export class Kepler {
     }
 }
 
-export class Orbit<A extends Authenticator> {
+export class Orbit {
     constructor(
         private url: string,
         private orbitId: string,
-        private auth: A,
+        private auth: Authenticator,
     ) { }
 
     public get orbit(): string {
