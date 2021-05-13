@@ -160,7 +160,7 @@ const addContent = async <T>(form: FormData, content: T) => {
     );
 }
 
-const makeCid = async <T>(content: T, codec: string = 'json'): Promise<string> => new CID(1, codec, await multihashing(new TextEncoder().encode(JSON.stringify(content)), 'blake2b-256')).toString('base58btc')
+const makeCid = async <T>(content: T, codec: string = 'json'): Promise<string> => new CID(1, codec, await multihashing(new TextEncoder().encode(typeof content === 'string' ? content : JSON.stringify(content)), 'blake2b-256')).toString('base58btc')
 
 const toPaddedHex = (n: number, padLen: number = 8, padChar: string = '0'): string =>
     n.toString(16).padStart(padLen, padChar)
