@@ -32,7 +32,7 @@ describe('Kepler Client', () => {
         const pkh = "tz1YSb7gXhgBw46nSXthhoSzhJdbQf9h92Gy"
         const domain = "TZProfiles"
 
-        return await expect(getOrbitId(pkh, domain)).resolves.toEqual(oid)
+        return await expect(getOrbitId(pkh, { domain })).resolves.toEqual(oid)
     })
 
     it('naive integration test', async () => {
