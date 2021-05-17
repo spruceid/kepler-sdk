@@ -175,7 +175,7 @@ export const orbitParams = (params: { [k: string]: string | number }): string =>
         p.append(key, typeof value === 'string' ? value : value.toString())
     }
     p.sort();
-    return p.toString()
+    return "?" + p.toString()
 }
 
 const createTzAuthContentMessage = (orbit: string, pk: string, pkh: string, action: Action, cids: string[]): string =>

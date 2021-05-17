@@ -28,26 +28,20 @@ describe('Kepler Client', () => {
     })
 
     it('Generates correct orbit IDs', async () => {
-        const oid = "zCT5htkeDcXL4DP4b7MMSNywaSRVRxTTynbvpKcYkdZKtoF3WgXb"
+        const oid = "zCT5htkeBWqcgBf37wwFThnV8sYYoddo8hzPr3j9TToTi1ctZ7mh"
         const pkh = "tz1YSb7gXhgBw46nSXthhoSzhJdbQf9h92Gy"
-        const domain = "TZProfiles"
+        const domain = "kepler.tzrofiles.com"
 
-        return await expect(getOrbitId(pkh, { domain })).resolves.toEqual(oid)
+        return await expect(getOrbitId(pkh, { domain, index: 0 })).resolves.toEqual(oid)
     })
 
     it('naive integration test', async () => {
-        const kepler = new Kepler('https://faad7ca90d6c.ngrok.io', authn);
-        const orbit = kepler.orbit('uAYAEHiB_A0nLzANfXNkW5WCju51Td_INJ6UacFK7qY6zejzKoA');
-        const fakeCid = "not_a_cid";
+        const kepler = new Kepler('http://localhost:8000', authn);
 
         const json = { hello: 'hey' };
+        const uri = await kepler.createOrbit(json).then(async res => res.text());
 
-        await expect(orbit.get(fakeCid)).rejects.toBeDefined();
-
-        const cid = await orbit.put(json).then(async (res) => await res.text());
-
-        await expect(orbit.get(cid).then(async (res) => await res.json())).resolves.toEqual(json)
-        return await expect(orbit.del(cid).then(res => res.status)).resolves.toEqual(200)
+        await expect(kepler.resolve(uri).then(async (res) => await res.json())).resolves.toEqual(json)
     })
 
     it('naive integration multipart test', async () => {
