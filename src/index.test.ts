@@ -7,11 +7,12 @@ import * as path from 'path';
 const ims = new InMemorySigner('edsk2gL9deG8idefWJJWNNtKXeszWR4FrEdNFM5622t1PkzH66oH3r');
 const mockAccount = jest.fn(async () => ({ publicKey: await ims.publicKey(), address: await ims.publicKeyHash() }));
 const mockSign = jest.fn(async ({ payload }) => ({ signature: await ims.sign(payload).then(res => res.prefixSig) }));
+const testDomain = 'kepler.tzprofiles.com'
 
 const buildContext = path.resolve(__dirname, '..');
 const dockerfile = 'test.Dockerfile';
 const keplerPort = 8000;
-const tempFs = '/temp';
+const keplerTempFs = '/temp';
 
 // @ts-ignore, mock DAppClient account info
 DAppClient.prototype.getActiveAccount = mockAccount;
@@ -25,16 +26,16 @@ describe('Kepler Client', () => {
     let keplerUrl: string;
 
     beforeAll(async () => {
-        authn = await authenticator(new DAppClient({ name: "Test Client" }), 'test-domain');
+        authn = await authenticator(new DAppClient({ name: "Test Client" }), testDomain);
 
         keplerContainer = await GenericContainer.fromDockerfile(buildContext, dockerfile)
             .build()
             .then(async c => await c.withExposedPorts(keplerPort)
-                .withTmpFs({ tempFs: "" })
-                .withEnv('KEPLER_DATABASE_PATH', tempFs)
+                .withTmpFs({ [keplerTempFs]: "" })
+                .withEnv('KEPLER_DATABASE_PATH', keplerTempFs)
                 .start())
 
-        keplerUrl = keplerContainer.getHost() + ":" + keplerContainer.getMappedPort(keplerPort)
+        keplerUrl = "http://" + keplerContainer.getHost() + ":" + keplerPort
         console.log(keplerUrl)
 
         await keplerContainer.logs().then(stream => {
