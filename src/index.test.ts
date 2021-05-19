@@ -1,10 +1,16 @@
 import { Kepler, Action, Authenticator, authenticator, stringEncoder, getOrbitId, orbitParams } from './';
 import { DAppClient } from '@airgap/beacon-sdk';
 import { InMemorySigner } from '@taquito/signer';
+import { GenericContainer, StartedTestContainer } from 'testcontainers';
+import * as path from 'path';
 
 const ims = new InMemorySigner('edsk2gL9deG8idefWJJWNNtKXeszWR4FrEdNFM5622t1PkzH66oH3r');
-const mockAccount = jest.fn(async () => ({ publicKey: await ims.publicKey(), address: await ims.publicKeyHash() }))
-const mockSign = jest.fn(async ({ payload }) => ({ signature: await ims.sign(payload).then(res => res.prefixSig) }))
+const mockAccount = jest.fn(async () => ({ publicKey: await ims.publicKey(), address: await ims.publicKeyHash() }));
+const mockSign = jest.fn(async ({ payload }) => ({ signature: await ims.sign(payload).then(res => res.prefixSig) }));
+
+const buildContext = path.resolve(__dirname);
+const dockerfile = 'test.Dockerfile';
+const keplerPort = 8000;
 
 // @ts-ignore, mock DAppClient account info
 DAppClient.prototype.getActiveAccount = mockAccount;
@@ -14,9 +20,16 @@ DAppClient.prototype.requestSignPayload = mockSign;
 
 describe('Kepler Client', () => {
     let authn: Authenticator;
+    let keplerContainer: StartedTestContainer;
+    let keplerUrl: string;
 
     beforeAll(async () => {
+        console.log(buildContext, dockerfile)
         authn = await authenticator(new DAppClient({ name: "Test Client" }), 'test-domain');
+        keplerContainer = await GenericContainer.fromDockerfile(buildContext, dockerfile)
+            .build()
+            .then(async c => await c.withExposedPorts(keplerPort).start())
+        keplerUrl = keplerContainer.getHost() + ":" + keplerContainer.getMappedPort(keplerPort)
     })
 
     it('Encodes strings correctly', () => expect(stringEncoder('message')).toBe('0501000000076d657373616765'))
@@ -44,7 +57,7 @@ describe('Kepler Client', () => {
     })
 
     it('naive integration test', async () => {
-        const kepler = new Kepler('http://localhost:8000', authn);
+        const kepler = new Kepler(keplerUrl, authn);
 
         const json = { hello: 'hey' };
         const uri = await kepler.createOrbit(json).then(async res => res.text());
@@ -53,7 +66,7 @@ describe('Kepler Client', () => {
     })
 
     it('naive integration multipart test', async () => {
-        const kepler = new Kepler('https://faad7ca90d6c.ngrok.io', authn);
+        const kepler = new Kepler(keplerUrl, authn);
         const orbit = kepler.orbit('uAYAEHiB_A0nLzANfXNkW5WCju51Td_INJ6UacFK7qY6zejzKoA');
         const fakeCid = "not_a_cid";
 
