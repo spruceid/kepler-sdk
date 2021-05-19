@@ -1,7 +1,7 @@
 {
   "name": "kepler-sdk",
-  "version": "0.4.0",
-  "main": "index.js",
+  "version": "0.6.0",
+  "main": "dist/index.js",
   "license": "Apache-2.0",
   "scripts": {
     "build": "tsc -p .",
@@ -10,7 +10,6 @@
   "files": [
     "/dist"
   ],
-  "main": "dist/index.js",
   "devDependencies": {
     "@taquito/signer": "^8.1.1",
     "@types/jest": "^26.0.22",
