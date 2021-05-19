@@ -28,7 +28,7 @@ export const authenticator: AuthFactory<DAppClient> = async (client, domain: str
 
     return {
         content: async (orbit: string, cids: string[], action: Action): Promise<string> => {
-            const auth = createTzAuthContentMessage(orbit, pk, pkh, action, cids);
+            const auth = createTzAuthContentMessage(orbit, pk, pkh, action, cids, domain);
             const { signature } = await client.requestSignPayload({
                 signingType: SigningType.MICHELINE,
                 payload: stringEncoder(auth)
@@ -178,11 +178,11 @@ export const orbitParams = (params: { [k: string]: string | number }): string =>
     return "?" + p.toString()
 }
 
-const createTzAuthContentMessage = (orbit: string, pk: string, pkh: string, action: Action, cids: string[]): string =>
-    `Tezos Signed Message: kepler.net ${(new Date()).toISOString()} ${pk} ${pkh} ${orbit} ${action} ${cids.join(' ')}`
+const createTzAuthContentMessage = (orbit: string, pk: string, pkh: string, action: Action, cids: string[], domain: string): string =>
+    `Tezos Signed Message: ${domain} ${(new Date()).toISOString()} ${pk} ${pkh} ${orbit} ${action} ${cids.join(' ')}`
 
-const createTzAuthCreationMessage = async (pk: string, pkh: string, cids: string[], params: { domain?: string; salt?: string; index?: number; }): Promise<string> =>
-    `Tezos Signed Message: kepler.net ${(new Date()).toISOString()} ${pk} ${pkh} ${await getOrbitId(pkh, params)} CREATE ${orbitParams(params)} ${cids.join(' ')}`
+const createTzAuthCreationMessage = async (pk: string, pkh: string, cids: string[], params: { domain: string; salt?: string; index?: number; }): Promise<string> =>
+    `Tezos Signed Message: ${params.domain} ${(new Date()).toISOString()} ${pk} ${pkh} ${await getOrbitId(pkh, params)} CREATE ${orbitParams(params)} ${cids.join(' ')}`
 
 const makeOrbitPath = (url: string, orbit: string): string => url + "/" + orbit
 
