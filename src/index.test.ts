@@ -8,9 +8,10 @@ const ims = new InMemorySigner('edsk2gL9deG8idefWJJWNNtKXeszWR4FrEdNFM5622t1PkzH
 const mockAccount = jest.fn(async () => ({ publicKey: await ims.publicKey(), address: await ims.publicKeyHash() }));
 const mockSign = jest.fn(async ({ payload }) => ({ signature: await ims.sign(payload).then(res => res.prefixSig) }));
 
-const buildContext = path.resolve(__dirname);
+const buildContext = path.resolve(__dirname, '..');
 const dockerfile = 'test.Dockerfile';
 const keplerPort = 8000;
+const tempFs = '/temp';
 
 // @ts-ignore, mock DAppClient account info
 DAppClient.prototype.getActiveAccount = mockAccount;
@@ -24,13 +25,30 @@ describe('Kepler Client', () => {
     let keplerUrl: string;
 
     beforeAll(async () => {
-        console.log(buildContext, dockerfile)
         authn = await authenticator(new DAppClient({ name: "Test Client" }), 'test-domain');
+
         keplerContainer = await GenericContainer.fromDockerfile(buildContext, dockerfile)
             .build()
-            .then(async c => await c.withExposedPorts(keplerPort).start())
+            .then(async c => await c.withExposedPorts(keplerPort)
+                .withTmpFs({ tempFs: "" })
+                .withEnv('KEPLER_DATABASE_PATH', tempFs)
+                .start())
+
         keplerUrl = keplerContainer.getHost() + ":" + keplerContainer.getMappedPort(keplerPort)
-    })
+        console.log(keplerUrl)
+
+        await keplerContainer.logs().then(stream => {
+            stream.on('data', line => console.log(line));
+            stream.on('err', line => console.error(line));
+            stream.on('end', () => console.log("Kepler container stream closed"));
+        })
+        // 10 minute time limit for building the container
+    }, 600000)
+
+    afterAll(async () => {
+        await keplerContainer.stop()
+        // 1 minute time limit for stopping the container
+    }, 60000)
 
     it('Encodes strings correctly', () => expect(stringEncoder('message')).toBe('0501000000076d657373616765'))
 
