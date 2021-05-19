@@ -1,4 +1,4 @@
-import { Kepler, Action, Authenticator, authenticator, stringEncoder, getOrbitId, orbitParams } from './';
+import { Kepler, Orbit, Action, Authenticator, authenticator, stringEncoder, getOrbitId } from './';
 import { DAppClient } from '@airgap/beacon-sdk';
 import { InMemorySigner } from '@taquito/signer';
 import { GenericContainer, StartedTestContainer } from 'testcontainers';
@@ -59,20 +59,11 @@ describe('Kepler Client', () => {
         const auth = await authn.content(orbit, [cid], Action.get)
     })
 
-    it('Generates correct orbit parameters', async () => {
-        const params = ";address=tz1YSb7gXhgBw46nSXthhoSzhJdbQf9h92Gy;domain=kepler.tzprofiles.com;index=0"
-        const pkh = "tz1YSb7gXhgBw46nSXthhoSzhJdbQf9h92Gy"
-        const domain = "kepler.tzprofiles.com"
-
-        return expect(orbitParams({ address: pkh, domain, index: 0 })).toEqual(params)
-    })
-
     it('Generates correct orbit IDs', async () => {
-        const oid = "zCT5htkeBtA6Qu5YF4vPkQcfeqy3pY4m8zxGdUKUiPgtPEbY3rHy"
+        const oid = "zCT5htkeE1yGCAKVUL8WGLptEGJ5EwLV3i25RjRPhPUsQYGQpjX9"
         const pkh = "tz1YSb7gXhgBw46nSXthhoSzhJdbQf9h92Gy"
-        const domain = "kepler.tzprofiles.com"
 
-        return await expect(getOrbitId(pkh, { domain, index: 0 })).resolves.toEqual(oid)
+        return await expect(getOrbitId(pkh, { domain: testDomain, index: 0 })).resolves.toEqual(oid)
     })
 
     it('naive integration test', async () => {
@@ -86,18 +77,22 @@ describe('Kepler Client', () => {
 
     it('naive integration multipart test', async () => {
         const kepler = new Kepler(keplerUrl, authn);
-        const orbit = kepler.orbit('uAYAEHiB_A0nLzANfXNkW5WCju51Td_INJ6UacFK7qY6zejzKoA');
+        const orbit = kepler.orbit(await getOrbitId(await ims.publicKeyHash(), { domain: testDomain, index: 0 }));
         const fakeCid = "not_a_cid";
 
-        const json1 = { hello: 'hey' };
-        const json2 = { hello: 'hey again' };
+        const json0 = { hello: 'hey' };
+        const json1 = { hello: 'hey again' };
 
-        await expect(orbit.get(fakeCid).then(res => res.status)).resolves.toEqual(200);
+        await expect(orbit.get(fakeCid).then(res => res.status)).resolves.toEqual(404);
 
-        const cids = await orbit.put(json1, json2);
-        console.log(cids)
+        const uris = await orbit.put(json0, json1).then(async res => await res.text()).then(t => t.split("\n"));
+        console.log(uris)
+        const cid = uris[0].split("/").slice(-1)[0]
 
-        // await expect(orbit.get(cid)).resolves.toEqual(json)
-        // return await expect(orbit.del(cid)).resolves.not.toThrow()
+        await expect(orbit.get(uris[0]).then(async res => await res.json())).resolves.toEqual(json0)
+        await expect(orbit.get(uris[1]).then(async res => await res.json())).resolves.toEqual(json1)
+
+        await expect(orbit.del(cid)).resolves.not.toThrow()
+        await expect(orbit.get(uris[0]).then(async res => res.status)).resolves.toEqual(404)
     })
 })
