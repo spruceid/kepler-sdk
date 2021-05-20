@@ -70,9 +70,12 @@ describe('Kepler Client', () => {
         const kepler = new Kepler(keplerUrl, authn);
 
         const json = { hello: 'hey' };
-        const uri = await kepler.createOrbit(json).then(async res => res.text());
+        console.log(process.version)
+        const res = await kepler.createOrbit(json);
+        expect(res.status).toEqual(200)
 
-        await expect(kepler.resolve(uri).then(async (res) => await res.json())).resolves.toEqual(json)
+        const uri = await res.text()
+        await expect(kepler.resolve(uri).then(async res => await res.json())).resolves.toEqual(json)
     })
 
     it('naive integration multipart test', async () => {
@@ -87,12 +90,13 @@ describe('Kepler Client', () => {
 
         const uris = await orbit.put(json0, json1).then(async res => await res.text()).then(t => t.split("\n"));
         console.log(uris)
-        const cid = uris[0].split("/").slice(-1)[0]
+        const cids = uris.map(uri => uri.split("/").slice(-1)[0])
+        console.log(cids)
 
-        await expect(orbit.get(uris[0]).then(async res => await res.json())).resolves.toEqual(json0)
-        await expect(orbit.get(uris[1]).then(async res => await res.json())).resolves.toEqual(json1)
+        await expect(orbit.get(cids[0]).then(async res => await res.json())).resolves.toEqual(json0)
+        await expect(orbit.get(cids[1]).then(async res => await res.json())).resolves.toEqual(json1)
 
-        await expect(orbit.del(cid)).resolves.not.toThrow()
-        await expect(orbit.get(uris[0]).then(async res => res.status)).resolves.toEqual(404)
+        await expect(orbit.del(cids[0])).resolves.not.toThrow()
+        await expect(orbit.get(cids[0]).then(async res => res.status)).resolves.toEqual(404)
     })
 })
