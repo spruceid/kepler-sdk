@@ -2,6 +2,8 @@ import {DAppClient, SigningType} from '@airgap/beacon-sdk';
 import fetch, {Response} from 'cross-fetch';
 import CID from 'cids';
 import multihashing from 'multihashing-async';
+import Blob from 'cross-blob';
+import FormData from 'form-data';
 
 export enum Action {
     get = 'GET',
@@ -90,6 +92,7 @@ export class Kepler {
         if (rest.length >= 1) {
             return await fetch(this.url, {
                 method: 'POST',
+                // @ts-ignore
                 body: await makeFormRequest(first, ...rest),
                 headers: {'Authorization': auth}
             });
