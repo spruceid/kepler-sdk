@@ -28,7 +28,7 @@ describe('Kepler Client', () => {
     })
 
     it('Generates correct orbit IDs', async () => {
-        const oid = "zCT5htkeBWqcgBf37wwFThnV8sYYoddo8hzPr3j9TToTi1ctZ7mh"
+        const oid = "zCT5htke5f3z7C77jRXmmmHwHHF2xXaoNuQiQ96wmp3nGke8PxpL"
         const pkh = "tz1YSb7gXhgBw46nSXthhoSzhJdbQf9h92Gy"
         const domain = "kepler.tzrofiles.com"
 

@@ -166,7 +166,7 @@ const toPaddedHex = (n: number, padLen: number = 8, padChar: string = '0'): stri
     n.toString(16).padStart(padLen, padChar)
 
 export const getOrbitId = async (pkh: string, params: { domain?: string; salt?: string; index?: number; } = {}): Promise<string> => {
-    return await makeCid(`tz:${pkh}${orbitParams(params)}`, 'raw');
+    return await makeCid(`tz${orbitParams({ address: pkh, ...params })}`, 'raw');
 }
 
 export const orbitParams = (params: { [k: string]: string | number }): string => {
