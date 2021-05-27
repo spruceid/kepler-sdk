@@ -1,4 +1,4 @@
-import { Kepler, Orbit, Action, Authenticator, authenticator, stringEncoder, getOrbitId } from './';
+import { Kepler, Action, Authenticator, authenticator, stringEncoder, getOrbitId, orbitParams } from './';
 import { DAppClient } from '@airgap/beacon-sdk';
 import { InMemorySigner } from '@taquito/signer';
 
@@ -27,10 +27,18 @@ describe('Kepler Client', () => {
         const auth = await authn.content(orbit, [cid], Action.get)
     })
 
-    it('Generates correct orbit IDs', async () => {
-        const oid = "zCT5htkeBWqcgBf37wwFThnV8sYYoddo8hzPr3j9TToTi1ctZ7mh"
+    it('Generates correct orbit parameters', async () => {
+        const params = ";address=tz1YSb7gXhgBw46nSXthhoSzhJdbQf9h92Gy;domain=kepler.tzprofiles.com;index=0"
         const pkh = "tz1YSb7gXhgBw46nSXthhoSzhJdbQf9h92Gy"
-        const domain = "kepler.tzrofiles.com"
+        const domain = "kepler.tzprofiles.com"
+
+        return expect(orbitParams({ address: pkh, domain, index: 0 })).toEqual(params)
+    })
+
+    it('Generates correct orbit IDs', async () => {
+        const oid = "zCT5htkeBtA6Qu5YF4vPkQcfeqy3pY4m8zxGdUKUiPgtPEbY3rHy"
+        const pkh = "tz1YSb7gXhgBw46nSXthhoSzhJdbQf9h92Gy"
+        const domain = "kepler.tzprofiles.com"
 
         return await expect(getOrbitId(pkh, { domain, index: 0 })).resolves.toEqual(oid)
     })

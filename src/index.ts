@@ -166,16 +166,16 @@ const toPaddedHex = (n: number, padLen: number = 8, padChar: string = '0'): stri
     n.toString(16).padStart(padLen, padChar)
 
 export const getOrbitId = async (pkh: string, params: { domain?: string; salt?: string; index?: number; } = {}): Promise<string> => {
-    return await makeCid(`tz:${pkh}${orbitParams(params)}`, 'raw');
+    return await makeCid(`tz${orbitParams({ address: pkh, ...params })}`, 'raw');
 }
 
 export const orbitParams = (params: { [k: string]: string | number }): string => {
-    let p = new URLSearchParams();
+    let p = [];
     for (const [key, value] of Object.entries(params)) {
-        p.append(key, typeof value === 'string' ? value : value.toString())
+        p.push(`${key}=${typeof value === 'string' ? value : value.toString()}`);
     }
     p.sort();
-    return "?" + p.toString()
+    return ';' + p.join(';');
 }
 
 const createTzAuthContentMessage = (orbit: string, pk: string, pkh: string, action: Action, cids: string[], domain: string): string =>
