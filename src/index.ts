@@ -4,9 +4,10 @@ import CID from 'cids';
 import multihashing from 'multihashing-async';
 
 export enum Action {
-    get = "GET",
-    put = "PUT",
-    delete = "DEL"
+    get = 'GET',
+    put = 'PUT',
+    delete = 'DEL',
+    list = 'LIST'
 }
 
 export interface Authenticator {
@@ -74,6 +75,10 @@ export class Kepler {
 
     public async del(orbit: string, cid: string): Promise<Response> {
         return await this.orbit(orbit).del(cid)
+    }
+
+    public async list(orbit: string): Promise<Response> {
+        return await this.orbit(orbit).list()
     }
 
     public orbit(orbit: string): Orbit {
@@ -145,6 +150,10 @@ export class Orbit {
             method: 'DELETE',
             headers: {'Authorization': await this.auth.content(this.orbit, [cid], Action.delete)}
         })
+    }
+
+    public async list(): Promise<Response> {
+        return await fetch(makeOrbitPath(this.url, this.orbit), { method: 'GET', headers: { 'Authorization': await this.auth.content(this.orbit, [], Action.list) } })
     }
 }
 
