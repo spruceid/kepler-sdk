@@ -1,4 +1,5 @@
 import {DAppClient, SigningType} from '@airgap/beacon-sdk';
+import Web3 from 'web3';
 import fetch, {Response} from 'cross-fetch';
 import CID from 'cids';
 import multihashing from 'multihashing-async';
@@ -19,7 +20,7 @@ export interface AuthFactory<B> {
     <S extends B>(signer: S, domain: string): Promise<Authenticator>;
 }
 
-export const authenticator: AuthFactory<DAppClient> = async (client, domain: string) => {
+export const tezosAuthenticator: AuthFactory<DAppClient> = async (client, domain: string) => {
     const {publicKey: pk, address: pkh} = await client.getActiveAccount().then(acc => {
         if (acc === undefined) {
             throw new Error("No Active Account")
@@ -42,6 +43,28 @@ export const authenticator: AuthFactory<DAppClient> = async (client, domain: str
                 signingType: SigningType.MICHELINE,
                 payload: stringEncoder(auth)
             });
+            return auth + " " + signature
+        }
+    }
+}
+
+export const ethAuthenticator: AuthFactory<Web3> = async (client, domain: string) => {
+    const accounts = await client.eth.getAccounts();
+    if (accounts.length === 0) {
+        throw new Error("No Active Account")
+    }
+    // TODO Assuming only one account
+    const pkh = accounts[0];
+
+    return {
+        content: async (orbit: string, cids: string[], action: Action): Promise<string> => {
+            const auth = createEthAuthContentMessage(orbit, pkh, action, cids, domain);
+            const signature = await client.eth.sign(auth, pkh);
+            return auth + " " + signature
+        },
+        createOrbit: async (cids: string[]): Promise<string> => {
+            const auth = await createEthAuthCreationMessage(pkh, cids, {address: pkh, domain, index: 0})
+            const signature = await client.eth.sign(auth, pkh);
             return auth + " " + signature
         }
     }
@@ -174,8 +197,8 @@ const makeCid = async <T>(content: T, codec: string = 'json'): Promise<string> =
 const toPaddedHex = (n: number, padLen: number = 8, padChar: string = '0'): string =>
     n.toString(16).padStart(padLen, padChar)
 
-export const getOrbitId = async (pkh: string, params: {domain?: string; salt?: string; index?: number;} = {}): Promise<string> => {
-    return await makeCid(`tz${orbitParams({address: pkh, ...params})}`, 'raw');
+export const getOrbitId = async (type_: string, pkh: string, params: {domain?: string; salt?: string; index?: number;} = {}): Promise<string> => {
+    return await makeCid(`${type_}${orbitParams({address: pkh, ...params})}`, 'raw');
 }
 
 export const orbitParams = (params: {[k: string]: string | number}): string => {
@@ -189,9 +212,13 @@ export const orbitParams = (params: {[k: string]: string | number}): string => {
 
 const createTzAuthContentMessage = (orbit: string, pk: string, pkh: string, action: Action, cids: string[], domain: string): string =>
     `Tezos Signed Message: ${domain} ${(new Date()).toISOString()} ${pk} ${pkh} ${orbit} ${action} ${cids.join(' ')}`
+const createEthAuthContentMessage = (orbit: string, pkh: string, action: Action, cids: string[], domain: string): string =>
+    `${domain} ${(new Date()).toISOString()} ${pkh} ${orbit} ${action} ${cids.join(' ')}`
 
 const createTzAuthCreationMessage = async (pk: string, pkh: string, cids: string[], params: {address: string; domain: string; salt?: string; index?: number;}): Promise<string> =>
-    `Tezos Signed Message: ${params.domain} ${(new Date()).toISOString()} ${pk} ${pkh} ${await getOrbitId(pkh, params)} CREATE tz${orbitParams(params)} ${cids.join(' ')}`
+    `Tezos Signed Message: ${params.domain} ${(new Date()).toISOString()} ${pk} ${pkh} ${await getOrbitId("tz", pkh, params)} CREATE tz${orbitParams(params)} ${cids.join(' ')}`
+const createEthAuthCreationMessage = async (pkh: string, cids: string[], params: {address: string; domain: string; salt?: string; index?: number;}): Promise<string> =>
+    `${params.domain} ${(new Date()).toISOString()} ${pkh} ${await getOrbitId("eth", pkh, params)} CREATE eth${orbitParams(params)} ${cids.join(' ')}`
 
 const makeOrbitPath = (url: string, orbit: string): string => url + "/" + orbit
 
