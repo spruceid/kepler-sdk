@@ -14,7 +14,7 @@ export const ethAuthenticator: AuthFactory<any> = async (client, domain: string)
     return {
         content: async (orbit: string, cids: string[], action: Action): Promise<string> => {
             const inv = invProps(action);
-            const prep = await prepareInvocation(`kepler://${orbit}/read`, inv, sigProps(`did:eth:pkh:{pkh}`), keyProps);
+            const prep = await prepareInvocation(`kepler://${orbit}/read`, inv, sigProps(`did:pkh:eth:{pkh}`), keyProps);
             if (!prep || prep.signingInput === undefined || prep.signingInput.primaryType === undefined) {
                 console.log("Proof preparation:", prep);
                 throw new Error("Expected EIP-712 TypedData");
@@ -27,7 +27,7 @@ export const ethAuthenticator: AuthFactory<any> = async (client, domain: string)
         },
         createOrbit: async (cids: string[]): Promise<string> => {
             const inv = invProps('Create');
-            const prep = await prepareInvocation("orbit_id", inv, sigProps(`did:eth:pkh:{pkh}`), keyProps);
+            const prep = await prepareInvocation("orbit_id", inv, sigProps(`did:pkh:eth:{pkh}`), keyProps);
             if (!prep || prep.signingInput === undefined || prep.signingInput.primaryType === undefined) {
                 console.log("Proof preparation:", prep);
                 throw new Error("Expected EIP-712 TypedData");
