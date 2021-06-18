@@ -1,8 +1,9 @@
-import {DAppClient, SigningType} from '@airgap/beacon-sdk';
+import { DAppClient, SigningType } from '@airgap/beacon-sdk';
 import Web3 from 'web3';
-import fetch, {Response} from 'cross-fetch';
+import fetch, { Response } from 'cross-fetch';
 import CID from 'cids';
 import multihashing from 'multihashing-async';
+import * as zcap from './zcap';
 
 export enum Action {
     get = 'GET',
