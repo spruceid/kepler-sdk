@@ -1,9 +1,8 @@
 import { DAppClient, SigningType } from '@airgap/beacon-sdk';
-import Web3 from 'web3';
 import fetch, { Response } from 'cross-fetch';
 import CID from 'cids';
 import multihashing from 'multihashing-async';
-import * as zcap from './zcap';
+export { ethAuthenticator } from './zcap';
 
 export enum Action {
     get = 'GET',
@@ -49,33 +48,11 @@ export const tezosAuthenticator: AuthFactory<DAppClient> = async (client, domain
     }
 }
 
-export const ethAuthenticator: AuthFactory<Web3> = async (client, domain: string) => {
-    const accounts = await client.eth.getAccounts();
-    if (accounts.length === 0) {
-        throw new Error("No Active Account")
-    }
-    // TODO Assuming only one account
-    const pkh = accounts[0];
-
-    return {
-        content: async (orbit: string, cids: string[], action: Action): Promise<string> => {
-            const auth = createEthAuthContentMessage(orbit, pkh, action, cids, domain);
-            const signature = await client.eth.sign(auth, pkh);
-            return auth + " " + signature
-        },
-        createOrbit: async (cids: string[]): Promise<string> => {
-            const auth = await createEthAuthCreationMessage(pkh, cids, {address: pkh, domain, index: 0})
-            const signature = await client.eth.sign(auth, pkh);
-            return auth + " " + signature
-        }
-    }
-}
-
 export class Kepler {
     constructor(
         private url: string,
         private auth: Authenticator,
-    ) {}
+    ) { }
 
     public async resolve(keplerUri: string, authenticate: boolean = true): Promise<Response> {
         if (!keplerUri.startsWith("kepler://")) throw new Error("Invalid Kepler URI");

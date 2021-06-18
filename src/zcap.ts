@@ -39,7 +39,7 @@ export const ethAuthenticator: AuthFactory<Web3> = async (client, domain: string
 const keyProps = { "kty": "EC", "crv": "secp256k1", "alg": "ES256K-R", "key_ops": ["signTypedData"] };
 
 const invProps = (capabilityAction: string = 'Read') => ({
-    "@context": "https://w3id...",
+    "@context": "https://w3id.org/security/v2",
     id: "urn",
     capabilityAction
 })
@@ -58,7 +58,7 @@ const sigProps = (did: string) => ({
                 { "name": "name", "type": "string" }
             ],
             "CapabilityInvocation": [
-                { "name": "@context", "type": "string[]" },
+                { "name": "@context", "type": "string" },
                 { "name": "id", "type": "string" },
                 { "name": "capabilityAction", "type": "string" },
                 { "name": "proof", "type": "Proof" }
