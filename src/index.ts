@@ -17,10 +17,10 @@ export interface Authenticator {
 }
 
 export interface AuthFactory<B> {
-    <S extends B>(signer: S, domain: string): Promise<Authenticator>;
+    <S extends B>(signer: S, domain: string, prepareInvokeCapability: any, completeInvokeCapability: any): Promise<Authenticator>;
 }
 
-export const tezosAuthenticator: AuthFactory<DAppClient> = async (client, domain: string) => {
+export const tezosAuthenticator: AuthFactory<DAppClient> = async (client, domain: string, prepareInvokeCapability: any, completeInvokeCapability: any) => {
     const {publicKey: pk, address: pkh} = await client.getActiveAccount().then(acc => {
         if (acc === undefined) {
             throw new Error("No Active Account")
@@ -53,6 +53,8 @@ export class Kepler {
         private url: string,
         private auth: Authenticator,
         private delegation: string,
+        private prepareInvocationCapability: any,
+        private completeInvocationCapability: any,
     ) { }
 
     public async resolve(keplerUri: string, authenticate: boolean = true): Promise<Response> {

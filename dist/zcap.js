@@ -36,10 +36,9 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.completeInvocation = exports.prepareInvocation = exports.ethAuthenticator = void 0;
-var didkit_wasm_1 = require("didkit-wasm");
-var ethAuthenticator = function (client, domain) { return __awaiter(void 0, void 0, void 0, function () {
-    var accounts, pkh;
+exports.ethAuthenticator = void 0;
+var ethAuthenticator = function (client, domain, prepareInvokeCapability, completeInvokeCapability) { return __awaiter(void 0, void 0, void 0, function () {
+    var accounts, pkh, prepareInvocation, completeInvocation;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0: return [4 /*yield*/, client.request({ method: 'eth_accounts' })];
@@ -49,6 +48,22 @@ var ethAuthenticator = function (client, domain) { return __awaiter(void 0, void
                     throw new Error("No Active Account");
                 }
                 pkh = accounts[0];
+                prepareInvocation = function (target_id, invProps, sigOpts, pk) { return __awaiter(void 0, void 0, void 0, function () { var _a, _b; return __generator(this, function (_c) {
+                    switch (_c.label) {
+                        case 0:
+                            _b = (_a = JSON).parse;
+                            return [4 /*yield*/, prepareInvokeCapability(JSON.stringify(invProps), target_id, JSON.stringify(sigOpts), JSON.stringify(pk))];
+                        case 1: return [2 /*return*/, _b.apply(_a, [_c.sent()])];
+                    }
+                }); }); };
+                completeInvocation = function (invProps, preperation, signature) { return __awaiter(void 0, void 0, void 0, function () { var _a, _b; return __generator(this, function (_c) {
+                    switch (_c.label) {
+                        case 0:
+                            _b = (_a = JSON).parse;
+                            return [4 /*yield*/, completeInvokeCapability(invProps, JSON.stringify(preperation), signature)];
+                        case 1: return [2 /*return*/, _b.apply(_a, [_c.sent()])];
+                    }
+                }); }); };
                 return [2 /*return*/, {
                         content: function (orbit, cids, action) { return __awaiter(void 0, void 0, void 0, function () {
                             var inv, prep, signature, _a, _b, _c;
@@ -57,7 +72,7 @@ var ethAuthenticator = function (client, domain) { return __awaiter(void 0, void
                                 switch (_e.label) {
                                     case 0:
                                         inv = invProps(action);
-                                        return [4 /*yield*/, exports.prepareInvocation("kepler://" + orbit + "/read", inv, sigProps("did:pkh:eth:{pkh}"), keyProps)];
+                                        return [4 /*yield*/, prepareInvocation("kepler://" + orbit + "/read", inv, sigProps("did:pkh:eth:{pkh}"), keyProps)];
                                     case 1:
                                         prep = _e.sent();
                                         if (!prep || prep.signingInput === undefined || prep.signingInput.primaryType === undefined) {
@@ -73,7 +88,7 @@ var ethAuthenticator = function (client, domain) { return __awaiter(void 0, void
                                         _d = {};
                                         _a = "Invocation";
                                         _c = (_b = JSON).stringify;
-                                        return [4 /*yield*/, exports.completeInvocation(inv, prep, signature)];
+                                        return [4 /*yield*/, completeInvocation(inv, prep, signature)];
                                     case 3: return [2 /*return*/, (_d[_a] = _c.apply(_b, [_e.sent()]), _d)];
                                 }
                             });
@@ -85,7 +100,7 @@ var ethAuthenticator = function (client, domain) { return __awaiter(void 0, void
                                 switch (_e.label) {
                                     case 0:
                                         inv = invProps('Create');
-                                        return [4 /*yield*/, exports.prepareInvocation("orbit_id", inv, sigProps("did:pkh:eth:{pkh}"), keyProps)];
+                                        return [4 /*yield*/, prepareInvocation("orbit_id", inv, sigProps("did:pkh:eth:{pkh}"), keyProps)];
                                     case 1:
                                         prep = _e.sent();
                                         if (!prep || prep.signingInput === undefined || prep.signingInput.primaryType === undefined) {
@@ -101,7 +116,7 @@ var ethAuthenticator = function (client, domain) { return __awaiter(void 0, void
                                         _d = {};
                                         _a = "Invocation";
                                         _c = (_b = JSON).stringify;
-                                        return [4 /*yield*/, exports.completeInvocation(inv, prep, signature)];
+                                        return [4 /*yield*/, completeInvocation(inv, prep, signature)];
                                     case 3: return [2 /*return*/, (_d[_a] = _c.apply(_b, [_e.sent()]), _d)];
                                 }
                             });
@@ -150,21 +165,3 @@ var sigProps = function (did) { return ({
         }
     }
 }); };
-var prepareInvocation = function (target_id, invProps, sigOpts, pk) { return __awaiter(void 0, void 0, void 0, function () { var _a, _b; return __generator(this, function (_c) {
-    switch (_c.label) {
-        case 0:
-            _b = (_a = JSON).parse;
-            return [4 /*yield*/, didkit_wasm_1.prepareInvokeCapability(JSON.stringify(invProps), target_id, JSON.stringify(sigOpts), JSON.stringify(pk))];
-        case 1: return [2 /*return*/, _b.apply(_a, [_c.sent()])];
-    }
-}); }); };
-exports.prepareInvocation = prepareInvocation;
-var completeInvocation = function (invProps, preperation, signature) { return __awaiter(void 0, void 0, void 0, function () { var _a, _b; return __generator(this, function (_c) {
-    switch (_c.label) {
-        case 0:
-            _b = (_a = JSON).parse;
-            return [4 /*yield*/, didkit_wasm_1.completeInvokeCapability(invProps, JSON.stringify(preperation), signature)];
-        case 1: return [2 /*return*/, _b.apply(_a, [_c.sent()])];
-    }
-}); }); };
-exports.completeInvocation = completeInvocation;

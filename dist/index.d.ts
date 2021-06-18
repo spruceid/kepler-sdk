@@ -11,14 +11,16 @@ export interface Authenticator {
     createOrbit: (cids: string[]) => Promise<HeadersInit>;
 }
 export interface AuthFactory<B> {
-    <S extends B>(signer: S, domain: string): Promise<Authenticator>;
+    <S extends B>(signer: S, domain: string, prepareInvokeCapability: any, completeInvokeCapability: any): Promise<Authenticator>;
 }
 export declare const tezosAuthenticator: AuthFactory<DAppClient>;
 export declare class Kepler {
     private url;
     private auth;
     private delegation;
-    constructor(url: string, auth: Authenticator, delegation: string);
+    private prepareInvocationCapability;
+    private completeInvocationCapability;
+    constructor(url: string, auth: Authenticator, delegation: string, prepareInvocationCapability: any, completeInvocationCapability: any);
     resolve(keplerUri: string, authenticate?: boolean): Promise<Response>;
     get(orbit: string, cid: string, authenticate?: boolean): Promise<Response>;
     put(orbit: string, first: any, ...rest: any[]): Promise<Response>;

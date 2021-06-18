@@ -69,7 +69,7 @@ var Action;
     Action["delete"] = "DEL";
     Action["list"] = "LIST";
 })(Action = exports.Action || (exports.Action = {}));
-var tezosAuthenticator = function (client, domain) { return __awaiter(void 0, void 0, void 0, function () {
+var tezosAuthenticator = function (client, domain, prepareInvokeCapability, completeInvokeCapability) { return __awaiter(void 0, void 0, void 0, function () {
     var _a, pk, pkh;
     return __generator(this, function (_b) {
         switch (_b.label) {
@@ -121,10 +121,12 @@ var tezosAuthenticator = function (client, domain) { return __awaiter(void 0, vo
 }); };
 exports.tezosAuthenticator = tezosAuthenticator;
 var Kepler = /** @class */ (function () {
-    function Kepler(url, auth, delegation) {
+    function Kepler(url, auth, delegation, prepareInvocationCapability, completeInvocationCapability) {
         this.url = url;
         this.auth = auth;
         this.delegation = delegation;
+        this.prepareInvocationCapability = prepareInvocationCapability;
+        this.completeInvocationCapability = completeInvocationCapability;
     }
     Kepler.prototype.resolve = function (keplerUri, authenticate) {
         if (authenticate === void 0) { authenticate = true; }

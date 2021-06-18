@@ -1,15 +1,20 @@
-import { prepareInvokeCapability, completeInvokeCapability } from 'didkit-wasm';
 import { AuthFactory, Action } from "."
 
 type Preperation = any;
 
-export const ethAuthenticator: AuthFactory<any> = async (client, domain: string) => {
+export const ethAuthenticator: AuthFactory<any> = async (client, domain: string, prepareInvokeCapability: any, completeInvokeCapability: any) => {
     const accounts = await client.request({ method: 'eth_accounts' });
     if (accounts.length === 0) {
         throw new Error("No Active Account")
     }
     // TODO Assuming only one account
     const pkh = accounts[0];
+
+    const prepareInvocation = async (target_id: string, invProps: any, sigOpts: any, pk: any): Promise<Preperation> =>
+        JSON.parse(await prepareInvokeCapability(JSON.stringify(invProps), target_id, JSON.stringify(sigOpts), JSON.stringify(pk))) as Preperation
+
+    const completeInvocation = async (invProps: any, preperation: Preperation, signature: string): Promise<any> =>
+        JSON.parse(await completeInvokeCapability(invProps, JSON.stringify(preperation), signature))
 
     return {
         content: async (orbit: string, cids: string[], action: Action): Promise<HeadersInit> => {
@@ -79,9 +84,3 @@ const sigProps = (did: string) => ({
         }
     }
 })
-
-export const prepareInvocation = async (target_id: string, invProps: any, sigOpts: any, pk: any): Promise<Preperation> =>
-    JSON.parse(await prepareInvokeCapability(JSON.stringify(invProps), target_id, JSON.stringify(sigOpts), JSON.stringify(pk))) as Preperation
-
-export const completeInvocation = async (invProps: any, preperation: Preperation, signature: string): Promise<any> =>
-    JSON.parse(await completeInvokeCapability(invProps, JSON.stringify(preperation), signature))
