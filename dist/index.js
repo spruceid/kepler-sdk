@@ -55,11 +55,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.orbitParams = exports.getOrbitId = exports.stringEncoder = exports.Orbit = exports.Kepler = exports.ethAuthenticator = exports.tezosAuthenticator = exports.Action = void 0;
+exports.orbitParams = exports.getOrbitId = exports.stringEncoder = exports.Orbit = exports.Kepler = exports.tezosAuthenticator = exports.Action = exports.ethAuthenticator = void 0;
 var beacon_sdk_1 = require("@airgap/beacon-sdk");
 var cross_fetch_1 = __importDefault(require("cross-fetch"));
 var cids_1 = __importDefault(require("cids"));
 var multihashing_async_1 = __importDefault(require("multihashing-async"));
+var zcap_1 = require("./zcap");
+Object.defineProperty(exports, "ethAuthenticator", { enumerable: true, get: function () { return zcap_1.ethAuthenticator; } });
 var Action;
 (function (Action) {
     Action["get"] = "GET";
@@ -118,50 +120,6 @@ var tezosAuthenticator = function (client, domain) { return __awaiter(void 0, vo
     });
 }); };
 exports.tezosAuthenticator = tezosAuthenticator;
-var ethAuthenticator = function (client, domain) { return __awaiter(void 0, void 0, void 0, function () {
-    var accounts, pkh;
-    return __generator(this, function (_a) {
-        switch (_a.label) {
-            case 0: return [4 /*yield*/, client.eth.getAccounts()];
-            case 1:
-                accounts = _a.sent();
-                if (accounts.length === 0) {
-                    throw new Error("No Active Account");
-                }
-                pkh = accounts[0];
-                return [2 /*return*/, {
-                        content: function (orbit, cids, action) { return __awaiter(void 0, void 0, void 0, function () {
-                            var auth, signature;
-                            return __generator(this, function (_a) {
-                                switch (_a.label) {
-                                    case 0:
-                                        auth = createEthAuthContentMessage(orbit, pkh, action, cids, domain);
-                                        return [4 /*yield*/, client.eth.sign(auth, pkh)];
-                                    case 1:
-                                        signature = _a.sent();
-                                        return [2 /*return*/, auth + " " + signature];
-                                }
-                            });
-                        }); },
-                        createOrbit: function (cids) { return __awaiter(void 0, void 0, void 0, function () {
-                            var auth, signature;
-                            return __generator(this, function (_a) {
-                                switch (_a.label) {
-                                    case 0: return [4 /*yield*/, createEthAuthCreationMessage(pkh, cids, { address: pkh, domain: domain, index: 0 })];
-                                    case 1:
-                                        auth = _a.sent();
-                                        return [4 /*yield*/, client.eth.sign(auth, pkh)];
-                                    case 2:
-                                        signature = _a.sent();
-                                        return [2 /*return*/, auth + " " + signature];
-                                }
-                            });
-                        }); }
-                    }];
-        }
-    });
-}); };
-exports.ethAuthenticator = ethAuthenticator;
 var Kepler = /** @class */ (function () {
     function Kepler(url, auth) {
         this.url = url;
@@ -434,7 +392,8 @@ var addContent = function (form, content) { return __awaiter(void 0, void 0, voi
                 _b = (_a = form).append;
                 return [4 /*yield*/, makeCid(content)];
             case 1:
-                _b.apply(_a, [_c.sent(), new Blob([JSON.stringify(content)], { type: 'application/json' })]);
+                _b.apply(_a, [_c.sent(),
+                    new Blob([JSON.stringify(content)], { type: 'application/json' })]);
                 return [2 /*return*/];
         }
     });

@@ -1,5 +1,5 @@
 import { DAppClient } from '@airgap/beacon-sdk';
-import Web3 from 'web3';
+export { ethAuthenticator } from './zcap';
 export declare enum Action {
     get = "GET",
     put = "PUT",
@@ -14,7 +14,6 @@ export interface AuthFactory<B> {
     <S extends B>(signer: S, domain: string): Promise<Authenticator>;
 }
 export declare const tezosAuthenticator: AuthFactory<DAppClient>;
-export declare const ethAuthenticator: AuthFactory<Web3>;
 export declare class Kepler {
     private url;
     private auth;
