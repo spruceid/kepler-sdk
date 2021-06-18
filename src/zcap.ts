@@ -50,7 +50,7 @@ const keyProps = { "kty": "EC", "crv": "secp256k1", "alg": "ES256K-R", "key_ops"
 
 const invProps = (capabilityAction: string = 'Read') => ({
     "@context": "https://w3id.org/security/v2",
-    id: "urn",
+    id: "urn:uuid:helo",
     capabilityAction
 })
 
