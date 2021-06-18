@@ -42,7 +42,7 @@ var ethAuthenticator = function (client, domain) { return __awaiter(void 0, void
     var accounts, pkh;
     return __generator(this, function (_a) {
         switch (_a.label) {
-            case 0: return [4 /*yield*/, client.eth.getAccounts()];
+            case 0: return [4 /*yield*/, client.request({ method: 'eth_accounts' })];
             case 1:
                 accounts = _a.sent();
                 if (accounts.length === 0) {
@@ -63,7 +63,10 @@ var ethAuthenticator = function (client, domain) { return __awaiter(void 0, void
                                             console.log("Proof preparation:", prep);
                                             throw new Error("Expected EIP-712 TypedData");
                                         }
-                                        return [4 /*yield*/, client.eth.sign(prep.signingInput, pkh)];
+                                        return [4 /*yield*/, client.request({
+                                                method: 'eth_signTypedData_v4',
+                                                params: [pkh, JSON.stringify(prep.signingInput)],
+                                            })];
                                     case 2:
                                         signature = _c.sent();
                                         _b = (_a = JSON).stringify;
@@ -85,7 +88,10 @@ var ethAuthenticator = function (client, domain) { return __awaiter(void 0, void
                                             console.log("Proof preparation:", prep);
                                             throw new Error("Expected EIP-712 TypedData");
                                         }
-                                        return [4 /*yield*/, client.eth.sign(prep.signingInput, pkh)];
+                                        return [4 /*yield*/, client.request({
+                                                method: 'eth_signTypedData_v4',
+                                                params: [pkh, JSON.stringify(prep.signingInput)],
+                                            })];
                                     case 2:
                                         signature = _c.sent();
                                         _b = (_a = JSON).stringify;

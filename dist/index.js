@@ -392,8 +392,7 @@ var addContent = function (form, content) { return __awaiter(void 0, void 0, voi
                 _b = (_a = form).append;
                 return [4 /*yield*/, makeCid(content)];
             case 1:
-                _b.apply(_a, [_c.sent(),
-                    new Blob([JSON.stringify(content)], { type: 'application/json' })]);
+                _b.apply(_a, [_c.sent(), new Blob([JSON.stringify(content)], { type: 'application/json' })]);
                 return [2 /*return*/];
         }
     });

@@ -1,11 +1,10 @@
 import { prepareInvokeCapability, completeInvokeCapability } from 'didkit-wasm';
 import { AuthFactory, Action } from "."
-import Web3 from 'web3';
 
 type Preperation = any;
 
-export const ethAuthenticator: AuthFactory<Web3> = async (client, domain: string) => {
-    const accounts = await client.eth.getAccounts();
+export const ethAuthenticator: AuthFactory<any> = async (client, domain: string) => {
+    const accounts = await client.request({ method: 'eth_accounts' });
     if (accounts.length === 0) {
         throw new Error("No Active Account")
     }
@@ -20,7 +19,10 @@ export const ethAuthenticator: AuthFactory<Web3> = async (client, domain: string
                 console.log("Proof preparation:", prep);
                 throw new Error("Expected EIP-712 TypedData");
             }
-            const signature = await client.eth.sign(prep.signingInput, pkh);
+            const signature = await client.request({
+                method: 'eth_signTypedData_v4',
+                params: [pkh, JSON.stringify(prep.signingInput)],
+            });
             return JSON.stringify(await completeInvocation(inv, prep, signature))
         },
         createOrbit: async (cids: string[]): Promise<string> => {
@@ -30,7 +32,10 @@ export const ethAuthenticator: AuthFactory<Web3> = async (client, domain: string
                 console.log("Proof preparation:", prep);
                 throw new Error("Expected EIP-712 TypedData");
             }
-            const signature = await client.eth.sign(prep.signingInput, pkh);
+            const signature = await client.request({
+                method: 'eth_signTypedData_v4',
+                params: [pkh, JSON.stringify(prep.signingInput)],
+            });
             return JSON.stringify(await completeInvocation(inv, prep, signature))
         }
     }
