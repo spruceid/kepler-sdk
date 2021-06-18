@@ -94,7 +94,7 @@ var tezosAuthenticator = function (client, domain) { return __awaiter(void 0, vo
                                             })];
                                     case 1:
                                         signature = (_a.sent()).signature;
-                                        return [2 /*return*/, auth + " " + signature];
+                                        return [2 /*return*/, { "Authorization": auth + " " + signature }];
                                 }
                             });
                         }); },
@@ -111,7 +111,7 @@ var tezosAuthenticator = function (client, domain) { return __awaiter(void 0, vo
                                             })];
                                     case 2:
                                         signature = (_a.sent()).signature;
-                                        return [2 /*return*/, auth + " " + signature];
+                                        return [2 /*return*/, { "Authorization": auth + " " + signature }];
                                 }
                             });
                         }); }
@@ -121,9 +121,10 @@ var tezosAuthenticator = function (client, domain) { return __awaiter(void 0, vo
 }); };
 exports.tezosAuthenticator = tezosAuthenticator;
 var Kepler = /** @class */ (function () {
-    function Kepler(url, auth) {
+    function Kepler(url, auth, delegation) {
         this.url = url;
         this.auth = auth;
+        this.delegation = delegation;
     }
     Kepler.prototype.resolve = function (keplerUri, authenticate) {
         if (authenticate === void 0) { authenticate = true; }
@@ -149,7 +150,7 @@ var Kepler = /** @class */ (function () {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.orbit(orbit).get(cid, authenticate)];
+                    case 0: return [4 /*yield*/, this.orbit(orbit).get(cid, authenticate, this.delegation)];
                     case 1: return [2 /*return*/, _a.sent()];
                 }
             });
@@ -224,16 +225,13 @@ var Kepler = /** @class */ (function () {
                         };
                         return [4 /*yield*/, makeFormRequest.apply(void 0, __spreadArray([first], rest))];
                     case 3: return [4 /*yield*/, _c.apply(void 0, _d.concat([(_e.body = _f.sent(),
-                                _e.headers = { 'Authorization': auth },
+                                _e.headers = auth,
                                 _e)]))];
                     case 4: return [2 /*return*/, _f.sent()];
                     case 5: return [4 /*yield*/, cross_fetch_1.default(this.url, {
                             method: 'POST',
                             body: JSON.stringify(first),
-                            headers: {
-                                'Authorization': auth,
-                                'Content-Type': 'application/json'
-                            }
+                            headers: __assign(__assign({}, auth), { 'Content-Type': 'application/json' })
                         })];
                     case 6: return [2 /*return*/, _f.sent()];
                 }
@@ -256,13 +254,13 @@ var Orbit = /** @class */ (function () {
         enumerable: false,
         configurable: true
     });
-    Orbit.prototype.get = function (cid, authenticate) {
+    Orbit.prototype.get = function (cid, authenticate, delegation) {
         if (authenticate === void 0) { authenticate = true; }
         return __awaiter(this, void 0, void 0, function () {
             var _a, _b, _c, _d;
-            var _e, _f;
-            return __generator(this, function (_g) {
-                switch (_g.label) {
+            var _e;
+            return __generator(this, function (_f) {
+                switch (_f.label) {
                     case 0:
                         _a = cross_fetch_1.default;
                         _b = [makeContentPath(this.url, this.orbit, cid)];
@@ -270,18 +268,17 @@ var Orbit = /** @class */ (function () {
                             method: "GET"
                         };
                         if (!authenticate) return [3 /*break*/, 2];
-                        _f = {};
-                        _d = "Authorization";
+                        _d = [{}];
                         return [4 /*yield*/, this.auth.content(this.orbit, [cid], Action.get)];
                     case 1:
-                        _c = (_f[_d] = _g.sent(), _f);
+                        _c = __assign.apply(void 0, [__assign.apply(void 0, _d.concat([_f.sent()])), { "Delegation": delegation }]);
                         return [3 /*break*/, 3];
                     case 2:
                         _c = undefined;
-                        _g.label = 3;
+                        _f.label = 3;
                     case 3: return [4 /*yield*/, _a.apply(void 0, _b.concat([(_e.headers = _c,
                                 _e)]))];
-                    case 4: return [2 /*return*/, _g.sent()];
+                    case 4: return [2 /*return*/, _f.sent()];
                 }
             });
         });
@@ -319,16 +316,13 @@ var Orbit = /** @class */ (function () {
                     case 3: return [4 /*yield*/, _d.apply(void 0, _e.concat([(
                             // @ts-ignore
                             _f.body = _g.sent(),
-                                _f.headers = { "Authorization": auth },
+                                _f.headers = auth,
                                 _f)]))];
                     case 4: return [2 /*return*/, _g.sent()];
                     case 5: return [4 /*yield*/, cross_fetch_1.default(makeOrbitPath(this.url, this.orbit), {
                             method: "POST",
                             body: JSON.stringify(first),
-                            headers: {
-                                "Authorization": auth,
-                                "Content-Type": "application/json"
-                            }
+                            headers: __assign(__assign({}, auth), { "Content-Type": "application/json" })
                         })];
                     case 6: return [2 /*return*/, _g.sent()];
                 }
@@ -337,41 +331,37 @@ var Orbit = /** @class */ (function () {
     };
     Orbit.prototype.del = function (cid) {
         return __awaiter(this, void 0, void 0, function () {
-            var _a, _b, _c;
-            var _d, _e;
-            return __generator(this, function (_f) {
-                switch (_f.label) {
+            var _a, _b;
+            var _c;
+            return __generator(this, function (_d) {
+                switch (_d.label) {
                     case 0:
                         _a = cross_fetch_1.default;
                         _b = [makeContentPath(this.url, this.orbit, cid)];
-                        _d = {
+                        _c = {
                             method: 'DELETE'
                         };
-                        _e = {};
-                        _c = 'Authorization';
                         return [4 /*yield*/, this.auth.content(this.orbit, [cid], Action.delete)];
-                    case 1: return [4 /*yield*/, _a.apply(void 0, _b.concat([(_d.headers = (_e[_c] = _f.sent(), _e),
-                                _d)]))];
-                    case 2: return [2 /*return*/, _f.sent()];
+                    case 1: return [4 /*yield*/, _a.apply(void 0, _b.concat([(_c.headers = _d.sent(),
+                                _c)]))];
+                    case 2: return [2 /*return*/, _d.sent()];
                 }
             });
         });
     };
     Orbit.prototype.list = function () {
         return __awaiter(this, void 0, void 0, function () {
-            var _a, _b, _c;
-            var _d, _e;
-            return __generator(this, function (_f) {
-                switch (_f.label) {
+            var _a, _b;
+            var _c;
+            return __generator(this, function (_d) {
+                switch (_d.label) {
                     case 0:
                         _a = cross_fetch_1.default;
                         _b = [makeOrbitPath(this.url, this.orbit)];
-                        _d = { method: 'GET' };
-                        _e = {};
-                        _c = 'Authorization';
+                        _c = { method: 'GET' };
                         return [4 /*yield*/, this.auth.content(this.orbit, [], Action.list)];
-                    case 1: return [4 /*yield*/, _a.apply(void 0, _b.concat([(_d.headers = (_e[_c] = _f.sent(), _e), _d)]))];
-                    case 2: return [2 /*return*/, _f.sent()];
+                    case 1: return [4 /*yield*/, _a.apply(void 0, _b.concat([(_c.headers = _d.sent(), _c)]))];
+                    case 2: return [2 /*return*/, _d.sent()];
                 }
             });
         });

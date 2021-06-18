@@ -7,8 +7,8 @@ export declare enum Action {
     list = "LIST"
 }
 export interface Authenticator {
-    content: (orbit: string, cids: string[], action: Action) => Promise<string>;
-    createOrbit: (cids: string[]) => Promise<string>;
+    content: (orbit: string, cids: string[], action: Action) => Promise<HeadersInit>;
+    createOrbit: (cids: string[]) => Promise<HeadersInit>;
 }
 export interface AuthFactory<B> {
     <S extends B>(signer: S, domain: string): Promise<Authenticator>;
@@ -17,7 +17,8 @@ export declare const tezosAuthenticator: AuthFactory<DAppClient>;
 export declare class Kepler {
     private url;
     private auth;
-    constructor(url: string, auth: Authenticator);
+    private delegation;
+    constructor(url: string, auth: Authenticator, delegation: string);
     resolve(keplerUri: string, authenticate?: boolean): Promise<Response>;
     get(orbit: string, cid: string, authenticate?: boolean): Promise<Response>;
     put(orbit: string, first: any, ...rest: any[]): Promise<Response>;
@@ -32,7 +33,7 @@ export declare class Orbit {
     private auth;
     constructor(url: string, orbitId: string, auth: Authenticator);
     get orbit(): string;
-    get(cid: string, authenticate?: boolean): Promise<Response>;
+    get(cid: string, authenticate: boolean | undefined, delegation: string): Promise<Response>;
     put(first: any, ...rest: any[]): Promise<Response>;
     del(cid: string): Promise<Response>;
     list(): Promise<Response>;

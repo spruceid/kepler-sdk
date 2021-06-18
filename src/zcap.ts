@@ -12,7 +12,7 @@ export const ethAuthenticator: AuthFactory<any> = async (client, domain: string)
     const pkh = accounts[0];
 
     return {
-        content: async (orbit: string, cids: string[], action: Action): Promise<string> => {
+        content: async (orbit: string, cids: string[], action: Action): Promise<HeadersInit> => {
             const inv = invProps(action);
             const prep = await prepareInvocation(`kepler://${orbit}/read`, inv, sigProps(`did:pkh:eth:{pkh}`), keyProps);
             if (!prep || prep.signingInput === undefined || prep.signingInput.primaryType === undefined) {
@@ -23,9 +23,9 @@ export const ethAuthenticator: AuthFactory<any> = async (client, domain: string)
                 method: 'eth_signTypedData_v4',
                 params: [pkh, JSON.stringify(prep.signingInput)],
             });
-            return JSON.stringify(await completeInvocation(inv, prep, signature))
+            return {"Invocation": JSON.stringify(await completeInvocation(inv, prep, signature))}
         },
-        createOrbit: async (cids: string[]): Promise<string> => {
+        createOrbit: async (cids: string[]): Promise<HeadersInit> => {
             const inv = invProps('Create');
             const prep = await prepareInvocation("orbit_id", inv, sigProps(`did:pkh:eth:{pkh}`), keyProps);
             if (!prep || prep.signingInput === undefined || prep.signingInput.primaryType === undefined) {
@@ -36,7 +36,7 @@ export const ethAuthenticator: AuthFactory<any> = async (client, domain: string)
                 method: 'eth_signTypedData_v4',
                 params: [pkh, JSON.stringify(prep.signingInput)],
             });
-            return JSON.stringify(await completeInvocation(inv, prep, signature))
+            return {"Invocation": JSON.stringify(await completeInvocation(inv, prep, signature))}
         }
     }
 }

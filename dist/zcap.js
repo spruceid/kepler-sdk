@@ -51,14 +51,15 @@ var ethAuthenticator = function (client, domain) { return __awaiter(void 0, void
                 pkh = accounts[0];
                 return [2 /*return*/, {
                         content: function (orbit, cids, action) { return __awaiter(void 0, void 0, void 0, function () {
-                            var inv, prep, signature, _a, _b;
-                            return __generator(this, function (_c) {
-                                switch (_c.label) {
+                            var inv, prep, signature, _a, _b, _c;
+                            var _d;
+                            return __generator(this, function (_e) {
+                                switch (_e.label) {
                                     case 0:
                                         inv = invProps(action);
                                         return [4 /*yield*/, exports.prepareInvocation("kepler://" + orbit + "/read", inv, sigProps("did:pkh:eth:{pkh}"), keyProps)];
                                     case 1:
-                                        prep = _c.sent();
+                                        prep = _e.sent();
                                         if (!prep || prep.signingInput === undefined || prep.signingInput.primaryType === undefined) {
                                             console.log("Proof preparation:", prep);
                                             throw new Error("Expected EIP-712 TypedData");
@@ -68,22 +69,25 @@ var ethAuthenticator = function (client, domain) { return __awaiter(void 0, void
                                                 params: [pkh, JSON.stringify(prep.signingInput)],
                                             })];
                                     case 2:
-                                        signature = _c.sent();
-                                        _b = (_a = JSON).stringify;
+                                        signature = _e.sent();
+                                        _d = {};
+                                        _a = "Invocation";
+                                        _c = (_b = JSON).stringify;
                                         return [4 /*yield*/, exports.completeInvocation(inv, prep, signature)];
-                                    case 3: return [2 /*return*/, _b.apply(_a, [_c.sent()])];
+                                    case 3: return [2 /*return*/, (_d[_a] = _c.apply(_b, [_e.sent()]), _d)];
                                 }
                             });
                         }); },
                         createOrbit: function (cids) { return __awaiter(void 0, void 0, void 0, function () {
-                            var inv, prep, signature, _a, _b;
-                            return __generator(this, function (_c) {
-                                switch (_c.label) {
+                            var inv, prep, signature, _a, _b, _c;
+                            var _d;
+                            return __generator(this, function (_e) {
+                                switch (_e.label) {
                                     case 0:
                                         inv = invProps('Create');
                                         return [4 /*yield*/, exports.prepareInvocation("orbit_id", inv, sigProps("did:pkh:eth:{pkh}"), keyProps)];
                                     case 1:
-                                        prep = _c.sent();
+                                        prep = _e.sent();
                                         if (!prep || prep.signingInput === undefined || prep.signingInput.primaryType === undefined) {
                                             console.log("Proof preparation:", prep);
                                             throw new Error("Expected EIP-712 TypedData");
@@ -93,10 +97,12 @@ var ethAuthenticator = function (client, domain) { return __awaiter(void 0, void
                                                 params: [pkh, JSON.stringify(prep.signingInput)],
                                             })];
                                     case 2:
-                                        signature = _c.sent();
-                                        _b = (_a = JSON).stringify;
+                                        signature = _e.sent();
+                                        _d = {};
+                                        _a = "Invocation";
+                                        _c = (_b = JSON).stringify;
                                         return [4 /*yield*/, exports.completeInvocation(inv, prep, signature)];
-                                    case 3: return [2 /*return*/, _b.apply(_a, [_c.sent()])];
+                                    case 3: return [2 /*return*/, (_d[_a] = _c.apply(_b, [_e.sent()]), _d)];
                                 }
                             });
                         }); }

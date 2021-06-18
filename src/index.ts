@@ -12,8 +12,8 @@ export enum Action {
 }
 
 export interface Authenticator {
-    content: (orbit: string, cids: string[], action: Action) => Promise<string>;
-    createOrbit: (cids: string[]) => Promise<string>;
+    content: (orbit: string, cids: string[], action: Action) => Promise<HeadersInit>;
+    createOrbit: (cids: string[]) => Promise<HeadersInit>;
 }
 
 export interface AuthFactory<B> {
@@ -29,21 +29,21 @@ export const tezosAuthenticator: AuthFactory<DAppClient> = async (client, domain
     });
 
     return {
-        content: async (orbit: string, cids: string[], action: Action): Promise<string> => {
+        content: async (orbit: string, cids: string[], action: Action): Promise<HeadersInit> => {
             const auth = createTzAuthContentMessage(orbit, pk, pkh, action, cids, domain);
             const {signature} = await client.requestSignPayload({
                 signingType: SigningType.MICHELINE,
                 payload: stringEncoder(auth)
             });
-            return auth + " " + signature
+            return {"Authorization":  auth + " " + signature}
         },
-        createOrbit: async (cids: string[]): Promise<string> => {
+        createOrbit: async (cids: string[]): Promise<HeadersInit> => {
             const auth = await createTzAuthCreationMessage(pk, pkh, cids, {address: pkh, domain, index: 0})
             const {signature} = await client.requestSignPayload({
                 signingType: SigningType.MICHELINE,
                 payload: stringEncoder(auth)
             });
-            return auth + " " + signature
+            return {"Authorization": auth + " " + signature}
         }
     }
 }
@@ -52,6 +52,7 @@ export class Kepler {
     constructor(
         private url: string,
         private auth: Authenticator,
+        private delegation: string,
     ) { }
 
     public async resolve(keplerUri: string, authenticate: boolean = true): Promise<Response> {
@@ -66,7 +67,7 @@ export class Kepler {
     }
 
     public async get(orbit: string, cid: string, authenticate: boolean = true): Promise<Response> {
-        return await this.orbit(orbit).get(cid, authenticate)
+        return await this.orbit(orbit).get(cid, authenticate, this.delegation)
     }
 
     // typed so that it takes at least 1 element
@@ -92,16 +93,13 @@ export class Kepler {
             return await fetch(this.url, {
                 method: 'POST',
                 body: await makeFormRequest(first, ...rest),
-                headers: {'Authorization': auth}
+                headers: auth
             });
         } else {
             return await fetch(this.url, {
                 method: 'POST',
                 body: JSON.stringify(first),
-                headers: {
-                    'Authorization': auth,
-                    'Content-Type': 'application/json'
-                }
+                headers: {...auth, ...{'Content-Type': 'application/json'}}
             })
         }
     }
@@ -118,10 +116,10 @@ export class Orbit {
         return this.orbitId
     }
 
-    public async get(cid: string, authenticate: boolean = true): Promise<Response> {
+    public async get(cid: string, authenticate: boolean = true, delegation: string): Promise<Response> {
         return await fetch(makeContentPath(this.url, this.orbit, cid), {
             method: "GET",
-            headers: authenticate ? {"Authorization": await this.auth.content(this.orbit, [cid], Action.get)} : undefined
+            headers: authenticate ? {...await this.auth.content(this.orbit, [cid], Action.get), ...{"Delegation": delegation}} : undefined
         })
     }
 
@@ -132,16 +130,13 @@ export class Orbit {
                 method: "POST",
                 // @ts-ignore
                 body: await makeFormRequest(first, ...rest),
-                headers: {"Authorization": auth}
+                headers: auth
             })
         } else {
             return await fetch(makeOrbitPath(this.url, this.orbit), {
                 method: "POST",
                 body: JSON.stringify(first),
-                headers: {
-                    "Authorization": auth,
-                    "Content-Type": "application/json"
-                }
+                headers: {...auth, ...{"Content-Type": "application/json"}}
             })
         }
     }
@@ -149,12 +144,12 @@ export class Orbit {
     public async del(cid: string): Promise<Response> {
         return await fetch(makeContentPath(this.url, this.orbit, cid), {
             method: 'DELETE',
-            headers: {'Authorization': await this.auth.content(this.orbit, [cid], Action.delete)}
+            headers: await this.auth.content(this.orbit, [cid], Action.delete)
         })
     }
 
     public async list(): Promise<Response> {
-        return await fetch(makeOrbitPath(this.url, this.orbit), { method: 'GET', headers: { 'Authorization': await this.auth.content(this.orbit, [], Action.list) } })
+        return await fetch(makeOrbitPath(this.url, this.orbit), { method: 'GET', headers: await this.auth.content(this.orbit, [], Action.list) })
     }
 }
 
