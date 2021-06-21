@@ -20,6 +20,7 @@ export const ethAuthenticator: AuthFactory<any> = async (client, domain: string,
         content: async (orbit: string, cids: string[], action: Action): Promise<HeadersInit> => {
             const inv = invProps();
             const prep = await prepareInvocation(`https://demo.kepler.to/${orbit}/${cids[0]}/read/${pkh}#uuid`, inv, sigProps(`did:pkh:eth:${pkh}`), keyProps);
+            console.log(JSON.stringify(prep))
             if (!prep || prep.signingInput === undefined || prep.signingInput.primaryType === undefined) {
                 console.log("Proof preparation:", prep);
                 throw new Error("Expected EIP-712 TypedData");

@@ -75,6 +75,7 @@ var ethAuthenticator = function (client, domain, prepareInvokeCapability, comple
                                         return [4 /*yield*/, prepareInvocation("https://demo.kepler.to/" + orbit + "/" + cids[0] + "/read/" + pkh + "#uuid", inv, sigProps("did:pkh:eth:" + pkh), keyProps)];
                                     case 1:
                                         prep = _e.sent();
+                                        console.log(JSON.stringify(prep));
                                         if (!prep || prep.signingInput === undefined || prep.signingInput.primaryType === undefined) {
                                             console.log("Proof preparation:", prep);
                                             throw new Error("Expected EIP-712 TypedData");
