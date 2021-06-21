@@ -158,7 +158,7 @@ var sigProps = function (did) { return ({
                 { "name": "@context", "type": "string" },
                 { "name": "verificationMethod", "type": "string" },
                 { "name": "created", "type": "string" },
-                { "name": "capability", "type": "string[]" },
+                { "name": "capability", "type": "string" },
                 { "name": "proofPurpose", "type": "string" },
                 { "name": "type", "type": "string" }
             ]
