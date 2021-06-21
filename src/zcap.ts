@@ -18,7 +18,7 @@ export const ethAuthenticator: AuthFactory<any> = async (client, domain: string,
 
     return {
         content: async (orbit: string, cids: string[], action: Action): Promise<HeadersInit> => {
-            const inv = invProps(action);
+            const inv = invProps();
             const prep = await prepareInvocation(`kepler://${orbit}/read`, inv, sigProps(`did:pkh:eth:${pkh}`), keyProps);
             if (!prep || prep.signingInput === undefined || prep.signingInput.primaryType === undefined) {
                 console.log("Proof preparation:", prep);

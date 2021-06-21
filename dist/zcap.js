@@ -71,7 +71,7 @@ var ethAuthenticator = function (client, domain, prepareInvokeCapability, comple
                             return __generator(this, function (_e) {
                                 switch (_e.label) {
                                     case 0:
-                                        inv = invProps(action);
+                                        inv = invProps();
                                         return [4 /*yield*/, prepareInvocation("kepler://" + orbit + "/read", inv, sigProps("did:pkh:eth:" + pkh), keyProps)];
                                     case 1:
                                         prep = _e.sent();
