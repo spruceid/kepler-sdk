@@ -48,14 +48,20 @@ var ethAuthenticator = function (client, domain, prepareInvokeCapability, comple
                     throw new Error("No Active Account");
                 }
                 pkh = accounts[0];
-                prepareInvocation = function (target_id, invProps, sigOpts, pk) { return __awaiter(void 0, void 0, void 0, function () { var _a, _b; return __generator(this, function (_c) {
-                    switch (_c.label) {
-                        case 0:
-                            _b = (_a = JSON).parse;
-                            return [4 /*yield*/, prepareInvokeCapability(JSON.stringify(invProps), target_id, JSON.stringify(sigOpts), JSON.stringify(pk))];
-                        case 1: return [2 /*return*/, _b.apply(_a, [_c.sent()])];
-                    }
-                }); }); };
+                prepareInvocation = function (target_id, invProps, sigOpts, pk) { return __awaiter(void 0, void 0, void 0, function () {
+                    var _a, _b;
+                    return __generator(this, function (_c) {
+                        switch (_c.label) {
+                            case 0:
+                                console.log(invProps);
+                                _b = (_a = JSON).parse;
+                                return [4 /*yield*/, prepareInvokeCapability(JSON.stringify(invProps), target_id, JSON.stringify(sigOpts), JSON.stringify(pk))];
+                            case 1:
+                                _b.apply(_a, [_c.sent()]);
+                                return [2 /*return*/];
+                        }
+                    });
+                }); };
                 completeInvocation = function (invProps, preperation, signature) { return __awaiter(void 0, void 0, void 0, function () { var _a, _b; return __generator(this, function (_c) {
                     switch (_c.label) {
                         case 0:
@@ -131,7 +137,7 @@ var invProps = function (capabilityAction) {
     if (capabilityAction === void 0) { capabilityAction = 'Read'; }
     return ({
         "@context": "https://w3id.org/security/v2",
-        id: "urn",
+        id: "urn:uuid:helo",
         capabilityAction: capabilityAction
     });
 };
