@@ -18,7 +18,7 @@ export const ethAuthenticator: AuthFactory<any> = async (client, domain: string,
 
     return {
         content: async (orbit: string, cids: string[], action: Action): Promise<HeadersInit> => {
-            const inv = invProps();
+            const inv = invProps(orbit, cids[0], pkh, 'Read');
             const prep = await prepareInvocation(`kepler://${orbit}/read`, inv, sigProps(`did:pkh:eth:${pkh}`), keyProps);
             if (!prep || prep.signingInput === undefined || prep.signingInput.primaryType === undefined) {
                 console.log("Proof preparation:", prep);
@@ -31,7 +31,7 @@ export const ethAuthenticator: AuthFactory<any> = async (client, domain: string,
             return {"Invocation": JSON.stringify(await completeInvocation(inv, prep, signature))}
         },
         createOrbit: async (cids: string[]): Promise<HeadersInit> => {
-            const inv = invProps('Create');
+            const inv = invProps('', '', '', 'Create');
             const prep = await prepareInvocation("orbit_id", inv, sigProps(`did:pkh:eth:${pkh}`), keyProps);
             if (!prep || prep.signingInput === undefined || prep.signingInput.primaryType === undefined) {
                 console.log("Proof preparation:", prep);
@@ -48,9 +48,9 @@ export const ethAuthenticator: AuthFactory<any> = async (client, domain: string,
 
 const keyProps = { "kty": "EC", "crv": "secp256k1", "alg": "ES256K-R", "key_ops": ["signTypedData"] };
 
-const invProps = (capabilityAction: string = 'Read') => ({
+const invProps = (orbit: string, cid: string, address: string, capabilityAction: string = 'Read') => ({
     "@context": "https://w3id.org/security/v2",
-    id: "urn:uuid:helo",
+    id: `https://demo.kepler.to/${orbit}/${cid}/${capabilityAction.toLowerCase()}/${address}#uuid`,
     capabilityAction
 })
 
