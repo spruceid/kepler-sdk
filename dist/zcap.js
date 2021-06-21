@@ -142,9 +142,9 @@ var invProps = function (capabilityAction) {
     });
 };
 var sigProps = function (did) { return ({
-    type: "EthereumEip712Signature2021",
+    // type: "EthereumEip712Signature2021",
     verificationMethod: did + '#Recovery2020',
-    proofPurpose: 'capabilityInvocation',
+    proofPurpose: 'assertionMethod',
     eip712Domain: {
         primaryType: "CapabilityInvocation",
         domain: {
