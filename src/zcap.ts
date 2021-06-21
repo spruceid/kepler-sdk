@@ -14,7 +14,7 @@ export const ethAuthenticator: AuthFactory<any> = async (client, domain: string,
         JSON.parse(await prepareInvokeCapability(JSON.stringify(invProps), target_id, JSON.stringify(sigOpts), JSON.stringify(pk))) as Preperation
 
     const completeInvocation = async (invProps: any, preperation: Preperation, signature: string): Promise<any> =>
-        JSON.parse(await completeInvokeCapability(invProps, JSON.stringify(preperation), signature))
+        JSON.parse(await completeInvokeCapability(JSON.stringify(invProps), JSON.stringify(preperation), signature))
 
     return {
         content: async (orbit: string, cids: string[], action: Action): Promise<HeadersInit> => {
@@ -28,7 +28,7 @@ export const ethAuthenticator: AuthFactory<any> = async (client, domain: string,
                 method: 'eth_signTypedData_v4',
                 params: [pkh, JSON.stringify(prep.signingInput)],
             });
-            return {"Invocation": JSON.stringify(await completeInvocation(JSON.stringify(inv), JSON.stringify(prep), signature))}
+            return {"Invocation": JSON.stringify(await completeInvocation(inv, prep, signature))}
         },
         createOrbit: async (cids: string[]): Promise<HeadersInit> => {
             const inv = invProps('Create');
@@ -41,7 +41,7 @@ export const ethAuthenticator: AuthFactory<any> = async (client, domain: string,
                 method: 'eth_signTypedData_v4',
                 params: [pkh, JSON.stringify(prep.signingInput)],
             });
-            return {"Invocation": JSON.stringify(await completeInvocation(JSON.stringify(inv), JSON.stringify(prep), signature))}
+            return {"Invocation": JSON.stringify(await completeInvocation(inv, prep, signature))}
         }
     }
 }

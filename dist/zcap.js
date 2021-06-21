@@ -60,7 +60,7 @@ var ethAuthenticator = function (client, domain, prepareInvokeCapability, comple
                     switch (_c.label) {
                         case 0:
                             _b = (_a = JSON).parse;
-                            return [4 /*yield*/, completeInvokeCapability(invProps, JSON.stringify(preperation), signature)];
+                            return [4 /*yield*/, completeInvokeCapability(JSON.stringify(invProps), JSON.stringify(preperation), signature)];
                         case 1: return [2 /*return*/, _b.apply(_a, [_c.sent()])];
                     }
                 }); }); };
@@ -88,7 +88,7 @@ var ethAuthenticator = function (client, domain, prepareInvokeCapability, comple
                                         _d = {};
                                         _a = "Invocation";
                                         _c = (_b = JSON).stringify;
-                                        return [4 /*yield*/, completeInvocation(JSON.stringify(inv), JSON.stringify(prep), signature)];
+                                        return [4 /*yield*/, completeInvocation(inv, prep, signature)];
                                     case 3: return [2 /*return*/, (_d[_a] = _c.apply(_b, [_e.sent()]), _d)];
                                 }
                             });
@@ -116,7 +116,7 @@ var ethAuthenticator = function (client, domain, prepareInvokeCapability, comple
                                         _d = {};
                                         _a = "Invocation";
                                         _c = (_b = JSON).stringify;
-                                        return [4 /*yield*/, completeInvocation(JSON.stringify(inv), JSON.stringify(prep), signature)];
+                                        return [4 /*yield*/, completeInvocation(inv, prep, signature)];
                                     case 3: return [2 /*return*/, (_d[_a] = _c.apply(_b, [_e.sent()]), _d)];
                                 }
                             });
