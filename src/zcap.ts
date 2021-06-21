@@ -10,10 +10,8 @@ export const ethAuthenticator: AuthFactory<any> = async (client, domain: string,
     // TODO Assuming only one account
     const pkh = accounts[0];
 
-    const prepareInvocation = async (target_id: string, invProps: any, sigOpts: any, pk: any): Promise<Preperation> => {
-        console.log(invProps);
+    const prepareInvocation = async (target_id: string, invProps: any, sigOpts: any, pk: any): Promise<Preperation> =>
         JSON.parse(await prepareInvokeCapability(JSON.stringify(invProps), target_id, JSON.stringify(sigOpts), JSON.stringify(pk))) as Preperation
-        }
 
     const completeInvocation = async (invProps: any, preperation: Preperation, signature: string): Promise<any> =>
         JSON.parse(await completeInvokeCapability(invProps, JSON.stringify(preperation), signature))
