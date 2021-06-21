@@ -71,8 +71,8 @@ var ethAuthenticator = function (client, domain, prepareInvokeCapability, comple
                             return __generator(this, function (_e) {
                                 switch (_e.label) {
                                     case 0:
-                                        inv = invProps(orbit, cids[0], pkh, 'Read');
-                                        return [4 /*yield*/, prepareInvocation("kepler://" + orbit + "/read", inv, sigProps("did:pkh:eth:" + pkh), keyProps)];
+                                        inv = invProps();
+                                        return [4 /*yield*/, prepareInvocation("https://demo.kepler.to/" + orbit + "/" + cids[0] + "/read/" + pkh + "#uuid", inv, sigProps("did:pkh:eth:" + pkh), keyProps)];
                                     case 1:
                                         prep = _e.sent();
                                         if (!prep || prep.signingInput === undefined || prep.signingInput.primaryType === undefined) {
@@ -99,7 +99,7 @@ var ethAuthenticator = function (client, domain, prepareInvokeCapability, comple
                             return __generator(this, function (_e) {
                                 switch (_e.label) {
                                     case 0:
-                                        inv = invProps('', '', '', 'Create');
+                                        inv = invProps('Create');
                                         return [4 /*yield*/, prepareInvocation("orbit_id", inv, sigProps("did:pkh:eth:" + pkh), keyProps)];
                                     case 1:
                                         prep = _e.sent();
@@ -127,11 +127,11 @@ var ethAuthenticator = function (client, domain, prepareInvokeCapability, comple
 }); };
 exports.ethAuthenticator = ethAuthenticator;
 var keyProps = { "kty": "EC", "crv": "secp256k1", "alg": "ES256K-R", "key_ops": ["signTypedData"] };
-var invProps = function (orbit, cid, address, capabilityAction) {
+var invProps = function (capabilityAction) {
     if (capabilityAction === void 0) { capabilityAction = 'Read'; }
     return ({
         "@context": "https://w3id.org/security/v2",
-        id: "https://demo.kepler.to/" + orbit + "/" + cid + "/" + capabilityAction.toLowerCase() + "/" + address + "#uuid",
+        id: "urn:uuid:helo",
         capabilityAction: capabilityAction
     });
 };
