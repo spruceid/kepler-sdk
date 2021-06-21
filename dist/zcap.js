@@ -78,7 +78,7 @@ var ethAuthenticator = function (client, domain, prepareInvokeCapability, comple
                                 switch (_e.label) {
                                     case 0:
                                         inv = invProps(action);
-                                        return [4 /*yield*/, prepareInvocation("kepler://" + orbit + "/read", inv, sigProps("did:pkh:eth:{pkh}"), keyProps)];
+                                        return [4 /*yield*/, prepareInvocation("kepler://" + orbit + "/read", inv, sigProps("did:pkh:eth:" + pkh), keyProps)];
                                     case 1:
                                         prep = _e.sent();
                                         if (!prep || prep.signingInput === undefined || prep.signingInput.primaryType === undefined) {
@@ -106,7 +106,7 @@ var ethAuthenticator = function (client, domain, prepareInvokeCapability, comple
                                 switch (_e.label) {
                                     case 0:
                                         inv = invProps('Create');
-                                        return [4 /*yield*/, prepareInvocation("orbit_id", inv, sigProps("did:pkh:eth:{pkh}"), keyProps)];
+                                        return [4 /*yield*/, prepareInvocation("orbit_id", inv, sigProps("did:pkh:eth:" + pkh), keyProps)];
                                     case 1:
                                         prep = _e.sent();
                                         if (!prep || prep.signingInput === undefined || prep.signingInput.primaryType === undefined) {
