@@ -28,7 +28,7 @@ export const ethAuthenticator: AuthFactory<any> = async (client, domain: string,
                 method: 'eth_signTypedData_v4',
                 params: [pkh, JSON.stringify(prep.signingInput)],
             });
-            return {"Invocation": JSON.stringify(await completeInvocation(inv, prep, signature))}
+            return {"Invocation": JSON.stringify(await completeInvocation(JSON.stringify(inv), JSON.stringify(prep), signature))}
         },
         createOrbit: async (cids: string[]): Promise<HeadersInit> => {
             const inv = invProps('Create');
@@ -41,7 +41,7 @@ export const ethAuthenticator: AuthFactory<any> = async (client, domain: string,
                 method: 'eth_signTypedData_v4',
                 params: [pkh, JSON.stringify(prep.signingInput)],
             });
-            return {"Invocation": JSON.stringify(await completeInvocation(inv, prep, signature))}
+            return {"Invocation": JSON.stringify(await completeInvocation(JSON.stringify(inv), JSON.stringify(prep), signature))}
         }
     }
 }
