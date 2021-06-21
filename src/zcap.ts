@@ -57,7 +57,7 @@ const invProps = (capabilityAction: string = 'Read') => ({
 })
 
 const sigProps = (did: string) => ({
-    type: "EthereumEip712Signature2021",
+    // type: "EthereumEip712Signature2021",
     verificationMethod: did + '#Recovery2020',
     proofPurpose: 'capabilityInvocation',
     eip712Domain: {
