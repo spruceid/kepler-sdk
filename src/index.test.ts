@@ -1,7 +1,7 @@
 import { Kepler, Action, Authenticator, authenticator, stringEncoder, getOrbitId, orbitParams } from './';
 import { DAppClient } from '@airgap/beacon-sdk';
 import { InMemorySigner } from '@taquito/signer';
-import { b58cencode } from "@taquito/utils";
+import { b58cencode, prefix } from "@taquito/utils";
 const crypto = require('crypto')
 
 const ims = new InMemorySigner('edsk2gL9deG8idefWJJWNNtKXeszWR4FrEdNFM5622t1PkzH66oH3r');
@@ -17,14 +17,15 @@ DAppClient.prototype.requestSignPayload = mockSign;
 const genClient = async (): Promise<DAppClient> => {
     const ims = new InMemorySigner(b58cencode(
         crypto.randomBytes(32),
-        new Uint8Array([13, 15, 58, 7])
+        prefix.edsk2
     ));
-    const dc = new DAppClient({ name: await ims.publicKey() })
     // @ts-ignore
-    dc.getActiveAccount = jest.fn(async () => ({ publicKey: await ims.publicKey(), address: await ims.publicKeyHash() }))
-    // @ts-ignore
-    dc.requestSignPayload = jest.fn(async ({ payload }) => ({ signature: await ims.sign(payload).then(res => res.prefixSig) }))
-    return dc
+    return {
+        // @ts-ignore
+        getActiveAccount: async () => ({ publicKey: await ims.publicKey(), address: await ims.publicKeyHash() }),
+        // @ts-ignore
+        requestSignPayload: async ({ payload }) => ({ signature: await ims.sign(payload).then(res => res.prefixSig) })
+    }
 }
 
 describe('Kepler Client', () => {
@@ -63,7 +64,7 @@ describe('Kepler Client', () => {
         console.log(await genClient().then(async c => await c.getActiveAccount()))
         const len = 10
         return await expect(Promise.all(Array(len).map(async _ => {
-            const client = new Kepler('https://localhost:8000', await authenticator(await genClient(), 'test'))
+            const client = new Kepler('http://localhost:8000', await authenticator(await genClient(), 'test'))
             return await client.createOrbit({ hi: 'there' }).then(async res => res.status)
         })).then(results => results.every(result => result === 200))).resolves.toBe(true)
     })
