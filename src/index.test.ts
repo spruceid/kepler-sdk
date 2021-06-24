@@ -27,6 +27,14 @@ const genClient = async (): Promise<DAppClient> => {
         requestSignPayload: async ({ payload }) => ({ signature: await ims.sign(payload).then(res => res.prefixSig) })
     }
 }
+const create = async (hostURL: string = 'http://localhost:8000') => {
+    const client = new Kepler(hostURL, await authenticator(await genClient(), 'test'))
+    const res0 = await client.createOrbit({ hi: 'there' })
+    expect(res0.status).toEqual(200)
+    const res1 = await client.resolve(await res0.text())
+    expect(res1.status).toEqual(200)
+    return await expect(res1.json()).resolves.toEqual({ hi: 'there' })
+}
 
 describe('Kepler Client', () => {
     let authn: Authenticator;
@@ -59,14 +67,20 @@ describe('Kepler Client', () => {
         return await expect(getOrbitId(pkh, { domain, index: 0 })).resolves.toEqual(oid)
     })
 
-    it('load', async () => {
-        console.log("reja")
-        console.log(await genClient().then(async c => await c.getActiveAccount()))
-        const len = 10
-        return await expect(Promise.all(Array(len).map(async _ => {
-            const client = new Kepler('http://localhost:8000', await authenticator(await genClient(), 'test'))
-            return await client.createOrbit({ hi: 'there' }).then(async res => res.status)
-        })).then(results => results.every(result => result === 200))).resolves.toBe(true)
+    it('sequential load', async () => {
+        const len = 1000
+        for (let i = 0; i < len; i++) {
+            await create()
+        }
+    })
+
+    it('concurrent load', async () => {
+        const len = 1000
+        const p = []
+        for (let i = 0; i < len; i++) {
+            p.push(create())
+        }
+        await Promise.all(p)
     })
 
     it('naive integration test', async () => {
