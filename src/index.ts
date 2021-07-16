@@ -1,5 +1,5 @@
-import {DAppClient, SigningType} from '@airgap/beacon-sdk';
-import fetch, {Response} from 'cross-fetch';
+import { DAppClient, SigningType } from '@airgap/beacon-sdk';
+import fetch, { Response } from 'cross-fetch';
 import CID from 'cids';
 import multihashing from 'multihashing-async';
 
@@ -15,30 +15,33 @@ export interface Authenticator {
     createOrbit: (cids: string[]) => Promise<string>;
 }
 
-export interface AuthFactory<B> {
-    <S extends B>(signer: S, domain: string): Promise<Authenticator>;
-}
-
-export const authenticator: AuthFactory<DAppClient> = async (client, domain: string) => {
-    const {publicKey: pk, address: pkh} = await client.getActiveAccount().then(acc => {
+export const authenticator = async (client: DAppClient, domain: string, contract?: string): Promise<Authenticator> => {
+    const { publicKey: pk, address: pkh } = await client.getActiveAccount().then(acc => {
         if (acc === undefined) {
             throw new Error("No Active Account")
         }
         return acc
     });
 
+    const params = contract ? {
+        contract
+    } : {
+        address: pkh,
+        index: 0
+    };
+
     return {
         content: async (orbit: string, cids: string[], action: Action): Promise<string> => {
             const auth = createTzAuthContentMessage(orbit, pk, pkh, action, cids, domain);
-            const {signature} = await client.requestSignPayload({
+            const { signature } = await client.requestSignPayload({
                 signingType: SigningType.MICHELINE,
                 payload: stringEncoder(auth)
             });
             return auth + " " + signature
         },
         createOrbit: async (cids: string[]): Promise<string> => {
-            const auth = await createTzAuthCreationMessage(pk, pkh, cids, {address: pkh, domain, index: 0})
-            const {signature} = await client.requestSignPayload({
+            const auth = await createTzAuthCreationMessage(pk, pkh, cids, domain, params)
+            const { signature } = await client.requestSignPayload({
                 signingType: SigningType.MICHELINE,
                 payload: stringEncoder(auth)
             });
@@ -51,7 +54,7 @@ export class Kepler {
     constructor(
         private url: string,
         private auth: Authenticator,
-    ) {}
+    ) { }
 
     public async resolve(keplerUri: string, authenticate: boolean = true): Promise<Response> {
         if (!keplerUri.startsWith("kepler://")) throw new Error("Invalid Kepler URI");
@@ -91,7 +94,7 @@ export class Kepler {
             return await fetch(this.url, {
                 method: 'POST',
                 body: await makeFormRequest(first, ...rest),
-                headers: {'Authorization': auth}
+                headers: { 'Authorization': auth }
             });
         } else {
             return await fetch(this.url, {
@@ -111,7 +114,7 @@ export class Orbit {
         private url: string,
         private orbitId: string,
         private auth: Authenticator,
-    ) {}
+    ) { }
 
     public get orbit(): string {
         return this.orbitId
@@ -120,7 +123,7 @@ export class Orbit {
     public async get(cid: string, authenticate: boolean = true): Promise<Response> {
         return await fetch(makeContentPath(this.url, this.orbit, cid), {
             method: "GET",
-            headers: authenticate ? {"Authorization": await this.auth.content(this.orbit, [cid], Action.get)} : undefined
+            headers: authenticate ? { "Authorization": await this.auth.content(this.orbit, [cid], Action.get) } : undefined
         })
     }
 
@@ -131,7 +134,7 @@ export class Orbit {
                 method: "POST",
                 // @ts-ignore
                 body: await makeFormRequest(first, ...rest),
-                headers: {"Authorization": auth}
+                headers: { "Authorization": auth }
             })
         } else {
             return await fetch(makeOrbitPath(this.url, this.orbit), {
@@ -148,7 +151,7 @@ export class Orbit {
     public async del(cid: string): Promise<Response> {
         return await fetch(makeContentPath(this.url, this.orbit, cid), {
             method: 'DELETE',
-            headers: {'Authorization': await this.auth.content(this.orbit, [cid], Action.delete)}
+            headers: { 'Authorization': await this.auth.content(this.orbit, [cid], Action.delete) }
         })
     }
 
@@ -165,7 +168,7 @@ export const stringEncoder = (s: string): string => {
 const addContent = async <T>(form: FormData, content: T) => {
     form.append(
         await makeCid(content),
-        new Blob([JSON.stringify(content)], {type: 'application/json'})
+        new Blob([JSON.stringify(content)], { type: 'application/json' })
     );
 }
 
@@ -174,11 +177,11 @@ const makeCid = async <T>(content: T, codec: string = 'json'): Promise<string> =
 const toPaddedHex = (n: number, padLen: number = 8, padChar: string = '0'): string =>
     n.toString(16).padStart(padLen, padChar)
 
-export const getOrbitId = async (pkh: string, params: {domain?: string; salt?: string; index?: number;} = {}): Promise<string> => {
-    return await makeCid(`tz${orbitParams({address: pkh, ...params})}`, 'raw');
+export const getOrbitId = async (params: TzOrbitParams): Promise<string> => {
+    return await makeCid(`tz${orbitParams({ ...params })}`, 'raw');
 }
 
-export const orbitParams = (params: {[k: string]: string | number}): string => {
+export const orbitParams = (params: { [k: string]: string | number }): string => {
     let p = [];
     for (const [key, value] of Object.entries(params)) {
         p.push(`${key}=${typeof value === 'string' ? value : value.toString()}`);
@@ -190,8 +193,14 @@ export const orbitParams = (params: {[k: string]: string | number}): string => {
 const createTzAuthContentMessage = (orbit: string, pk: string, pkh: string, action: Action, cids: string[], domain: string): string =>
     `Tezos Signed Message: ${domain} ${(new Date()).toISOString()} ${pk} ${pkh} ${orbit} ${action} ${cids.join(' ')}`
 
-const createTzAuthCreationMessage = async (pk: string, pkh: string, cids: string[], params: {address: string; domain: string; salt?: string; index?: number;}): Promise<string> =>
-    `Tezos Signed Message: ${params.domain} ${(new Date()).toISOString()} ${pk} ${pkh} ${await getOrbitId(pkh, params)} CREATE tz${orbitParams(params)} ${cids.join(' ')}`
+type TzOrbitParams = {
+    address: string; salt?: string; index?: number;
+} | {
+    contract: string; salt?: string;
+}
+
+const createTzAuthCreationMessage = async (pk: string, pkh: string, cids: string[], domain: string, params: TzOrbitParams): Promise<string> =>
+    `Tezos Signed Message: ${domain} ${(new Date()).toISOString()} ${pk} ${pkh} ${await getOrbitId(params)} CREATE tz${orbitParams(params)} ${cids.join(' ')}`
 
 const makeOrbitPath = (url: string, orbit: string): string => url + "/" + orbit
 
@@ -200,6 +209,6 @@ const makeContentPath = (url: string, orbit: string, cid: string): string => mak
 const makeFormRequest = async (first: any, ...rest: any[]): Promise<FormData> => {
     const data = new FormData();
     await addContent(data, first)
-    for (const content of rest) {await addContent(data, content)}
+    for (const content of rest) { await addContent(data, content) }
     return data
 }
