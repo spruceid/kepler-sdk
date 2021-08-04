@@ -55,13 +55,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.orbitParams = exports.getOrbitId = exports.stringEncoder = exports.Orbit = exports.Kepler = exports.tezosAuthenticator = exports.Action = exports.ethAuthenticator = void 0;
-var beacon_sdk_1 = require("@airgap/beacon-sdk");
+exports.orbitParams = exports.getOrbitId = exports.Orbit = exports.Kepler = exports.Action = exports.tzStringAuthenticator = exports.ethZcapAuthenticator = void 0;
 var cross_fetch_1 = __importDefault(require("cross-fetch"));
 var cids_1 = __importDefault(require("cids"));
 var multihashing_async_1 = __importDefault(require("multihashing-async"));
-var zcap_1 = require("./zcap");
-Object.defineProperty(exports, "ethAuthenticator", { enumerable: true, get: function () { return zcap_1.ethAuthenticator; } });
+var ethZcap_1 = require("./ethZcap");
+Object.defineProperty(exports, "ethZcapAuthenticator", { enumerable: true, get: function () { return ethZcap_1.ethZcapAuthenticator; } });
+var tzString_1 = require("./tzString");
+Object.defineProperty(exports, "tzStringAuthenticator", { enumerable: true, get: function () { return tzString_1.tzStringAuthenticator; } });
 var Action;
 (function (Action) {
     Action["get"] = "GET";
@@ -69,64 +70,10 @@ var Action;
     Action["delete"] = "DEL";
     Action["list"] = "LIST";
 })(Action = exports.Action || (exports.Action = {}));
-var tezosAuthenticator = function (client, domain, prepareInvokeCapability, completeInvokeCapability) { return __awaiter(void 0, void 0, void 0, function () {
-    var _a, pk, pkh;
-    return __generator(this, function (_b) {
-        switch (_b.label) {
-            case 0: return [4 /*yield*/, client.getActiveAccount().then(function (acc) {
-                    if (acc === undefined) {
-                        throw new Error("No Active Account");
-                    }
-                    return acc;
-                })];
-            case 1:
-                _a = _b.sent(), pk = _a.publicKey, pkh = _a.address;
-                return [2 /*return*/, {
-                        content: function (orbit, cids, action) { return __awaiter(void 0, void 0, void 0, function () {
-                            var auth, signature;
-                            return __generator(this, function (_a) {
-                                switch (_a.label) {
-                                    case 0:
-                                        auth = createTzAuthContentMessage(orbit, pk, pkh, action, cids, domain);
-                                        return [4 /*yield*/, client.requestSignPayload({
-                                                signingType: beacon_sdk_1.SigningType.MICHELINE,
-                                                payload: exports.stringEncoder(auth)
-                                            })];
-                                    case 1:
-                                        signature = (_a.sent()).signature;
-                                        return [2 /*return*/, { "Authorization": auth + " " + signature }];
-                                }
-                            });
-                        }); },
-                        createOrbit: function (cids) { return __awaiter(void 0, void 0, void 0, function () {
-                            var auth, signature;
-                            return __generator(this, function (_a) {
-                                switch (_a.label) {
-                                    case 0: return [4 /*yield*/, createTzAuthCreationMessage(pk, pkh, cids, { address: pkh, domain: domain, index: 0 })];
-                                    case 1:
-                                        auth = _a.sent();
-                                        return [4 /*yield*/, client.requestSignPayload({
-                                                signingType: beacon_sdk_1.SigningType.MICHELINE,
-                                                payload: exports.stringEncoder(auth)
-                                            })];
-                                    case 2:
-                                        signature = (_a.sent()).signature;
-                                        return [2 /*return*/, { "Authorization": auth + " " + signature }];
-                                }
-                            });
-                        }); }
-                    }];
-        }
-    });
-}); };
-exports.tezosAuthenticator = tezosAuthenticator;
 var Kepler = /** @class */ (function () {
-    function Kepler(url, auth, delegation, prepareInvocationCapability, completeInvocationCapability) {
+    function Kepler(url, auth) {
         this.url = url;
         this.auth = auth;
-        this.delegation = delegation;
-        this.prepareInvocationCapability = prepareInvocationCapability;
-        this.completeInvocationCapability = completeInvocationCapability;
     }
     Kepler.prototype.resolve = function (keplerUri, authenticate) {
         if (authenticate === void 0) { authenticate = true; }
@@ -152,7 +99,7 @@ var Kepler = /** @class */ (function () {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.orbit(orbit).get(cid, authenticate, this.delegation)];
+                    case 0: return [4 /*yield*/, this.orbit(orbit).get(cid, authenticate)];
                     case 1: return [2 /*return*/, _a.sent()];
                 }
             });
@@ -256,7 +203,7 @@ var Orbit = /** @class */ (function () {
         enumerable: false,
         configurable: true
     });
-    Orbit.prototype.get = function (cid, authenticate, delegation) {
+    Orbit.prototype.get = function (cid, authenticate) {
         if (authenticate === void 0) { authenticate = true; }
         return __awaiter(this, void 0, void 0, function () {
             var _a, _b, _c, _d;
@@ -273,7 +220,7 @@ var Orbit = /** @class */ (function () {
                         _d = [{}];
                         return [4 /*yield*/, this.auth.content(this.orbit, [cid], Action.get)];
                     case 1:
-                        _c = __assign.apply(void 0, [__assign.apply(void 0, _d.concat([_f.sent()])), { "Delegation": delegation }]);
+                        _c = __assign.apply(void 0, _d.concat([_f.sent()]));
                         return [3 /*break*/, 3];
                     case 2:
                         _c = undefined;
@@ -371,11 +318,6 @@ var Orbit = /** @class */ (function () {
     return Orbit;
 }());
 exports.Orbit = Orbit;
-var stringEncoder = function (s) {
-    var bytes = Buffer.from(s, 'utf8');
-    return "0501" + toPaddedHex(bytes.length) + bytes.toString('hex');
-};
-exports.stringEncoder = stringEncoder;
 var addContent = function (form, content) { return __awaiter(void 0, void 0, void 0, function () {
     var _a, _b;
     return __generator(this, function (_c) {
@@ -401,22 +343,14 @@ var makeCid = function (content, codec) {
         }
     }); });
 };
-var toPaddedHex = function (n, padLen, padChar) {
-    if (padLen === void 0) { padLen = 8; }
-    if (padChar === void 0) { padChar = '0'; }
-    return n.toString(16).padStart(padLen, padChar);
-};
-var getOrbitId = function (type_, pkh, params) {
-    if (params === void 0) { params = {}; }
-    return __awaiter(void 0, void 0, void 0, function () {
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0: return [4 /*yield*/, makeCid("" + type_ + exports.orbitParams(__assign({ address: pkh }, params)), 'raw')];
-                case 1: return [2 /*return*/, _a.sent()];
-            }
-        });
+var getOrbitId = function (type_, params) { return __awaiter(void 0, void 0, void 0, function () {
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0: return [4 /*yield*/, makeCid("" + type_ + exports.orbitParams(params), 'raw')];
+            case 1: return [2 /*return*/, _a.sent()];
+        }
     });
-};
+}); };
 exports.getOrbitId = getOrbitId;
 var orbitParams = function (params) {
     var p = [];
@@ -428,28 +362,6 @@ var orbitParams = function (params) {
     return ';' + p.join(';');
 };
 exports.orbitParams = orbitParams;
-var createTzAuthContentMessage = function (orbit, pk, pkh, action, cids, domain) {
-    return "Tezos Signed Message: " + domain + " " + (new Date()).toISOString() + " " + pk + " " + pkh + " " + orbit + " " + action + " " + cids.join(' ');
-};
-var createEthAuthContentMessage = function (orbit, pkh, action, cids, domain) {
-    return domain + " " + (new Date()).toISOString() + " " + pkh + " " + orbit + " " + action + " " + cids.join(' ');
-};
-var createTzAuthCreationMessage = function (pk, pkh, cids, params) { return __awaiter(void 0, void 0, void 0, function () { var _a; return __generator(this, function (_b) {
-    switch (_b.label) {
-        case 0:
-            _a = "Tezos Signed Message: " + params.domain + " " + (new Date()).toISOString() + " " + pk + " " + pkh + " ";
-            return [4 /*yield*/, exports.getOrbitId("tz", pkh, params)];
-        case 1: return [2 /*return*/, _a + (_b.sent()) + " CREATE tz" + exports.orbitParams(params) + " " + cids.join(' ')];
-    }
-}); }); };
-var createEthAuthCreationMessage = function (pkh, cids, params) { return __awaiter(void 0, void 0, void 0, function () { var _a; return __generator(this, function (_b) {
-    switch (_b.label) {
-        case 0:
-            _a = params.domain + " " + (new Date()).toISOString() + " " + pkh + " ";
-            return [4 /*yield*/, exports.getOrbitId("eth", pkh, params)];
-        case 1: return [2 /*return*/, _a + (_b.sent()) + " CREATE eth" + exports.orbitParams(params) + " " + cids.join(' ')];
-    }
-}); }); };
 var makeOrbitPath = function (url, orbit) { return url + "/" + orbit; };
 var makeContentPath = function (url, orbit, cid) { return makeOrbitPath(url, orbit) + "/" + cid; };
 var makeFormRequest = function (first) {

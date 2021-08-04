@@ -1,5 +1,5 @@
-import { DAppClient } from '@airgap/beacon-sdk';
-export { ethAuthenticator } from './zcap';
+export { ethZcapAuthenticator } from './ethZcap';
+export { tzStringAuthenticator } from './tzString';
 export declare enum Action {
     get = "GET",
     put = "PUT",
@@ -10,17 +10,10 @@ export interface Authenticator {
     content: (orbit: string, cids: string[], action: Action) => Promise<HeadersInit>;
     createOrbit: (cids: string[]) => Promise<HeadersInit>;
 }
-export interface AuthFactory<B> {
-    <S extends B>(signer: S, domain: string, prepareInvokeCapability: any, completeInvokeCapability: any): Promise<Authenticator>;
-}
-export declare const tezosAuthenticator: AuthFactory<DAppClient>;
 export declare class Kepler {
     private url;
     private auth;
-    private delegation;
-    private prepareInvocationCapability;
-    private completeInvocationCapability;
-    constructor(url: string, auth: Authenticator, delegation: string, prepareInvocationCapability: any, completeInvocationCapability: any);
+    constructor(url: string, auth: Authenticator);
     resolve(keplerUri: string, authenticate?: boolean): Promise<Response>;
     get(orbit: string, cid: string, authenticate?: boolean): Promise<Response>;
     put(orbit: string, first: any, ...rest: any[]): Promise<Response>;
@@ -35,16 +28,13 @@ export declare class Orbit {
     private auth;
     constructor(url: string, orbitId: string, auth: Authenticator);
     get orbit(): string;
-    get(cid: string, authenticate: boolean | undefined, delegation: string): Promise<Response>;
+    get(cid: string, authenticate?: boolean): Promise<Response>;
     put(first: any, ...rest: any[]): Promise<Response>;
     del(cid: string): Promise<Response>;
     list(): Promise<Response>;
 }
-export declare const stringEncoder: (s: string) => string;
-export declare const getOrbitId: (type_: string, pkh: string, params?: {
-    domain?: string;
-    salt?: string;
-    index?: number;
+export declare const getOrbitId: (type_: string, params: {
+    [k: string]: string | number;
 }) => Promise<string>;
 export declare const orbitParams: (params: {
     [k: string]: string | number;

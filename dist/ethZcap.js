@@ -36,8 +36,9 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ethAuthenticator = void 0;
-var ethAuthenticator = function (client, domain, prepareInvokeCapability, completeInvokeCapability) { return __awaiter(void 0, void 0, void 0, function () {
+exports.ethZcapAuthenticator = void 0;
+var _1 = require(".");
+var ethZcapAuthenticator = function (client, domain, prepareInvokeCapability, completeInvokeCapability) { return __awaiter(void 0, void 0, void 0, function () {
     var accounts, pkh, prepareInvocation, completeInvocation;
     return __generator(this, function (_a) {
         switch (_a.label) {
@@ -71,8 +72,8 @@ var ethAuthenticator = function (client, domain, prepareInvokeCapability, comple
                             return __generator(this, function (_e) {
                                 switch (_e.label) {
                                     case 0:
-                                        inv = invProps();
-                                        return [4 /*yield*/, prepareInvocation("https://demo.kepler.to/" + orbit + "/" + cids[0] + "/read/" + pkh + "#uuid", inv, sigProps("did:pkh:eth:" + pkh), keyProps)];
+                                        inv = invProps(actionToKey(action, cids));
+                                        return [4 /*yield*/, prepareInvocation(orbit, inv, sigProps("did:pkh:eth:" + pkh), keyProps)];
                                     case 1:
                                         prep = _e.sent();
                                         console.log(JSON.stringify(prep));
@@ -100,7 +101,7 @@ var ethAuthenticator = function (client, domain, prepareInvokeCapability, comple
                             return __generator(this, function (_e) {
                                 switch (_e.label) {
                                     case 0:
-                                        inv = invProps('Create');
+                                        inv = invProps({ create: cids });
                                         return [4 /*yield*/, prepareInvocation("orbit_id", inv, sigProps("did:pkh:eth:" + pkh), keyProps)];
                                     case 1:
                                         prep = _e.sent();
@@ -126,10 +127,29 @@ var ethAuthenticator = function (client, domain, prepareInvokeCapability, comple
         }
     });
 }); };
-exports.ethAuthenticator = ethAuthenticator;
+exports.ethZcapAuthenticator = ethZcapAuthenticator;
 var keyProps = { "kty": "EC", "crv": "secp256k1", "alg": "ES256K-R", "key_ops": ["signTypedData"] };
+var ContentActionKeys;
+(function (ContentActionKeys) {
+    ContentActionKeys["get"] = "get";
+    ContentActionKeys["put"] = "put";
+    ContentActionKeys["del"] = "del";
+})(ContentActionKeys || (ContentActionKeys = {}));
+var actionToKey = function (action, cids) {
+    var _a, _b, _c;
+    switch (action) {
+        case _1.Action.get:
+            return _a = {}, _a[ContentActionKeys.get] = cids, _a;
+        case _1.Action.put:
+            return _b = {}, _b[ContentActionKeys.put] = cids, _b;
+        case _1.Action.delete:
+            return _c = {}, _c[ContentActionKeys.del] = cids, _c;
+        case _1.Action.list:
+            return 'list';
+    }
+};
 var invProps = function (capabilityAction) {
-    if (capabilityAction === void 0) { capabilityAction = 'Read'; }
+    if (capabilityAction === void 0) { capabilityAction = 'list'; }
     return ({
         "@context": "https://w3id.org/security/v2",
         id: "urn:uuid:helo",
