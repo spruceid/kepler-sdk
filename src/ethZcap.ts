@@ -1,8 +1,9 @@
-import { Authenticator, Action } from "."
+import { Authenticator, Action } from ".";
+import { invProps, actionToKey } from './zcap';
 
 type Preperation = any;
 
-export const ethZcapAuthenticator = async (client: any, domain: string, prepareInvokeCapability: any, completeInvokeCapability: any): Promise<Authenticator> => {
+export const ethZcapAuthenticator = async (client: any, prepareInvokeCapability: any, completeInvokeCapability: any): Promise<Authenticator> => {
     const accounts = await client.request({ method: 'eth_accounts' });
     if (accounts.length === 0) {
         throw new Error("No Active Account")
@@ -48,35 +49,6 @@ export const ethZcapAuthenticator = async (client: any, domain: string, prepareI
 }
 
 const keyProps = { "kty": "EC", "crv": "secp256k1", "alg": "ES256K-R", "key_ops": ["signTypedData"] };
-
-enum ContentActionKeys {
-    get = 'get',
-    put = 'put',
-    del = 'del'
-}
-
-type CapContentAction = {[K in ContentActionKeys]?: string[]}
-type CapOrbitAction = 'list' | { create: string[] }
-
-const actionToKey = (action: Action, cids: string[]): CapContentAction | 'list' => {
-    switch (action) {
-            case Action.get:
-                return { [ContentActionKeys.get]: cids}
-            case Action.put:
-                return { [ContentActionKeys.put]: cids}
-            case Action.delete:
-                return { [ContentActionKeys.del]: cids}
-            case Action.list:
-                return 'list'
-    }
-}
-
-const invProps = (capabilityAction: CapContentAction | CapOrbitAction = 'list') => ({
-    "@context": "https://w3id.org/security/v2",
-    // TODO unique
-    id: "urn:uuid:helo",
-    capabilityAction
-})
 
 const sigProps = (did: string) => ({
     // type: "EthereumEip712Signature2021",
