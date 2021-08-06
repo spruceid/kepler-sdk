@@ -19,7 +19,7 @@ export const ethZcapAuthenticator = async (client: any, prepareInvokeCapability:
 
     return {
         content: async (orbit: string, cids: string[], action: Action): Promise<HeadersInit> => {
-            const inv = invProps(actionToKey(action, cids));
+            const inv = invProps(orbit, actionToKey(action, cids));
             const prep = await prepareInvocation(orbit, inv, sigProps(`did:pkh:eth:${pkh}`), keyProps);
             console.log(JSON.stringify(prep))
             if (!prep || prep.signingInput === undefined || prep.signingInput.primaryType === undefined) {
@@ -33,7 +33,7 @@ export const ethZcapAuthenticator = async (client: any, prepareInvokeCapability:
             return { "Invocation": JSON.stringify(await completeInvocation(inv, prep, signature)) }
         },
         createOrbit: async (cids: string[]): Promise<HeadersInit> => {
-            const inv = invProps({ create: cids });
+            const inv = invProps("orbit_id", { create: cids });
             const prep = await prepareInvocation("orbit_id", inv, sigProps(`did:pkh:eth:${pkh}`), keyProps);
             if (!prep || prep.signingInput === undefined || prep.signingInput.primaryType === undefined) {
                 console.log("Proof preparation:", prep);
@@ -53,7 +53,7 @@ const keyProps = { "kty": "EC", "crv": "secp256k1", "alg": "ES256K-R", "key_ops"
 const sigProps = (did: string) => ({
     // type: "EthereumEip712Signature2021",
     verificationMethod: did + '#Recovery2020',
-    proofPurpose: 'assertionMethod',
+    proofPurpose: 'capabilityInocation',
     eip712Domain: {
         primaryType: "CapabilityInvocation",
         domain: {

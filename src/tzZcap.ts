@@ -22,12 +22,12 @@ export const TzZcapAuthenticator = async <D extends DAppClient>(client: D, prepa
 
     return {
         content: async (orbit: string, cids: string[], action: Action): Promise<HeadersInit> => {
-            const inv = invProps(actionToKey(action, cids));
+            const inv = invProps(orbit, actionToKey(action, cids));
             const prep = await prepareInvocation(orbit, inv, sigProps(`did:pkh:tz:${pkh}`), keyProps);
             console.log(JSON.stringify(prep))
             if (!prep || prep.signingInput === undefined) {
                 console.log("Proof preparation:", prep);
-                throw new Error("Expected EIP-712 TypedData");
+                throw new Error("Missing Signing Input");
             }
 
             const { signature } = await client.requestSignPayload({
@@ -37,12 +37,12 @@ export const TzZcapAuthenticator = async <D extends DAppClient>(client: D, prepa
             return { "Invocation": JSON.stringify(await completeInvocation(inv, prep, signature)) }
         },
         createOrbit: async (cids: string[]): Promise<HeadersInit> => {
-            const inv = invProps({ create: cids });
+            const inv = invProps("orbit_id", { create: cids });
             // TODO need orbit id here
             const prep = await prepareInvocation("orbit_id", inv, sigProps(`did:pkh:tz:${pkh}`), keyProps);
             if (!prep || prep.signingInput === undefined) {
                 console.log("Proof preparation:", prep);
-                throw new Error("Expected EIP-712 TypedData");
+                throw new Error("Missing Signing Input");
             }
             const { signature } = await client.requestSignPayload({
                 signingType: SigningType.MICHELINE,
