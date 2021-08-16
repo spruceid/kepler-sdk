@@ -2,6 +2,7 @@ import fetch, { Response } from 'cross-fetch';
 import CID from 'cids';
 import multihashing from 'multihashing-async';
 export { ethZcapAuthenticator } from './ethZcap';
+export { tzZcapAuthenticator } from './tzZcap';
 export { tzStringAuthenticator } from './tzString';
 
 export enum Action {
@@ -94,14 +95,14 @@ export class Orbit {
         const auth = await this.auth.content(this.orbit, await Promise.all([first, ...rest].map(async (c) => await makeCid(c))), Action.put)
         if (rest.length >= 1) {
             return await fetch(makeOrbitPath(this.url, this.orbit), {
-                method: "POST",
+                method: "PUT",
                 // @ts-ignore
                 body: await makeFormRequest(first, ...rest),
                 headers: auth
             })
         } else {
             return await fetch(makeOrbitPath(this.url, this.orbit), {
-                method: "POST",
+                method: "PUT",
                 body: JSON.stringify(first),
                 headers: { ...auth, ...{ "Content-Type": "application/json" } }
             })

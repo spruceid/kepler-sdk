@@ -1,6 +1,7 @@
-import { Kepler, Action, Authenticator, authenticator, stringEncoder, getOrbitId, orbitParams } from './';
+import { Kepler, Action, Authenticator, tzZcapAuthenticator, getOrbitId, orbitParams } from './';
 import { DAppClient } from '@airgap/beacon-sdk';
 import { InMemorySigner } from '@taquito/signer';
+import { JWKFromTezos, prepareInvokeCapability, completeInvokeCapability } from 'didkit-wasm';
 
 const ims = new InMemorySigner('edsk2gL9deG8idefWJJWNNtKXeszWR4FrEdNFM5622t1PkzH66oH3r');
 const mockAccount = jest.fn(async () => ({ publicKey: await ims.publicKey(), address: await ims.publicKeyHash() }))
@@ -16,7 +17,8 @@ describe('Kepler Client', () => {
     let authn: Authenticator;
 
     beforeAll(async () => {
-        authn = await authenticator(new DAppClient({ name: "Test Client" }), 'test-domain');
+        // await init();
+        authn = await tzZcapAuthenticator(new DAppClient({ name: "Test Client" }), prepareInvokeCapability, completeInvokeCapability, JWKFromTezos);
     })
 
     it('Encodes strings correctly', () => expect(stringEncoder('message')).toBe('0501000000076d657373616765'))
@@ -40,7 +42,7 @@ describe('Kepler Client', () => {
         const pkh = "tz1YSb7gXhgBw46nSXthhoSzhJdbQf9h92Gy"
         const domain = "kepler.tzprofiles.com"
 
-        return await expect(getOrbitId(pkh, { domain, index: 0 })).resolves.toEqual(oid)
+        return await expect(getOrbitId("tz", { address: pkh, domain, index: 0 })).resolves.toEqual(oid)
     })
 
     it('naive integration test', async () => {

@@ -23,9 +23,9 @@ export const actionToKey = (action: Action, cids: string[]): CapContentAction | 
 }
 
 export const invProps = (orbit: string, capabilityAction: CapContentAction | CapOrbitAction = 'list') => ({
-    "@context": "https://w3id.org/security/v2",
+    "@context": ["https://w3id.org/security/v2", { capabilityAction: { "@id": "sec:capabilityAction", "@type": "@json" } }],
     // TODO unique
     id: "urn:uuid:helo",
-    orbit,
+    invocationTarget: orbit,
     capabilityAction
 })
