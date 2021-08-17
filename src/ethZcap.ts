@@ -20,7 +20,7 @@ export const ethZcapAuthenticator = async (client: any, prepareInvokeCapability:
     return {
         content: async (orbit: string, cids: string[], action: Action): Promise<HeadersInit> => {
             const inv = invProps(orbit, actionToKey(action, cids));
-            const prep = await prepareInvocation(orbit, inv, sigProps(`did:pkh:eth:${pkh}`), keyProps);
+            const prep = await prepareInvocation("kepler://" + orbit, inv, sigProps(`did:pkh:eth:${pkh}`), keyProps);
             console.log(JSON.stringify(prep))
             if (!prep || prep.signingInput === undefined || prep.signingInput.primaryType === undefined) {
                 console.log("Proof preparation:", prep);
@@ -30,11 +30,11 @@ export const ethZcapAuthenticator = async (client: any, prepareInvokeCapability:
                 method: 'eth_signTypedData_v4',
                 params: [pkh, JSON.stringify(prep.signingInput)],
             });
-            return { "Invocation": JSON.stringify(await completeInvocation(inv, prep, signature)) }
+            return { "X-Kepler-Invocation": JSON.stringify(await completeInvocation(inv, prep, signature)) }
         },
         createOrbit: async (cids: string[]): Promise<HeadersInit> => {
             const inv = invProps("orbit_id", { create: cids });
-            const prep = await prepareInvocation("orbit_id", inv, sigProps(`did:pkh:eth:${pkh}`), keyProps);
+            const prep = await prepareInvocation("kepler://orbit_id", inv, sigProps(`did:pkh:eth:${pkh}`), keyProps);
             if (!prep || prep.signingInput === undefined || prep.signingInput.primaryType === undefined) {
                 console.log("Proof preparation:", prep);
                 throw new Error("Expected EIP-712 TypedData");
@@ -43,7 +43,7 @@ export const ethZcapAuthenticator = async (client: any, prepareInvokeCapability:
                 method: 'eth_signTypedData_v4',
                 params: [pkh, JSON.stringify(prep.signingInput)],
             });
-            return { "Invocation": JSON.stringify(await completeInvocation(inv, prep, signature)) }
+            return { "X-Kepler-Invocation": JSON.stringify(await completeInvocation(inv, prep, signature)) }
         }
     }
 }
