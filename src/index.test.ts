@@ -1,7 +1,9 @@
-import { Kepler, Action, Authenticator, tzZcapAuthenticator, getOrbitId, orbitParams } from './';
+import { Kepler, Action, Authenticator, tzZcapAuthenticator, getOrbitId, orbitParams, tzStringAuthenticator } from './';
 import { DAppClient } from '@airgap/beacon-sdk';
 import { InMemorySigner } from '@taquito/signer';
-import { JWKFromTezos, prepareInvokeCapability, completeInvokeCapability } from 'didkit-wasm';
+import { JWKFromTezos, prepareInvokeCapability, completeInvokeCapability, verifyInvocationSignature } from 'didkit-wasm';
+import { stringEncoder } from './tzString';
+import { sigProps } from './tzZcap';
 
 const ims = new InMemorySigner('edsk2gL9deG8idefWJJWNNtKXeszWR4FrEdNFM5622t1PkzH66oH3r');
 const mockAccount = jest.fn(async () => ({ publicKey: await ims.publicKey(), address: await ims.publicKeyHash() }))
@@ -15,17 +17,21 @@ DAppClient.prototype.requestSignPayload = mockSign;
 
 describe('Kepler Client', () => {
     let authn: Authenticator;
+    let authn2: Authenticator;
 
     beforeAll(async () => {
         // await init();
-        authn = await tzZcapAuthenticator(new DAppClient({ name: "Test Client" }), prepareInvokeCapability, completeInvokeCapability, JWKFromTezos);
+        const dc = new DAppClient({ name: "Test Client" });
+        authn = await tzZcapAuthenticator(dc, prepareInvokeCapability, completeInvokeCapability, JWKFromTezos);
+        authn2 = await tzStringAuthenticator(dc, 'test');
     })
 
     it('Encodes strings correctly', () => expect(stringEncoder('message')).toBe('0501000000076d657373616765'))
 
     it('Creates auth tokens', async () => {
-        const cid = 'uAYAEHiB0uGRNPXEMdA9L-lXR2MKIZzKlgW1z6Ug4fSv3LRSPfQ';
-        const orbit = 'uAYAEHiB_A0nLzANfXNkW5WCju51Td_INJ6UacFK7qY6zejzKoA';
+        const cid = 'z3v8BBKAGbGkuFU8TQq3J7k9XDs9udtMCic4KMS6HBxHczS1Tyv'
+        const orbit = 'z3v8BBKAxmb5DPsoCsaucZZ26FzPSbLWDAGtpHSiKjA4AJLQ3my'
+        const auth2 = await authn2.content(orbit, [cid], Action.get)
         const auth = await authn.content(orbit, [cid], Action.get)
     })
 
