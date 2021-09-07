@@ -32,7 +32,11 @@ describe('Kepler Client', () => {
         const cid = 'z3v8BBKAGbGkuFU8TQq3J7k9XDs9udtMCic4KMS6HBxHczS1Tyv'
         const orbit = 'z3v8BBKAxmb5DPsoCsaucZZ26FzPSbLWDAGtpHSiKjA4AJLQ3my'
         const auth2 = await authn2.content(orbit, [cid], Action.get)
+        console.log(auth2)
         const auth = await authn.content(orbit, [cid], Action.get)
+        console.log(auth)
+        // @ts-ignore
+        // console.log(await verifyInvocationSignature(auth['X-Kepler-Invocation'], JSON.stringify(sigProps('did:pkh:tz:tz1WWXeGFgtARRLPPzT2qcpeiQZ8oQb6rBZd'))))
     })
 
     it('Generates correct orbit parameters', async () => {
@@ -55,25 +59,25 @@ describe('Kepler Client', () => {
         const kepler = new Kepler('http://localhost:8000', authn);
 
         const json = { hello: 'hey' };
-        const uri = await kepler.createOrbit(json).then(async res => res.text());
+        const uri = await kepler.orbit('zCT5htkeCtg5pwXJkyFS5zcuidUMzuhrjYR5ostgasmagNkPuYXy').put(json).then(async res => res.text());
 
         await expect(kepler.resolve(uri).then(async (res) => await res.json())).resolves.toEqual(json)
     })
 
     it('naive integration multipart test', async () => {
-        const kepler = new Kepler('https://faad7ca90d6c.ngrok.io', authn);
-        const orbit = kepler.orbit('uAYAEHiB_A0nLzANfXNkW5WCju51Td_INJ6UacFK7qY6zejzKoA');
-        const fakeCid = "not_a_cid";
+        // const kepler = new Kepler('https://faad7ca90d6c.ngrok.io', authn);
+        // const orbit = kepler.orbit('uAYAEHiB_A0nLzANfXNkW5WCju51Td_INJ6UacFK7qY6zejzKoA');
+        // const fakeCid = "not_a_cid";
 
-        const json1 = { hello: 'hey' };
-        const json2 = { hello: 'hey again' };
+        // const json1 = { hello: 'hey' };
+        // const json2 = { hello: 'hey again' };
 
-        await expect(orbit.get(fakeCid).then(res => res.status)).resolves.toEqual(200);
+        // await expect(orbit.get(fakeCid).then(res => res.status)).resolves.toEqual(200);
 
-        const cids = await orbit.put(json1, json2);
-        console.log(cids)
+        // const cids = await orbit.put(json1, json2);
+        // console.log(cids)
 
-        // await expect(orbit.get(cid)).resolves.toEqual(json)
-        // return await expect(orbit.del(cid)).resolves.not.toThrow()
+        // // await expect(orbit.get(cid)).resolves.toEqual(json)
+        // // return await expect(orbit.del(cid)).resolves.not.toThrow()
     })
 })

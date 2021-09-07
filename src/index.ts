@@ -1,8 +1,7 @@
 import fetch, { Response } from 'cross-fetch';
 import CID from 'cids';
 import multihashing from 'multihashing-async';
-export { ethZcapAuthenticator } from './ethZcap';
-export { tzZcapAuthenticator } from './tzZcap';
+export { zcapAuthenticator } from './zcap';
 export { tzStringAuthenticator } from './tzString';
 
 export enum Action {
