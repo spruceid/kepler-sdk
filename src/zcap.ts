@@ -26,8 +26,8 @@ export const zcapAuthenticator = async <C extends Capabilities, D>(client: C, de
     }
 }
 
-export const sessionProps = (invoker: string, capabilityAction: string[] = ['list', 'get'], expiry: Date) => ({
-    invoker, capabilityAction, expiry
+export const sessionProps = (parentCapability: string, invoker: string, capabilityAction: string[] = ['list', 'get'], expiration: Date) => ({
+    parentCapability, invoker, capabilityAction, expiration: expiration.toISOString()
 })
 
 enum ContentActionKeys {
@@ -57,4 +57,4 @@ const invProps = (orbit: string, capabilityAction: CapContentAction | CapOrbitAc
     capabilityAction
 })
 
-const keplerContext = [W3ID_SECURITY_V2, { capabilityAction: { "@id": "sec:capabilityAction", "@type": "@json" } }];
+export const keplerContext = [W3ID_SECURITY_V2, { capabilityAction: { "@id": "sec:capabilityAction", "@type": "@json" } }];
