@@ -26,6 +26,10 @@ export const zcapAuthenticator = async <C extends Capabilities, D>(client: C, de
     }
 }
 
+export const sessionProps = (invoker: string, capabilityAction: string[] = ['list', 'get'], expiry: Date) => ({
+    invoker, capabilityAction, expiry
+})
+
 enum ContentActionKeys {
     get = 'get',
     put = 'put',
