@@ -1,7 +1,7 @@
 import fetch, { Response } from 'cross-fetch';
 import CID from 'cids';
 import multihashing from 'multihashing-async';
-export { zcapAuthenticator, sessionProps } from './zcap';
+export { zcapAuthenticator, startSession, didVmToParams } from './zcap';
 export { tzStringAuthenticator } from './tzString';
 
 export enum Action {

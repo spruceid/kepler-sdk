@@ -26,6 +26,31 @@ export const zcapAuthenticator = async <C extends Capabilities, D>(client: C, de
     }
 }
 
+export const startSession = async <C extends Capabilities, S extends Capabilities>(
+    orbit: string,
+    controller: C,
+    sessionKey: S,
+    rights: string[] = ['list', 'get'],
+    timeMs: number = 1000 * 60,
+): Promise<Authenticator> => {
+    // delegate to session key
+    let exp = new Date(Date.now() + timeMs);
+    const delegation = await controller.delegate(
+        sessionProps("kepler://" + orbit, sessionKey.id(), rights, exp),
+        [],
+        randomId(),
+        keplerContext
+    )
+
+    // return authenticator for client
+    return await zcapAuthenticator(sessionKey, delegation);
+}
+
+export const didVmToParams = (didVm: string, other: { [key: string]: string } = {}) => {
+    const [did, vm] = didVm.split("#");
+    return "did;did=" + did + orbitParams({ ...other, vm })
+}
+
 export const sessionProps = (parentCapability: string, invoker: string, capabilityAction: string[] = ['list', 'get'], expiration: Date) => ({
     parentCapability, invoker, capabilityAction, expiration: expiration.toISOString()
 })

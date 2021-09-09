@@ -1,6 +1,5 @@
-import { Kepler, Action, Authenticator, zcapAuthenticator, getOrbitId, orbitParams, sessionProps } from './';
-import { keplerContext } from './zcap';
-import { tz, didkey, randomId, Capabilities } from '@spruceid/zcap-providers';
+import { Kepler, startSession, didVmToParams } from './';
+import { tz, didkey, Capabilities } from '@spruceid/zcap-providers';
 import * as didkit from '@spruceid/didkit-wasm-node';
 import fetch from 'cross-fetch';
 
@@ -12,27 +11,6 @@ import { randomBytes } from 'crypto';
 const allowlist = 'http://localhost:10000';
 const kepler = 'http://localhost:8000';
 
-const startSession = async <C extends Capabilities, S extends Capabilities>(
-    orbit: string,
-    c: C,
-    s: S,
-    rights: string[] = ['list', 'get'],
-    timeMs: number = 1000 * 60,
-): Promise<Authenticator> => {
-    // delegate to session key
-    let exp = new Date(Date.now() + timeMs);
-    const delegation = await c.delegate(
-        sessionProps("kepler://" + orbit, s.id(), rights, exp),
-        [],
-        randomId(),
-        keplerContext
-    )
-    console.log(delegation)
-
-    // return authenticator for client
-    return await zcapAuthenticator(s, delegation);
-}
-
 describe('Kepler Client', () => {
     let controller: Capabilities;
     let sessionKey: Capabilities;
@@ -41,7 +19,7 @@ describe('Kepler Client', () => {
     beforeAll(async () => {
         // create orbit controller
         controller = await tz(genTzClient(), didkit);
-        const params = controller.id() + ';index=0;';
+        const params = didVmToParams(controller.id(), { index: "0" });
         // register orbit with allowlist
         oid = await fetch(`${allowlist}/${params}`, {
             method: 'PUT',
