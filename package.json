@@ -1,6 +1,6 @@
 {
   "name": "kepler-sdk",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "main": "dist/index.js",
   "license": "Apache-2.0",
   "scripts": {
@@ -19,7 +19,7 @@
     "jest-localstorage-mock": "^2.4.9",
     "ts-jest": "^26.5.4",
     "typescript": "^4.2.3",
-    "@spruceid/zcap-providers": "0.1.0"
+    "@spruceid/zcap-providers": "^0.1.1"
   },
   "dependencies": {
     "cids": "^1.1.6",
