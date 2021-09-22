@@ -1,71 +1,122 @@
-import { Kepler, Action, Authenticator, authenticator, stringEncoder, getOrbitId, orbitParams } from './';
+import { Kepler, startSession, didVmToParams } from './';
+import { tz, didkey, Capabilities } from '@spruceid/zcap-providers';
+import * as didkit from '@spruceid/didkit-wasm-node';
+import fetch from 'cross-fetch';
+
 import { DAppClient } from '@airgap/beacon-sdk';
 import { InMemorySigner } from '@taquito/signer';
+import { b58cencode, prefix } from "@taquito/utils";
+import { randomBytes } from 'crypto';
+import { sessionProps, zcapAuthenticator } from './zcap';
 
-const ims = new InMemorySigner('edsk2gL9deG8idefWJJWNNtKXeszWR4FrEdNFM5622t1PkzH66oH3r');
-const mockAccount = jest.fn(async () => ({ publicKey: await ims.publicKey(), address: await ims.publicKeyHash() }))
-const mockSign = jest.fn(async ({ payload }) => ({ signature: await ims.sign(payload).then(res => res.prefixSig) }))
-
-// @ts-ignore, mock DAppClient account info
-DAppClient.prototype.getActiveAccount = mockAccount;
-
-// @ts-ignore, mock DAppClient signing implementation
-DAppClient.prototype.requestSignPayload = mockSign;
+const allowlist = 'http://localhost:10000';
+const kepler = 'http://localhost:8000';
 
 describe('Kepler Client', () => {
-    let authn: Authenticator;
+    let controller: Capabilities;
+    let sessionKey: Capabilities;
+    let oid: string;
 
     beforeAll(async () => {
-        authn = await authenticator(new DAppClient({ name: "Test Client" }), 'test-domain');
+        // create orbit controller
+        controller = await tz(genTzClient(), didkit);
+        const params = didVmToParams(controller.id(), { index: "0" });
+        // register orbit with allowlist
+        oid = await fetch(`${allowlist}/${params}`, {
+            method: 'PUT',
+            body: JSON.stringify([controller.id()]),
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Hcaptcha-Sitekey': '10000000-ffff-ffff-ffff-000000000001',
+                'X-Hcaptcha-Token': '10000000-aaaa-bbbb-cccc-000000000001'
+            }
+        }).then(async res => res.text());
+
+        // create orbit
+        await fetch(`${kepler}/al/${oid}`, {
+            method: 'POST',
+            body: params
+        });
+
+        // create session key
+        sessionKey = await didkey(genJWK(), didkit);
     })
 
-    it('Encodes strings correctly', () => expect(stringEncoder('message')).toBe('0501000000076d657373616765'))
-
-    it('Creates auth tokens', async () => {
-        const cid = 'uAYAEHiB0uGRNPXEMdA9L-lXR2MKIZzKlgW1z6Ug4fSv3LRSPfQ';
-        const orbit = 'uAYAEHiB_A0nLzANfXNkW5WCju51Td_INJ6UacFK7qY6zejzKoA';
-        const auth = await authn.content(orbit, [cid], Action.get)
-    })
-
-    it('Generates correct orbit parameters', async () => {
-        const params = ";address=tz1YSb7gXhgBw46nSXthhoSzhJdbQf9h92Gy;domain=kepler.tzprofiles.com;index=0"
-        const pkh = "tz1YSb7gXhgBw46nSXthhoSzhJdbQf9h92Gy"
-        const domain = "kepler.tzprofiles.com"
-
-        return expect(orbitParams({ address: pkh, domain, index: 0 })).toEqual(params)
-    })
-
-    it('Generates correct orbit IDs', async () => {
-        const oid = "zCT5htkeBtA6Qu5YF4vPkQcfeqy3pY4m8zxGdUKUiPgtPEbY3rHy"
-        const pkh = "tz1YSb7gXhgBw46nSXthhoSzhJdbQf9h92Gy"
-        const domain = "kepler.tzprofiles.com"
-
-        return await expect(getOrbitId(pkh, { domain, index: 0 })).resolves.toEqual(oid)
-    })
-
-    it('naive integration test', async () => {
-        const kepler = new Kepler('http://localhost:8000', authn);
+    it('only allows properly authorized actions', async () => {
+        // get authenticator for client
+        const write = new Kepler(kepler, await startSession(oid, controller, sessionKey, ['put', 'del'])).orbit(oid);
+        const read = new Kepler(kepler, await startSession(oid, controller, sessionKey, ['get', 'list'])).orbit(oid);
 
         const json = { hello: 'hey' };
-        const uri = await kepler.createOrbit(json).then(async res => res.text());
+        const json2 = { hello: 'hey2' };
 
-        await expect(kepler.resolve(uri).then(async (res) => await res.json())).resolves.toEqual(json)
+        // writer can write
+        const uri = await write.put(json).then(async res => {
+            expect(res.status).toEqual(200);
+            return res.text()
+        });
+        const [cid] = uri.split("/").slice(-1);
+
+        // reader can list
+        await expect(read.list().then(async res => await res.json())).resolves.toHaveProperty('length', 1);
+        // reader can read
+        await expect(read.get(cid).then(async (res) => await res.json())).resolves.toEqual(json)
+        // reader cant write
+        await expect(read.put(json2)).resolves.toHaveProperty('status', 401);
+        // reader cant delete
+        await expect(read.del(cid)).resolves.toHaveProperty('status', 401);
+
+        // writer cant list
+        await expect(write.list()).resolves.toHaveProperty('status', 401);
+        // writer cant read
+        await expect(write.get(cid)).resolves.toHaveProperty('status', 401);
+        // writer can delete
+        await expect(write.del(cid)).resolves.toHaveProperty('status', 200);
     })
 
-    it('naive integration multipart test', async () => {
-        const kepler = new Kepler('https://faad7ca90d6c.ngrok.io', authn);
-        const orbit = kepler.orbit('uAYAEHiB_A0nLzANfXNkW5WCju51Td_INJ6UacFK7qY6zejzKoA');
-        const fakeCid = "not_a_cid";
+    it('doesnt allow expired authorizations', async () => {
+        // get expired authenticator for client
+        const keplerClient = new Kepler(kepler, await startSession(oid, controller, sessionKey, ['list'], 0));
+        await expect(keplerClient.list(oid)).resolves.toHaveProperty('status', 401);
+    })
 
-        const json1 = { hello: 'hey' };
-        const json2 = { hello: 'hey again' };
+    it('only allows authorized invokers', async () => {
+        const authd = new Kepler(kepler, await startSession(oid, controller, sessionKey)).orbit(oid);
+        const unauthd = [
+            // incorrect invoker
+            await zcapAuthenticator(
+                await didkey(genJWK(), didkit),
+                await controller.delegate(sessionProps(
+                    "kepler://" + oid,
+                    // id will not match randomly generated did:key
+                    sessionKey.id(),
+                    ['list'],
+                    new Date(Date.now() + 1000 * 60)
+                ), [])
+            ),
+            // no delegation
+            await zcapAuthenticator(await didkey(genJWK(), didkit)),
+            // expired delegation
+            await startSession(oid, controller, sessionKey, ['list'], 0),
+        ].map(a => new Kepler(kepler, a).orbit(oid));
 
-        await expect(orbit.get(fakeCid).then(res => res.status)).resolves.toEqual(200);
-
-        const cids = await orbit.put(json1, json2);
-        console.log(cids)
-
-        // await expect(orbit.get(cid)).resolves.toEqual(json)
-        // return await expect(orbit.del(cid)).resolves.not.toThrow()
+        await expect(authd.list()).resolves.toHaveProperty('status', 200);
+        await Promise.all(unauthd.map(async k => await expect(k.list()).resolves.toHaveProperty('status', 401)))
     })
 })
+
+const genTzClient = (secret: string = b58cencode(
+    randomBytes(32),
+    prefix.edsk2
+)): DAppClient => {
+    const ims = new InMemorySigner(secret);
+    // @ts-ignore
+    return {
+        // @ts-ignore
+        getActiveAccount: async () => ({ publicKey: await ims.publicKey(), address: await ims.publicKeyHash() }),
+        // @ts-ignore
+        requestSignPayload: async ({ payload }) => ({ signature: await ims.sign(payload).then(res => res.prefixSig) })
+    }
+}
+
+const genJWK = (): JsonWebKey => JSON.parse(didkit.generateEd25519Key())
