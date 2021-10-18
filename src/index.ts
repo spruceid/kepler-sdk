@@ -13,7 +13,7 @@ export enum Action {
 
 export interface Authenticator {
     content: (orbit: string, cids: string[], action: Action) => Promise<HeadersInit>;
-    createOrbit: (cids: string[]) => Promise<HeadersInit>;
+    createOrbit: (cids: string[], params: { [key: string]: number | string }) => Promise<HeadersInit>;
 }
 
 export class Kepler {
@@ -55,7 +55,7 @@ export class Kepler {
     }
 
     public async createOrbit(first: any, ...rest: any[]): Promise<Response> {
-        const auth = await this.auth.createOrbit(await Promise.all([first, ...rest].map(async (c) => await makeCid(c))))
+        const auth = await this.auth.createOrbit(await Promise.all([first, ...rest].map(async (c) => await makeCid(c))), {})
         if (rest.length >= 1) {
             return await fetch(this.url, {
                 method: 'POST',
@@ -127,7 +127,7 @@ const addContent = async <T>(form: FormData, content: T) => {
     );
 }
 
-const makeCid = async <T>(content: T, codec: string = 'json'): Promise<string> => new CID(1, codec, await multihashing(new TextEncoder().encode(typeof content === 'string' ? content : JSON.stringify(content)), 'blake2b-256')).toString('base58btc')
+export const makeCid = async <T>(content: T, codec: string = 'json'): Promise<string> => new CID(1, codec, await multihashing(new TextEncoder().encode(typeof content === 'string' ? content : JSON.stringify(content)), 'blake2b-256')).toString('base58btc')
 
 export const getOrbitId = async (type_: string, params: { [k: string]: string | number }): Promise<string> => {
     return await makeCid(`${type_}${orbitParams(params)}`, 'raw');
