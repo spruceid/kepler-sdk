@@ -18,8 +18,8 @@ export const tzStringAuthenticator = async <D extends DAppClient>(client: D, dom
             });
             return { "Authorization": auth + " " + signature }
         },
-        createOrbit: async (cids: string[]): Promise<HeadersInit> => {
-            const auth = await createTzAuthCreationMessage(pk, pkh, cids, { domain, index: 0 })
+        createOrbit: async (cids: string[], params: { [key: string]: number | string }): Promise<HeadersInit> => {
+            const auth = await createTzAuthCreationMessage(pk, pkh, cids, { domain, index: 0, ...params })
             const { signature } = await client.requestSignPayload({
                 signingType: SigningType.MICHELINE,
                 payload: stringEncoder(auth)

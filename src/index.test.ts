@@ -8,44 +8,57 @@ import { InMemorySigner } from '@taquito/signer';
 import { b58cencode, prefix } from "@taquito/utils";
 import { randomBytes } from 'crypto';
 import { sessionProps, zcapAuthenticator } from './zcap';
+import { S3 } from './s3';
 
 const allowlist = 'http://localhost:10000';
-const kepler = 'http://localhost:8000';
+const kepler = ['http://localhost:8000', 'http://localhost:9000'];
+
+const hostsToString = (h: { [key: string]: string[] }) =>
+    Object.keys(h).map(host => `${host}:${h[host].join(",")}`).join("|")
+
+const create = async ([url, ...urls]: string[], [main, ...rest]: Capabilities[], params: { [key: string]: string | number } = { nonce: genSecret() }, method?: string): Promise<string> => {
+    const hosts = await [url, ...urls].reduce<Promise<{ [k: string]: string[] }>>(async (h, url) => {
+        const hs = await h;
+        const k = new Kepler(url, await zcapAuthenticator(main));
+        const id = await k.new_id();
+        hs[id] = [await k.id_addr(id)];
+        return hs
+    }, Promise.resolve({}))
+
+    // TODO deploy contract
+    const manifest = {
+        controllers: [main, ...rest].map(c => c.id()),
+        hosts
+    }
+
+    params["hosts"] = hostsToString(hosts);
+
+    await Promise.all(urls.map(async url => {
+        const k = new Kepler(url, await zcapAuthenticator(main));
+        console.log(await k.createOrbit([], params, method).then(async r => await r.text()))
+    }));
+
+    const k = new Kepler(url, await zcapAuthenticator(main));
+    return await k.createOrbit([], params, method).then(async r => await r.text());
+}
 
 describe('Kepler Client', () => {
-    let controller: Capabilities;
-    let sessionKey: Capabilities;
-    let oid: string;
 
     beforeAll(async () => {
-        // create orbit controller
-        controller = await tz(genTzClient(), didkit);
-        const params = didVmToParams(controller.id(), { index: "0" });
-        // register orbit with allowlist
-        oid = await fetch(`${allowlist}/${params}`, {
-            method: 'PUT',
-            body: JSON.stringify([controller.id()]),
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Hcaptcha-Sitekey': '10000000-ffff-ffff-ffff-000000000001',
-                'X-Hcaptcha-Token': '10000000-aaaa-bbbb-cccc-000000000001'
-            }
-        }).then(async res => res.text());
-
-        // create orbit
-        await fetch(`${kepler}/al/${oid}`, {
-            method: 'POST',
-            body: params
-        });
-
-        // create session key
-        sessionKey = await didkey(genJWK(), didkit);
     })
 
     it('only allows properly authorized actions', async () => {
+        // create orbit controller
+        const controller = await tz(genTzClient(), didkit);
+
+        const oid = await create(kepler, [controller]);
+
+        // create session key
+        const sessionKey = await didkey(genJWK(), didkit);
+
         // get authenticator for client
-        const write = new Kepler(kepler, await startSession(oid, controller, sessionKey, ['put', 'del'])).orbit(oid);
-        const read = new Kepler(kepler, await startSession(oid, controller, sessionKey, ['get', 'list'])).orbit(oid);
+        const write = new Kepler(kepler[0], await startSession(oid, controller, sessionKey, ['put', 'del'])).orbit(oid);
+        const read = new Kepler(kepler[0], await startSession(oid, controller, sessionKey, ['get', 'list'])).orbit(oid);
 
         const json = { hello: 'hey' };
         const json2 = { hello: 'hey2' };
@@ -74,14 +87,58 @@ describe('Kepler Client', () => {
         await expect(write.del(cid)).resolves.toHaveProperty('status', 200);
     })
 
+    it('replicates in s3', async () => {
+        // create orbit controller
+        const controller = await tz(genTzClient(), didkit);
+
+        const oid = await create(kepler, [controller]);
+
+        const node1 = new S3(kepler[0], oid, await zcapAuthenticator(controller));
+        const node2 = new S3(kepler[1], oid, await zcapAuthenticator(controller));
+
+        await new Promise(res => setTimeout(res, 4000));
+        const json = { hello: "there" };
+        const res = await node1.put('key1', JSON.stringify(json), { "my-header": "my header value", "content-type": "application/json" });
+        expect(res.status).toEqual(200);
+
+        const getRes1 = await node1.get('key1');
+
+        expect(getRes1.status).toEqual(200);
+        await expect(getRes1.json()).resolves.toEqual(json);
+        expect(getRes1.headers.get('my-header')).toEqual('my header value');
+
+        await new Promise(res => setTimeout(res, 4000));
+
+        const getRes2 = await node2.get('key1', false);
+        expect(getRes2.status).toEqual(200);
+        await expect(getRes2.json()).resolves.toEqual(json);
+        expect(getRes1.headers.get('my-header')).toEqual('my header value');
+    }, 60000)
+
     it('doesnt allow expired authorizations', async () => {
+        // create orbit controller
+        const controller = await tz(genTzClient(), didkit);
+
+        const oid = await create(kepler, [controller]);
+
+        // create session key
+        const sessionKey = await didkey(genJWK(), didkit);
+
         // get expired authenticator for client
-        const keplerClient = new Kepler(kepler, await startSession(oid, controller, sessionKey, ['list'], 0));
-        await expect(keplerClient.list(oid)).resolves.toHaveProperty('status', 401);
+        const keplerClient = new Kepler(kepler[0], await startSession(oid, controller, sessionKey, ['list'], 0)).orbit(oid);
+        await expect(keplerClient.list()).resolves.toHaveProperty('status', 401);
     })
 
     it('only allows authorized invokers', async () => {
-        const authd = new Kepler(kepler, await startSession(oid, controller, sessionKey)).orbit(oid);
+        // create orbit controller
+        const controller = await tz(genTzClient(), didkit);
+
+        const oid = await create(kepler, [controller]);
+
+        // create session key
+        const sessionKey = await didkey(genJWK(), didkit);
+
+        const authd = new Kepler(kepler[0], await startSession(oid, controller, sessionKey)).orbit(oid);
         const unauthd = [
             // incorrect invoker
             await zcapAuthenticator(
@@ -98,17 +155,19 @@ describe('Kepler Client', () => {
             await zcapAuthenticator(await didkey(genJWK(), didkit)),
             // expired delegation
             await startSession(oid, controller, sessionKey, ['list'], 0),
-        ].map(a => new Kepler(kepler, a).orbit(oid));
+        ].map(a => new Kepler(kepler[0], a).orbit(oid));
 
         await expect(authd.list()).resolves.toHaveProperty('status', 200);
         await Promise.all(unauthd.map(async k => await expect(k.list()).resolves.toHaveProperty('status', 401)))
     })
 })
 
-const genTzClient = (secret: string = b58cencode(
+const genSecret = () => b58cencode(
     randomBytes(32),
     prefix.edsk2
-)): DAppClient => {
+)
+
+const genTzClient = (secret: string = genSecret()): DAppClient => {
     const ims = new InMemorySigner(secret);
     // @ts-ignore
     return {

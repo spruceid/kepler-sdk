@@ -16,7 +16,7 @@ export enum Action {
 
 export interface Authenticator {
     content: (orbit: string, cids: string[], action: Action) => Promise<HeadersInit>;
-    createOrbit: (cids: string[]) => Promise<HeadersInit>;
+    createOrbit: (cids: string[], params: { [key: string]: number | string }, method: string) => Promise<HeadersInit>;
 }
 
 export class Kepler {
@@ -49,23 +49,29 @@ export class Kepler {
     }
 
     public async id_addr(id: string): Promise<string> {
-        return await fetch(this.url + "/relay").then(async res => await res.text() + "/" + id);
+        return await fetch(this.url + "/relay").then(async res => await res.text() + "/p2p-circuit/p2p/" + id);
     }
 
-    public async createOrbit(first: any, ...rest: any[]): Promise<Response> {
-        const auth = await this.auth.createOrbit(await Promise.all([first, ...rest].map(async (c) => await makeCid(c))))
-        if (rest.length >= 1) {
+    public async createOrbit(content: any[], params: { [key: string]: string | number } = {}, method: string = 'did'): Promise<Response> {
+        const auth = await this.auth.createOrbit(await Promise.all(content.map(async (c) => await makeCid(c))), params, method)
+        if (content.length === 1) {
             return await fetch(this.url, {
                 method: 'POST',
-                body: await makeFormRequest(first, ...rest),
-                headers: auth
-            });
-        } else {
-            return await fetch(this.url, {
-                method: 'POST',
-                body: JSON.stringify(first),
+                body: JSON.stringify(content[0]),
                 headers: { ...auth, ...{ 'Content-Type': 'application/json' } }
             })
+        } else if (content.length === 0) {
+            return await fetch(this.url, {
+                method: 'POST',
+                headers: auth
+            })
+        } else {
+            const [c, ...r] = content;
+            return await fetch(this.url, {
+                method: 'POST',
+                body: await makeFormRequest(c, ...r),
+                headers: auth
+            });
         }
     }
 }
@@ -86,7 +92,7 @@ export const getOrbitId = async (type_: string, params: { [k: string]: string | 
 export const orbitParams = (params: { [k: string]: string | number }): string => {
     let p = [];
     for (const [key, value] of Object.entries(params)) {
-        p.push(`${key}=${typeof value === 'string' ? value : value.toString()}`);
+        p.push(`${encodeURIComponent(key)}=${encodeURIComponent(value === 'string' ? value : value.toString())}`);
     }
     p.sort();
     return ';' + p.join(';');
