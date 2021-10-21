@@ -6,6 +6,7 @@ import { S3 } from './s3';
 export { zcapAuthenticator, startSession, didVmToParams } from './zcap';
 export { tzStringAuthenticator } from './tzString';
 export { Ipfs };
+export { S3 };
 
 export enum Action {
     get = 'GET',
