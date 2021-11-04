@@ -17,8 +17,8 @@ export const zcapAuthenticator = async <C extends Capabilities, D>(client: C, de
             }
         },
         createOrbit: async (cids: string[], params: { [key: string]: number | string } = {}, method: string = 'did'): Promise<HeadersInit> => {
-            const parameters = method === 'did' ? didVmToParams(client.id(), params) : orbitParams(params);
-            const oid = await makeCid(parameters, 'raw');
+            const parameters = didVmToParams(client.id(), params);
+            const oid = await makeCid(new TextEncoder().encode(parameters));
             const props = invProps(oid, {
                 create: {
                     parameters, content: cids
