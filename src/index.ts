@@ -77,17 +77,17 @@ export class Kepler {
     }
 }
 
-const addContent = async <T>(form: FormData, content: T) => {
+const addContent = async (form: FormData, blob: Blob) => {
     form.append(
-        await makeCid(content),
-        new Blob([JSON.stringify(content)], { type: 'application/json' })
+        await makeCid(new Uint8Array(await blob.arrayBuffer())),
+        blob
     );
 }
 
-export const makeCid = async <T>(content: T, codec: string = 'json'): Promise<string> => new CID(1, codec, await multihashing(new TextEncoder().encode(typeof content === 'string' ? content : JSON.stringify(content)), 'blake2b-256')).toString('base58btc')
+export const makeCid = async (content: Uint8Array): Promise<string> => new CID(1, 'raw', await multihashing(content, 'blake2b-256')).toString('base58btc')
 
 export const getOrbitId = async (type_: string, params: { [k: string]: string | number }): Promise<string> => {
-    return await makeCid(`${type_}${orbitParams(params)}`, 'raw');
+    return await makeCid(new TextEncoder().encode(`${type_}${orbitParams(params)}`));
 }
 
 export const orbitParams = (params: { [k: string]: string | number }): string => {
@@ -99,7 +99,7 @@ export const orbitParams = (params: { [k: string]: string | number }): string =>
     return ';' + p.join(';');
 }
 
-const makeFormRequest = async (first: any, ...rest: any[]): Promise<FormData> => {
+const makeFormRequest = async (first: Blob, ...rest: Blob[]): Promise<FormData> => {
     const data = new FormData();
     await addContent(data, first)
     for (const content of rest) { await addContent(data, content) }

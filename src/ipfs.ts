@@ -19,8 +19,8 @@ export class Ipfs {
         })
     }
 
-    public async put(first: any, ...rest: any[]): Promise<Response> {
-        const auth = await this.auth.content(this.orbit, await Promise.all([first, ...rest].map(async (c) => await makeCid(c))), Action.put)
+    public async put(first: Blob, ...rest: Blob[]): Promise<Response> {
+        const auth = await this.auth.content(this.orbit, await Promise.all([first, ...rest].map(async (c) => await makeCid(new Uint8Array(await c.arrayBuffer())))), Action.put)
         if (rest.length >= 1) {
             return await fetch(makeOrbitPath(this.url, this.orbit), {
                 method: "PUT",
@@ -31,7 +31,7 @@ export class Ipfs {
         } else {
             return await fetch(makeOrbitPath(this.url, this.orbit), {
                 method: "PUT",
-                body: JSON.stringify(first),
+                body: first,
                 headers: { ...auth, ...{ "Content-Type": "application/json" } }
             })
         }

@@ -26,8 +26,8 @@ export class S3 {
         })
     }
 
-    public async put(key: string, value: any, metadata: { [key: string]: string }): Promise<Response> {
-        const cid = await makeCid(value, 'raw');
+    public async put(key: string, value: Blob, metadata: { [key: string]: string }): Promise<Response> {
+        const cid = await makeCid(new Uint8Array(await value.arrayBuffer()));
         const auth = await this.auth.content(this.orbit, [cid], Action.put)
         return await fetch(makeContentPath(this.url, this.orbit, key), {
             method: "PUT",
