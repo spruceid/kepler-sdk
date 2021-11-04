@@ -1,7 +1,9 @@
 import { Kepler, startSession, didVmToParams } from './';
 import { tz, didkey, Capabilities } from '@spruceid/zcap-providers';
 import * as didkit from '@spruceid/didkit-wasm-node';
-import fetch from 'cross-fetch';
+// import { Response } from 'cross-fetch';
+import Blob = require('fetch-blob');
+// import { Blob } from 'buffer';
 
 import { DAppClient } from '@airgap/beacon-sdk';
 import { InMemorySigner } from '@taquito/signer';
@@ -64,7 +66,8 @@ describe('Kepler Client', () => {
         const json2 = { hello: 'hey2' };
 
         // writer can write
-        const uri = await write.put(json).then(async res => {
+        // @ts-ignore
+        const uri = await write.put(new Blob([JSON.stringify(json)], { type: 'application/json' })).then(async res => {
             expect(res.status).toEqual(200);
             return res.text()
         });
@@ -75,7 +78,8 @@ describe('Kepler Client', () => {
         // reader can read
         await expect(read.get(cid).then(async (res) => await res.json())).resolves.toEqual(json)
         // reader cant write
-        await expect(read.put(json2)).resolves.toHaveProperty('status', 401);
+        // @ts-ignore
+        await expect(read.put(new Blob([JSON.stringify(json2)], { type: 'application/json' }))).resolves.toHaveProperty('status', 401);
         // reader cant delete
         await expect(read.del(cid)).resolves.toHaveProperty('status', 401);
 
@@ -98,7 +102,8 @@ describe('Kepler Client', () => {
 
         await new Promise(res => setTimeout(res, 4000));
         const json = { hello: "there" };
-        const res = await node1.put('key1', JSON.stringify(json), { "my-header": "my header value", "content-type": "application/json" });
+        // @ts-ignore
+        const res = await node1.put('key1', new Blob([JSON.stringify(json)], { type: 'application/json' }), { "my-header": "my header value" });
         expect(res.status).toEqual(200);
 
         const getRes1 = await node1.get('key1');
