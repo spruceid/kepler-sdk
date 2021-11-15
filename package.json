@@ -10,6 +10,12 @@
   "files": [
     "/dist"
   ],
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "setupFiles": ["jest-localstorage-mock"],
+    "transform": {}
+  },
   "type": "module",
   "devDependencies": {
     "@airgap/beacon-sdk": "^2.2.3",
