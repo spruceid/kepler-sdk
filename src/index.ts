@@ -46,11 +46,11 @@ export class Kepler {
     }
 
     public async new_id(): Promise<string> {
-        return await fetch(this.url + "/new_id").then(async res => await res.text());
+        return await fetch(this.url + "/peer/generate").then(async res => await res.text());
     }
 
     public async id_addr(id: string): Promise<string> {
-        return await fetch(this.url + "/relay").then(async res => await res.text() + "/p2p-circuit/p2p/" + id);
+        return await fetch(this.url + "/peer/relay").then(async res => await res.text() + "/p2p-circuit/p2p/" + id);
     }
 
     public async createOrbit(content: any[], params: { [key: string]: string | number } = {}, method: string = 'did'): Promise<Response> {
