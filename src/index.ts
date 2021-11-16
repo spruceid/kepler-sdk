@@ -53,13 +53,13 @@ export class Kepler {
         return await fetch(this.url + "/peer/relay").then(async res => await res.text() + "/p2p-circuit/p2p/" + id);
     }
 
-    public async createOrbit(content: any[], params: { [key: string]: string | number } = {}, method: string = 'did'): Promise<Response> {
-        const auth = await this.auth.createOrbit(await Promise.all(content.map(async (c) => await makeCid(c))), params, method)
+    public async createOrbit(content: Blob[], params: { [key: string]: string | number } = {}, method: string = 'did'): Promise<Response> {
+        const auth = await this.auth.createOrbit(await Promise.all(content.map(async (c) => await makeCid(new Uint8Array(await c.arrayBuffer())))), params, method)
         if (content.length === 1) {
             return await fetch(this.url, {
                 method: 'POST',
-                body: JSON.stringify(content[0]),
-                headers: { ...auth, ...{ 'Content-Type': 'application/json' } }
+                body: content[0],
+                headers: auth
             })
         } else if (content.length === 0) {
             return await fetch(this.url, {
