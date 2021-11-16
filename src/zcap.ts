@@ -16,7 +16,7 @@ export const zcapAuthenticator = async <C extends Capabilities, D>(client: C, de
                 "X-Kepler-Invocation": invstr,
             }
         },
-        createOrbit: async (cids: string[], params: { [key: string]: number | string } = {}, method: string = 'did'): Promise<HeadersInit> => {
+        createOrbit: async (cids: string[], params: { [key: string]: number | string } = {}, method: string = 'did'): Promise<{ headers: HeadersInit, oid: string }> => {
             const parameters = didVmToParams(client.id(), params);
             const oid = await makeCid(new TextEncoder().encode(parameters));
             const props = invProps(oid, {
@@ -26,7 +26,7 @@ export const zcapAuthenticator = async <C extends Capabilities, D>(client: C, de
             });
             const inv = await client.invoke(props, "kepler://" + oid, randomId(), keplerContext);
             const invBytes = new TextEncoder().encode(JSON.stringify(inv));
-            return { "X-Kepler-Invocation": base64url.stringify(invBytes) }
+            return { headers: { "X-Kepler-Invocation": base64url.stringify(invBytes) }, oid }
         }
     }
 }

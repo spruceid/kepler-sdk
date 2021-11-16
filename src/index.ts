@@ -17,8 +17,8 @@ export enum Action {
 
 export interface Authenticator {
     content: (orbit: string, cids: string[], action: Action) => Promise<HeadersInit>;
-    createOrbit: (cids: string[], params: { [key: string]: number | string }, method: string) => Promise<HeadersInit>;
-}
+    createOrbit: (cids: string[], params: { [key: string]: number | string }, method: string) => Promise<{ headers: HeadersInit, oid: string }>
+};
 
 export class Kepler {
     constructor(
@@ -54,24 +54,24 @@ export class Kepler {
     }
 
     public async createOrbit(content: Blob[], params: { [key: string]: string | number } = {}, method: string = 'did'): Promise<Response> {
-        const auth = await this.auth.createOrbit(await Promise.all(content.map(async (c) => await makeCid(new Uint8Array(await c.arrayBuffer())))), params, method)
+        const { headers, oid } = await this.auth.createOrbit(await Promise.all(content.map(async (c) => await makeCid(new Uint8Array(await c.arrayBuffer())))), params, method)
         if (content.length === 1) {
-            return await fetch(this.url, {
+            return await fetch(this.url + "/" + oid, {
                 method: 'POST',
                 body: content[0],
-                headers: auth
+                headers
             })
         } else if (content.length === 0) {
-            return await fetch(this.url, {
+            return await fetch(this.url + "/" + oid, {
                 method: 'POST',
-                headers: auth
+                headers
             })
         } else {
             const [c, ...r] = content;
-            return await fetch(this.url, {
+            return await fetch(this.url + "/" + oid, {
                 method: 'POST',
                 body: await makeFormRequest(c, ...r),
-                headers: auth
+                headers
             });
         }
     }
