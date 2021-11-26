@@ -1,4 +1,4 @@
-import { Authenticator, Action, getOrbitId, orbitParams } from '.';
+import { Authenticator, Action, makeCid, orbitParams } from '.';
 import { base64url } from 'rfc4648';
 import { Capabilities, W3ID_SECURITY_V2, randomId, Delegation } from '@spruceid/zcap-providers';
 
@@ -16,12 +16,17 @@ export const zcapAuthenticator = async <C extends Capabilities, D>(client: C, de
                 "X-Kepler-Invocation": invstr,
             }
         },
-        createOrbit: async (cids: string[]): Promise<HeadersInit> => {
-            // TODO need orbit id here
-            const props = invProps("orbit_id", { create: cids });
-            const inv = await client.invoke(props, "kepler://orbit_id", randomId(), keplerContext);
+        createOrbit: async (cids: string[], params: { [key: string]: number | string } = {}, method: string = 'did'): Promise<{ headers: HeadersInit, oid: string }> => {
+            const parameters = didVmToParams(client.id(), params);
+            const oid = await makeCid(new TextEncoder().encode(parameters));
+            const props = invProps(oid, {
+                create: {
+                    parameters, content: cids
+                }
+            });
+            const inv = await client.invoke(props, "kepler://" + oid, randomId(), keplerContext);
             const invBytes = new TextEncoder().encode(JSON.stringify(inv));
-            return { "X-Kepler-Invocation": base64url.stringify(invBytes) }
+            return { headers: { "X-Kepler-Invocation": base64url.stringify(invBytes) }, oid }
         }
     }
 }
@@ -46,10 +51,11 @@ export const startSession = async <C extends Capabilities, S extends Capabilitie
     return await zcapAuthenticator(sessionKey, delegation);
 }
 
-export const didVmToParams = (didVm: string, other: { [key: string]: string } = {}) => {
+export const didVmToParams = (didVm: string, other: { [key: string]: string | number } = {}) => {
     const [did, vm] = didVm.split("#");
-    return "did;did=" + did + orbitParams({ ...other, vm })
+    return "did" + orbitParams({ ...other, did, vm })
 }
+
 
 export const sessionProps = (parentCapability: string, invoker: string, capabilityAction: string[] = ['list', 'get'], expiration: Date) => ({
     parentCapability, invoker, capabilityAction, expiration: expiration.toISOString()
@@ -62,7 +68,7 @@ enum ContentActionKeys {
 }
 
 type CapContentAction = { [K in ContentActionKeys]?: string[] }
-type CapOrbitAction = 'list' | { create: string[] }
+type CapOrbitAction = 'list' | { create: { parameters: string, content: string[] } }
 
 const actionToKey = (action: Action, cids: string[]): CapContentAction | 'list' => {
     switch (action) {
