@@ -2,13 +2,12 @@ import { SiweMessage } from 'siwe';
 import { Signer } from 'ethers';
 import { Authenticator, Action, getOrbitId, orbitParams } from '.';
 
-
-export const SIWEAuthenticator = async <S extends Signer>(client: S, domain: string): Promise<Authenticator> => {
+export const SIWEAuthenticator = async <S extends Signer>(client: S, domain: string, chainId: string = '1'): Promise<Authenticator> => {
     const pkh = await client.getAddress();
 
     return {
         content: async (orbit: string, cids: string[], action: Action): Promise<HeadersInit> => {
-            const auth = createSiweAuthContentMessage(orbit, pkh, action, cids, domain);
+            const auth = createSiweAuthContentMessage(orbit, pkh, action, cids, domain, chainId);
             const signature = await client.signMessage(auth);
             return { "Authorization": auth + " " + signature }
         },
@@ -22,9 +21,8 @@ export const SIWEAuthenticator = async <S extends Signer>(client: S, domain: str
 
 const statement = "Authorize an action on your Kepler Orbit";
 const version = "1";
-const chainId = "1";
 
-const createSiweAuthContentMessage = (orbit: string, address: string, action: Action, cids: string[], domain: string) => {
+const createSiweAuthContentMessage = (orbit: string, address: string, action: Action, cids: string[], domain: string, chainId: string) => {
     const now = Date.now();
     return new SiweMessage({
         domain, address, statement, version, chainId,
