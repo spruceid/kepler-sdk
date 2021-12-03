@@ -34,3 +34,22 @@ const createSiweAuthContentMessage = (orbit: string, address: string, action: Ac
 }
 
 const createSiweAuthCreationMessage = (pkh: string, cids: string[], domain: string, params: { [key: string]: number | string }) => ({ oid: '', auth: '' })
+
+type SessionOptions = {
+    nbf?: Date,
+    exp?: Date
+};
+
+const millisecondsFromNow = (ms: number) => new Date(Date.now() + ms);
+
+const startSIWESession = async (orbit: string, domain: string, chainId: string, delegator: string, delegate: string, actions: string[] = ['GET'], opts: SessionOptions = { exp: millisecondsFromNow(120000) }) => new SiweMessage({
+    domain,
+    address: delegator,
+    statement: `Allow ${domain} to access your orbit using their temporary session key: ${delegate}`,
+    uri: delegate,
+    resources: actions.map(action => `kepler://${orbit}/${action}`),
+    version,
+    chainId,
+    ...(opts.exp ? { expirationTime: opts.exp.toISOString() } : {}),
+    ...(opts.nbf ? { notBefore: opts.nbf.toISOString() } : {})
+})
