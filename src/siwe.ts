@@ -42,12 +42,12 @@ type SessionOptions = {
 
 const millisecondsFromNow = (ms: number) => new Date(Date.now() + ms);
 
-const startSIWESession = async (orbit: string, domain: string, chainId: string, delegator: string, delegate: string, actions: string[] = ['GET'], opts: SessionOptions = { exp: millisecondsFromNow(120000) }) => new SiweMessage({
+const startSIWESession = async (orbit: string, domain: string, chainId: string, delegator: string, delegate: string, actions: string[] = ['get'], opts: SessionOptions = { exp: millisecondsFromNow(120000) }) => new SiweMessage({
     domain,
     address: delegator,
     statement: `Allow ${domain} to access your orbit using their temporary session key: ${delegate}`,
     uri: delegate,
-    resources: actions.map(action => `kepler://${orbit}/${action}`),
+    resources: actions.map(action => `kepler://${orbit}#${action}`),
     version,
     chainId,
     ...(opts.exp ? { expirationTime: opts.exp.toISOString() } : {}),
