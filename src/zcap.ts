@@ -1,20 +1,25 @@
 import { Authenticator, Action, makeCid, orbitParams } from '.';
 import { base64url } from 'rfc4648';
 import { Capabilities, W3ID_SECURITY_V2, randomId, Delegation } from '@spruceid/zcap-providers';
+import { SiweMessage } from 'siwe';
 
-export const zcapAuthenticator = async <C extends Capabilities, D>(client: C, delegation?: Delegation<D>): Promise<Authenticator> => {
-    const delb64 = delegation ? base64url.stringify(new TextEncoder().encode(JSON.stringify(delegation))) : undefined;
+export const zcapAuthenticator = async <C extends Capabilities, D>(client: C, delegation?: Delegation<D> | SiweMessage): Promise<Authenticator> => {
+    const { h, delId } = delegation instanceof SiweMessage ? {
+        h: { "X-Siwe-Delegation": base64url.stringify(new TextEncoder().encode(JSON.stringify([delegation.toMessage(), delegation.signature]))) },
+        delId: "urn:siwe:kepler:" + delegation.nonce
+    } : delegation ? {
+        h: { "X-Kepler-Delegation": base64url.stringify(new TextEncoder().encode(JSON.stringify(delegation))) },
+        delId: delegation.id
+    } : { h: {}, delId: "" };
     return {
         content: async (orbit: string, cids: string[], action: Action): Promise<HeadersInit> => {
             const props = invProps(orbit, actionToKey(action, cids));
-            const inv = await client.invoke(props, delegation ? delegation.id : "kepler://" + orbit, randomId(), keplerContext);
+            const inv = await client.invoke(props, delId || ("kepler://" + orbit), randomId(), keplerContext);
             const invstr = base64url.stringify(new TextEncoder().encode(JSON.stringify(inv)));
-            return delb64 ? {
+            return {
                 "X-Kepler-Invocation": invstr,
-                "X-Kepler-Delegation": delb64
-            } : {
-                "X-Kepler-Invocation": invstr,
-            }
+                ...h
+            } as {}
         },
         createOrbit: async (cids: string[], params: { [key: string]: number | string } = {}, method: string = 'did'): Promise<{ headers: HeadersInit, oid: string }> => {
             const parameters = didVmToParams(client.id(), params);
