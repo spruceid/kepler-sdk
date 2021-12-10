@@ -1,20 +1,23 @@
 import { SiweMessage } from 'siwe';
 import { Signer } from 'ethers';
+import { base64url } from 'rfc4648';
 import { Authenticator, Action, getOrbitId, orbitParams } from '.';
 
-export const SIWEAuthenticator = async <S extends Signer>(client: S, domain: string, chainId: string = '1'): Promise<Authenticator> => {
-    const pkh = await client.getAddress();
+export const siweAuthenticator = async <S extends Signer>(client: S, domain: string, chainId: string = '1'): Promise<Authenticator> => {
+    const pkh = await client.getAddress().then(a => a.toLowerCase());
 
     return {
         content: async (orbit: string, cids: string[], action: Action): Promise<HeadersInit> => {
             const auth = createSiweAuthContentMessage(orbit, pkh, action, cids, domain, chainId);
             const signature = await client.signMessage(auth);
-            return { "Authorization": auth + " " + signature }
+            const invstr = base64url.stringify(new TextEncoder().encode(JSON.stringify([auth, signature])));
+            return { "X-Siwe-Invocation": invstr }
         },
         createOrbit: async (cids: string[], params: { [key: string]: number | string }): Promise<{ headers: HeadersInit, oid: string }> => {
-            const { oid, auth } = createSiweAuthCreationMessage(pkh, cids, domain, params)
+            const { oid, auth } = await createSiweAuthCreationMessage(pkh, cids, domain, params, chainId)
             const signature = await client.signMessage(auth);
-            return { headers: { "Authorization": auth + " " + signature }, oid }
+            const invstr = base64url.stringify(new TextEncoder().encode(JSON.stringify([auth, signature])));
+            return { headers: { "X-Siwe-Invocation": invstr }, oid }
         }
     }
 }
@@ -28,12 +31,25 @@ const createSiweAuthContentMessage = (orbit: string, address: string, action: Ac
         domain, address, statement, version, chainId,
         issuedAt: new Date(now).toISOString(),
         expirationTime: new Date(now + 10000).toISOString(),
-        resources: cids.map(cid => `/${orbit}/${cid}/${action}`),
+        resources: cids.map(cid => `/${cid}#${action}`),
         uri: `kepler://${orbit}`
     }).toMessage()
 }
 
-const createSiweAuthCreationMessage = (pkh: string, cids: string[], domain: string, params: { [key: string]: number | string }) => ({ oid: '', auth: '' })
+const createSiweAuthCreationMessage = async (address: string, cids: string[], domain: string, params: { [key: string]: number | string }, chainId: string) => {
+    const now = Date.now();
+    const paramsStr = orbitParams({ did: `did:pkh:eip155:${chainId}:${address}`, vm: "blockchainAccountId", ...params });
+    const oid = await getOrbitId("did", paramsStr);
+    const auth = new SiweMessage({
+        domain, address, version, chainId,
+        statement: 'Authorize this provider to host your Orbit',
+        issuedAt: new Date(now).toISOString(),
+        expirationTime: new Date(now + 10000).toISOString(),
+        resources: ["#host", ...cids.map(cid => `/${cid}#put`)],
+        uri: `kepler://did${paramsStr}`
+    }).toMessage();
+    return { oid, auth }
+}
 
 type SessionOptions = {
     nbf?: Date,
@@ -42,7 +58,7 @@ type SessionOptions = {
 
 const millisecondsFromNow = (ms: number) => new Date(Date.now() + ms);
 
-const startSIWESession = async (orbit: string, domain: string, chainId: string, delegator: string, delegate: string, actions: string[] = ['get'], opts: SessionOptions = { exp: millisecondsFromNow(120000) }) => new SiweMessage({
+export const startSIWESession = async (orbit: string, domain: string, chainId: string, delegator: string, delegate: string, actions: string[] = ['get'], opts: SessionOptions = { exp: millisecondsFromNow(120000) }) => new SiweMessage({
     domain,
     address: delegator,
     statement: `Allow ${domain} to access your orbit using their temporary session key: ${delegate}`,
