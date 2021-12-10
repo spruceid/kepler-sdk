@@ -878,6 +878,31 @@
   dependencies:
     uuid "^8.3.2"
 
+"@stablelib/binary@^1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@stablelib/binary/-/binary-1.0.1.tgz#c5900b94368baf00f811da5bdb1610963dfddf7f"
+  integrity sha512-ClJWvmL6UBM/wjkvv/7m5VP3GMr9t0osr4yVgLZsLCOz4hGN9gIAFEqnJ0TsSMAN+n840nf2cHZnA5/KFqHC7Q==
+  dependencies:
+    "@stablelib/int" "^1.0.1"
+
+"@stablelib/int@^1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@stablelib/int/-/int-1.0.1.tgz#75928cc25d59d73d75ae361f02128588c15fd008"
+  integrity sha512-byr69X/sDtDiIjIV6m4roLVWnNNlRGzsvxw+agj8CIEazqWGOQp2dTYgQhtyVXV9wpO6WyXRQUzLV/JRNumT2w==
+
+"@stablelib/random@^1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@stablelib/random/-/random-1.0.1.tgz#4357a00cb1249d484a9a71e6054bc7b8324a7009"
+  integrity sha512-zOh+JHX3XG9MSfIB0LZl/YwPP9w3o6WBiJkZvjPoKKu5LKFW4OLV71vMxWp9qG5T43NaWyn0QQTWgqCdO+yOBQ==
+  dependencies:
+    "@stablelib/binary" "^1.0.1"
+    "@stablelib/wipe" "^1.0.1"
+
+"@stablelib/wipe@^1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@stablelib/wipe/-/wipe-1.0.1.tgz#d21401f1d59ade56a62e139462a97f104ed19a36"
+  integrity sha512-WfqfX/eXGiAd3RJe4VU2snh/ZPwtSjLG4ynQ/vYzvghTh7dHFcI1wl+nrkWG6lGhukOxOsUHfv8dUXr58D0ayg==
+
 "@taquito/http-utils@^8.1.0":
   version "8.1.1"
   resolved "https://registry.npmjs.org/@taquito/http-utils/-/http-utils-8.1.1.tgz"
@@ -3871,11 +3896,12 @@ sisteransi@^1.0.5:
   resolved "https://registry.npmjs.org/sisteransi/-/sisteransi-1.0.5.tgz"
   integrity sha512-bLGGlR1QxBcynn2d5YmDX4MGjlZvy2MRBDRNHLJ8VI6l6+9FUiyTFNJ0IveOSP0bcXgVDPRcfGqA0pjaqUpfVg==
 
-siwe@^0.1.1:
-  version "0.1.1"
-  resolved "https://registry.yarnpkg.com/siwe/-/siwe-0.1.1.tgz#10a125039c15b2a2cfad30df70d2eb6a9d3cd168"
-  integrity sha512-H7WadpY7Rmt9TPPwQPbSKi/6ur85FeU9P3cEUErS5ekwwQY1FQH/+dYqaAvkkk09wipHe4PvgZVVszVKFGa0qg==
+siwe@^0.1.2:
+  version "0.1.2"
+  resolved "https://registry.yarnpkg.com/siwe/-/siwe-0.1.2.tgz#34bbf546b3ef18a3333d904749caec1d4bea9a50"
+  integrity sha512-hAvZA2DGRzhvDupxxO9hyjINF4docyP0/KsfxDJUs6ROOqcBQ6LHAo0aLaH+6Y7XKsegi+xV+XRMWIlKKuSZnA==
   dependencies:
+    "@stablelib/random" "^1.0.1"
     apg-js "^4.1.1"
     ethers "^5.5.1"
 
