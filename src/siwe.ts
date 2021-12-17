@@ -2,16 +2,19 @@ import { SiweMessage } from 'siwe';
 import { Signer } from 'ethers';
 import { base64url } from 'rfc4648';
 import { Authenticator, Action, getOrbitId, orbitParams } from '.';
+import { Delegation } from '@spruceid/zcap-providers';
+import { getHeaderAndDelId } from './zcap';
 
-export const siweAuthenticator = async <S extends Signer>(client: S, domain: string, chainId: string = '1'): Promise<Authenticator> => {
-    const pkh = await client.getAddress().then(a => a.toLowerCase());
+export const siweAuthenticator = async <S extends Signer, D>(client: S, domain: string, chainId: string = '1', delegation?: Delegation<D> | SiweMessage): Promise<Authenticator> => {
+    const pkh = await client.getAddress();
+    const { h, delId } = getHeaderAndDelId(delegation);
 
     return {
         content: async (orbit: string, cids: string[], action: Action): Promise<HeadersInit> => {
             const auth = createSiweAuthContentMessage(orbit, pkh, action, cids, domain, chainId);
             const signature = await client.signMessage(auth);
             const invstr = base64url.stringify(new TextEncoder().encode(JSON.stringify([auth, signature])));
-            return { "X-Siwe-Invocation": invstr }
+            return { "X-Siwe-Invocation": invstr, ...h } as {}
         },
         createOrbit: async (cids: string[], params: { [key: string]: number | string }): Promise<{ headers: HeadersInit, oid: string }> => {
             const { oid, auth } = await createSiweAuthCreationMessage(pkh, cids, domain, params, chainId)
