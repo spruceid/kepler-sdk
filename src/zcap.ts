@@ -3,14 +3,17 @@ import { base64url } from 'rfc4648';
 import { Capabilities, W3ID_SECURITY_V2, randomId, Delegation } from '@spruceid/zcap-providers';
 import { SiweMessage } from 'siwe';
 
+export const getHeaderAndDelId = <D>(delegation?: Delegation<D> | SiweMessage) => delegation instanceof SiweMessage ? {
+    h: { "X-Siwe-Delegation": base64url.stringify(new TextEncoder().encode(JSON.stringify([delegation.toMessage(), delegation.signature]))) },
+    delId: "urn:siwe:kepler:" + delegation.nonce
+} : delegation ? {
+
+    h: { "X-Kepler-Delegation": base64url.stringify(new TextEncoder().encode(JSON.stringify(delegation))) },
+    delId: delegation.id
+} : { h: {}, delId: "" }
+
 export const zcapAuthenticator = async <C extends Capabilities, D>(client: C, delegation?: Delegation<D> | SiweMessage): Promise<Authenticator> => {
-    const { h, delId } = delegation instanceof SiweMessage ? {
-        h: { "X-Siwe-Delegation": base64url.stringify(new TextEncoder().encode(JSON.stringify([delegation.toMessage(), delegation.signature]))) },
-        delId: "urn:siwe:kepler:" + delegation.nonce
-    } : delegation ? {
-        h: { "X-Kepler-Delegation": base64url.stringify(new TextEncoder().encode(JSON.stringify(delegation))) },
-        delId: delegation.id
-    } : { h: {}, delId: "" };
+    const { h, delId } = getHeaderAndDelId(delegation);
     return {
         content: async (orbit: string, cids: string[], action: Action): Promise<HeadersInit> => {
             const props = invProps(orbit, actionToKey(action, cids));
