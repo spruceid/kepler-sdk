@@ -18,7 +18,6 @@
     ],
     "transform": {}
   },
-  "type": "module",
   "devDependencies": {
     "@airgap/beacon-sdk": "^2.2.3",
     "@spruceid/didkit-wasm-node": "0.1.6",
