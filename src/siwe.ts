@@ -34,7 +34,7 @@ const createSiweAuthContentMessage = (orbit: string, address: string, action: Ac
         domain, address, statement, version, chainId,
         issuedAt: new Date(now).toISOString(),
         expirationTime: new Date(now + 10000).toISOString(),
-        resources: cids.map(cid => `kepler://${orbit}/${cid}#${action}`),
+        resources: cids.map(cid => `kepler://${orbit}/${cid}#${action.toLowerCase()}`),
         uri: `kepler://${orbit}`
     }).toMessage()
 }
