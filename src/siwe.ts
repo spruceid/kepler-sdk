@@ -34,7 +34,7 @@ const createSiweAuthContentMessage = (orbit: string, address: string, action: Ac
         domain, address, statement, version, chainId,
         issuedAt: new Date(now).toISOString(),
         expirationTime: new Date(now + 10000).toISOString(),
-        resources: cids.map(cid => `/${cid}#${action}`),
+        resources: cids.map(cid => `kepler://${orbit}/${cid}#${action}`),
         uri: `kepler://${orbit}`
     }).toMessage()
 }
@@ -48,7 +48,7 @@ const createSiweAuthCreationMessage = async (address: string, cids: string[], do
         statement: 'Authorize this provider to host your Orbit',
         issuedAt: new Date(now).toISOString(),
         expirationTime: new Date(now + 10000).toISOString(),
-        resources: ["#host", ...cids.map(cid => `/${cid}#put`)],
+        resources: [`kepler://${oid}#host`, ...cids.map(cid => `kepler://${oid}/${cid}#put`)],
         uri: `kepler://did${paramsStr}`
     }).toMessage();
     return { oid, auth }
