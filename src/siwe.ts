@@ -5,6 +5,8 @@ import { Authenticator, Action, getOrbitId, orbitParams } from '.';
 import { Delegation } from '@spruceid/zcap-providers';
 import { getHeaderAndDelId } from './zcap';
 
+const invHeaderStr = "x-siwe-invocation";
+
 export const siweAuthenticator = async <S extends Signer, D>(client: S, domain: string, chainId: string = '1', delegation?: Delegation<D> | SiweMessage): Promise<Authenticator> => {
     const pkh = await client.getAddress();
     const { h, delId } = getHeaderAndDelId(delegation);
@@ -14,13 +16,13 @@ export const siweAuthenticator = async <S extends Signer, D>(client: S, domain: 
             const auth = createSiweAuthContentMessage(orbit, pkh, action, cids, domain, chainId);
             const signature = await client.signMessage(auth);
             const invstr = base64url.stringify(new TextEncoder().encode(JSON.stringify([auth, signature])));
-            return { "X-Siwe-Invocation": invstr, ...h } as {}
+            return { [invHeaderStr]: invstr, ...h } as {}
         },
         createOrbit: async (cids: string[], params: { [key: string]: number | string }): Promise<{ headers: HeadersInit, oid: string }> => {
             const { oid, auth } = await createSiweAuthCreationMessage(pkh, cids, domain, params, chainId)
             const signature = await client.signMessage(auth);
             const invstr = base64url.stringify(new TextEncoder().encode(JSON.stringify([auth, signature])));
-            return { headers: { "X-Siwe-Invocation": invstr }, oid }
+            return { headers: { [invHeaderStr]: invstr }, oid }
         }
     }
 }

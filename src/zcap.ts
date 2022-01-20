@@ -3,12 +3,14 @@ import { base64url } from 'rfc4648';
 import { Capabilities, W3ID_SECURITY_V2, randomId, Delegation } from '@spruceid/zcap-providers';
 import { SiweMessage } from 'siwe';
 
+const invHeaderStr = "x-kepler-invocation";
+
 export const getHeaderAndDelId = <D>(delegation?: Delegation<D> | SiweMessage) => delegation instanceof SiweMessage ? {
-    h: { "X-Siwe-Delegation": base64url.stringify(new TextEncoder().encode(JSON.stringify([delegation.toMessage(), delegation.signature]))) },
+    h: { "x-siwe-delegation": base64url.stringify(new TextEncoder().encode(JSON.stringify([delegation.toMessage(), delegation.signature]))) },
     delId: "urn:siwe:kepler:" + delegation.nonce
 } : delegation ? {
 
-    h: { "X-Kepler-Delegation": base64url.stringify(new TextEncoder().encode(JSON.stringify(delegation))) },
+    h: { "x-kepler-delegation": base64url.stringify(new TextEncoder().encode(JSON.stringify(delegation))) },
     delId: delegation.id
 } : { h: {}, delId: "" }
 
@@ -20,7 +22,7 @@ export const zcapAuthenticator = async <C extends Capabilities, D>(client: C, de
             const inv = await client.invoke(props, delId || ("kepler://" + orbit), randomId(), keplerContext);
             const invstr = base64url.stringify(new TextEncoder().encode(JSON.stringify(inv)));
             return {
-                "X-Kepler-Invocation": invstr,
+                [invHeaderStr]: invstr,
                 ...h
             } as {}
         },
@@ -34,7 +36,7 @@ export const zcapAuthenticator = async <C extends Capabilities, D>(client: C, de
             });
             const inv = await client.invoke(props, "kepler://" + oid, randomId(), keplerContext);
             const invBytes = new TextEncoder().encode(JSON.stringify(inv));
-            return { headers: { "X-Kepler-Invocation": base64url.stringify(invBytes) }, oid }
+            return { headers: { [invHeaderStr]: base64url.stringify(invBytes) }, oid }
         }
     }
 }
