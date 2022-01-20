@@ -5,6 +5,7 @@ import { Ipfs } from './ipfs';
 import { S3 } from './s3';
 export { zcapAuthenticator, startSession, didVmToParams } from './zcap';
 export { tzStringAuthenticator } from './tzString';
+export { siweAuthenticator, startSIWESession } from './siwe';
 export { Ipfs };
 export { S3 };
 
@@ -86,9 +87,10 @@ const addContent = async (form: FormData, blob: Blob) => {
 
 export const makeCid = async (content: Uint8Array): Promise<string> => new CID(1, 'raw', await multihashing(content, 'blake2b-256')).toString('base58btc')
 
-export const getOrbitId = async (type_: string, params: { [k: string]: string | number }): Promise<string> => {
-    return await makeCid(new TextEncoder().encode(`${type_}${orbitParams(params)}`));
-}
+export const getOrbitId = async (type_: string, params: string | { [k: string]: string | number }): Promise<string> =>
+    typeof params === 'string'
+        ? makeCid(new TextEncoder().encode(`${type_}${params}`))
+        : getOrbitId(type_, orbitParams(params))
 
 export const orbitParams = (params: { [k: string]: string | number }): string => {
     let p = [];
