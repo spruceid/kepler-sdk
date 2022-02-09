@@ -3896,10 +3896,10 @@ sisteransi@^1.0.5:
   resolved "https://registry.npmjs.org/sisteransi/-/sisteransi-1.0.5.tgz"
   integrity sha512-bLGGlR1QxBcynn2d5YmDX4MGjlZvy2MRBDRNHLJ8VI6l6+9FUiyTFNJ0IveOSP0bcXgVDPRcfGqA0pjaqUpfVg==
 
-siwe@^0.1.2:
-  version "0.1.2"
-  resolved "https://registry.yarnpkg.com/siwe/-/siwe-0.1.2.tgz#34bbf546b3ef18a3333d904749caec1d4bea9a50"
-  integrity sha512-hAvZA2DGRzhvDupxxO9hyjINF4docyP0/KsfxDJUs6ROOqcBQ6LHAo0aLaH+6Y7XKsegi+xV+XRMWIlKKuSZnA==
+siwe@^0.1.4:
+  version "0.1.4"
+  resolved "https://registry.yarnpkg.com/siwe/-/siwe-0.1.4.tgz#4cce181134001a3829506683a659f3dc861586b7"
+  integrity sha512-FI5LsUdoB/hJiMs4REqBOsOXRQrylIm1LyJuNYbVvTUd9oVzr75NhtIYLITmwwceN8ZX/TGe4kL4UQ2BZOiXOg==
   dependencies:
     "@stablelib/random" "^1.0.1"
     apg-js "^4.1.1"
