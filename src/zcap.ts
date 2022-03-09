@@ -1,4 +1,4 @@
-import { Authenticator, Action, makeCid, orbitParams } from '.';
+import { Authenticator, Action, makeCid, makeKRI } from '.';
 import { base64url } from 'rfc4648';
 import { Capabilities, W3ID_SECURITY_V2, randomId, Delegation } from '@spruceid/zcap-providers';
 import { SiweMessage } from 'siwe';
@@ -26,14 +26,10 @@ export const zcapAuthenticator = async <C extends Capabilities, D>(client: C, de
                 ...h
             } as {}
         },
-        createOrbit: async (cids: string[], params: { [key: string]: number | string } = {}, method: string = 'did'): Promise<{ headers: HeadersInit, oid: string }> => {
-            const parameters = didVmToParams(client.id(), params);
-            const oid = await makeCid(new TextEncoder().encode(parameters));
-            const props = invProps(oid, {
-                create: {
-                    parameters, content: cids
-                }
-            });
+        authorizePeer: async (orbit: string, peer: string): Promise<HeadersInit> => {
+            const props = {
+                invocationTarget: orbit,
+            };
             const inv = await client.invoke(props, "kepler://" + oid, randomId(), keplerContext);
             const invBytes = new TextEncoder().encode(JSON.stringify(inv));
             return { headers: { [invHeaderStr]: base64url.stringify(invBytes) }, oid }

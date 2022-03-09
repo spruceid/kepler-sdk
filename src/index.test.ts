@@ -18,26 +18,20 @@ const kepler = ['http://localhost:8000', 'http://localhost:9000'];
 const hostsToString = (h: { [key: string]: string[] }) =>
     Object.keys(h).map(host => `${host}:${h[host].join(",")}`).join("|")
 
-const create = async ([url, ...urls]: string[], [main, ...rest]: Capabilities[], params: { [key: string]: string | number } = { nonce: genSecret() }, method?: string): Promise<string> => {
+const create = async (did: string, [url, ...urls]: string[], [main, ...rest]: Capabilities[]): Promise<string> => {
     const hosts = await [url, ...urls].reduce<Promise<{ [k: string]: string[] }>>(async (h, url) => {
         const hs = await h;
         const k = new Kepler(url, await zcapAuthenticator(main));
-        const id = await k.new_id();
-        hs[id] = [await k.id_addr(id)];
+        const id = await k.newPeer();
+        await k.orbit(did).addPeer(id);
+        hs[id] = [await k.idAddr(id)];
         return hs
     }, Promise.resolve({}))
 
-    // TODO deploy contract
-    const manifest = {
-        controllers: [main, ...rest].map(c => c.id()),
-        hosts
-    }
-
-    params["hosts"] = hostsToString(hosts);
-
     await Promise.all(urls.map(async url => {
         const k = new Kepler(url, await zcapAuthenticator(main));
-        console.log(await k.createOrbit([], params, method).then(async r => await r.text()))
+        k.orbit()
+        console.log(await k.addOrbit([], params, method).then(async r => await r.text()))
     }));
 
     const k = new Kepler(url, await zcapAuthenticator(main));

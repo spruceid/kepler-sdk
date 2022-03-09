@@ -3,6 +3,7 @@ import CID from 'cids';
 import multihashing from 'multihashing-async';
 import { Ipfs } from './ipfs';
 import { S3 } from './s3';
+export { makeKRI } from './util'
 export { zcapAuthenticator, startSession, didVmToParams } from './zcap';
 export { tzStringAuthenticator } from './tzString';
 export { siweAuthenticator, startSIWESession } from './siwe';
@@ -18,17 +19,16 @@ export enum Action {
 
 export interface Authenticator {
     content: (orbit: string, cids: string[], action: Action) => Promise<HeadersInit>;
-    createOrbit: (cids: string[], params: { [key: string]: number | string }, method: string) => Promise<{ headers: HeadersInit, oid: string }>
+    authorizePeer: (peer: string) => Promise<HeadersInit>;
 };
 
 export class Kepler {
     constructor(
         private url: string,
-        private auth: Authenticator,
     ) { }
 
     public async resolve(keplerUri: string, authenticate: boolean = true): Promise<Response> {
-        if (!keplerUri.startsWith("kepler://")) throw new Error("Invalid Kepler URI");
+        if (!keplerUri.startsWith("kepler:")) throw new Error("Invalid Kepler URI");
 
         let [versionedOrbit, cid] = keplerUri.split("/").slice(-2);
         let orbit = versionedOrbit.split(":").pop();
@@ -86,20 +86,6 @@ const addContent = async (form: FormData, blob: Blob) => {
 }
 
 export const makeCid = async (content: Uint8Array): Promise<string> => new CID(1, 'raw', await multihashing(content, 'blake2b-256')).toString('base58btc')
-
-export const getOrbitId = async (type_: string, params: string | { [k: string]: string | number }): Promise<string> =>
-    typeof params === 'string'
-        ? makeCid(new TextEncoder().encode(`${type_}${params}`))
-        : getOrbitId(type_, orbitParams(params))
-
-export const orbitParams = (params: { [k: string]: string | number }): string => {
-    let p = [];
-    for (const [key, value] of Object.entries(params)) {
-        p.push(`${encodeURIComponent(key)}=${encodeURIComponent(value === 'string' ? value : value.toString())}`);
-    }
-    p.sort();
-    return ';' + p.join(';');
-}
 
 const makeFormRequest = async (first: Blob, ...rest: Blob[]): Promise<FormData> => {
     const data = new FormData();
