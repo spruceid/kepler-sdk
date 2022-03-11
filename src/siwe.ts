@@ -7,7 +7,7 @@ import { getHeaderAndDelId } from './zcap';
 
 const invHeaderStr = "x-siwe-invocation";
 
-export const siweAuthenticator = async <S extends Signer, D>(orbit: string, client: S, domain: string, chainId: string = '1', delegation?: Delegation<D> | SiweMessage): Promise<Authenticator> => {
+export const siweAuthenticator = async <W extends WalletProvider, D>(orbit: string, client: W, domain: string, chainId: string = '1', delegation?: Delegation<D> | SiweMessage): Promise<Authenticator> => {
     const pkh = await client.getAddress();
     const { h, delId } = getHeaderAndDelId(delegation);
 

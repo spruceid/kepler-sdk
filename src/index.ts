@@ -9,6 +9,7 @@ export { tzStringAuthenticator } from './tzString';
 export { siweAuthenticator, startSIWESession } from './siwe';
 export { Ipfs };
 export { S3 };
+export { Kepler as SimpleKepler } from './kepler';
 
 export enum Action {
     get = 'GET',
