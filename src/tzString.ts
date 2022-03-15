@@ -1,5 +1,5 @@
 import { DAppClient, SigningType } from '@airgap/beacon-sdk';
-import { Authenticator, Action, getOrbitId, orbitParams } from '.';
+import { Authenticator, Action, makeCid, makeKRI } from '.';
 
 export const tzStringAuthenticator = async <D extends DAppClient>(client: D, domain: string): Promise<Authenticator> => {
     const { publicKey: pk, address: pkh } = await client.getActiveAccount().then(acc => {
@@ -18,13 +18,13 @@ export const tzStringAuthenticator = async <D extends DAppClient>(client: D, dom
             });
             return { "Authorization": auth + " " + signature }
         },
-        createOrbit: async (cids: string[], params: { [key: string]: number | string }): Promise<{ headers: HeadersInit, oid: string }> => {
-            const { oid, auth } = await createTzAuthCreationMessage(pk, pkh, cids, { domain, index: 0, ...params })
+        authorizePeer: async (orbit: string, peer: string): Promise<HeadersInit> => {
+            const auth = await createTzAuthCreationMessage(orbit, pk, pkh, domain, peer)
             const { signature } = await client.requestSignPayload({
                 signingType: SigningType.MICHELINE,
                 payload: stringEncoder(auth)
             });
-            return { headers: { "Authorization": auth + " " + signature }, oid }
+            return { "Authorization": auth + " " + signature }
         }
     }
 }
@@ -32,8 +32,8 @@ export const tzStringAuthenticator = async <D extends DAppClient>(client: D, dom
 const createTzAuthContentMessage = (orbit: string, pk: string, pkh: string, action: Action, cids: string[], domain: string): string =>
     `Tezos Signed Message: ${domain} ${(new Date()).toISOString()} ${pk} ${pkh} ${orbit} ${action} ${cids.join(' ')}`
 
-const createTzAuthCreationMessage = async (pk: string, pkh: string, cids: string[], params: { domain: string; salt?: string; index?: number; }): Promise<{ auth: string, oid: string }> => await getOrbitId("tz", { address: pkh, ...params }).then(oid =>
-    ({ oid, auth: `Tezos Signed Message: ${params.domain} ${(new Date()).toISOString()} ${pk} ${pkh} ${oid} CREATE tz${orbitParams(params)} ${cids.join(' ')}` }))
+const createTzAuthCreationMessage = async (orbit: string, pk: string, pkh: string, domain: string, peer: string): Promise<string> =>
+    `Tezos Signed Message: ${domain} ${(new Date()).toISOString()} ${pk} ${pkh} ${orbit} CREATE ${peer}`
 
 export const stringEncoder = (s: string): string => {
     const bytes = Buffer.from(s, 'utf8');

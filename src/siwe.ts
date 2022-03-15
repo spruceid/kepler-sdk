@@ -1,7 +1,7 @@
 import { SiweMessage } from 'siwe';
 import { Signer } from 'ethers';
 import { base64url } from 'rfc4648';
-import { Authenticator, Action, getOrbitId, orbitParams, makeKRI } from '.';
+import { Authenticator, Action, getKRI, makeKRI } from '.';
 import { Delegation } from '@spruceid/zcap-providers';
 import { getHeaderAndDelId } from './zcap';
 
@@ -19,7 +19,7 @@ export const siweAuthenticator = async <S extends Signer, D>(orbit: string, clie
             return { [invHeaderStr]: invstr, ...h } as {}
         },
         authorizePeer: async (orbit: string, peer: string): Promise<HeadersInit> => {
-            const auth = createSiweAuthCreationMessage(orbit, pkh, peer, domain, chainId)
+            const auth = createSiweAuthCreationMessage(orbit, pkh, peer, domain, chainId, {})
             const signature = await client.signMessage(auth);
             const invstr = base64url.stringify(new TextEncoder().encode(JSON.stringify([auth, signature])));
             return { [invHeaderStr]: invstr }
@@ -42,8 +42,7 @@ const createSiweAuthContentMessage = (orbit: string, address: string, action: Ac
 }
 
 const createSiweAuthCreationMessage = (
-    did: string,
-    name: string,
+    orbit: string,
     address: string,
     peer: string,
     domain: string,
@@ -52,10 +51,10 @@ const createSiweAuthCreationMessage = (
 ) => new SiweMessage({
         domain, address, version, chainId,
         statement: 'Authorize this provider to host your Orbit',
-        issuedAt: opts.nbf || new Date().toISOString(),
-        expirationTime: opts.exp || new Date(Date.now() + 120000).toISOString(),
-        resources: [make],
-    uri: peer
+        issuedAt: opts.nbf?.toISOString() ?? new Date().toISOString(),
+        expirationTime: opts.exp?.toISOString() ?? new Date(Date.now() + 120000).toISOString(),
+        resources: [`${orbit}#peer`],
+        uri: peer
     }).toMessage()
 
 type SessionOptions = {
@@ -70,7 +69,7 @@ export const startSIWESession = async (orbit: string, domain: string, chainId: s
     address: delegator,
     statement: `Allow ${domain} to access your orbit using their temporary session key: ${delegate}`,
     uri: delegate,
-    resources: actions.map(action => `kepler://${orbit}#${action}`),
+    resources: actions.map(action => `${orbit}#${action}`),
     version,
     chainId,
     ...(opts.exp ? { expirationTime: opts.exp.toISOString() } : {}),

@@ -19,7 +19,7 @@ export const zcapAuthenticator = async <C extends Capabilities, D>(client: C, de
     return {
         content: async (orbit: string, cids: string[], action: Action): Promise<HeadersInit> => {
             const props = invProps(orbit, actionToKey(action, cids));
-            const inv = await client.invoke(props, delId || ("kepler://" + orbit), randomId(), keplerContext);
+            const inv = await client.invoke(props, delId || orbit, randomId(), keplerContext);
             const invstr = base64url.stringify(new TextEncoder().encode(JSON.stringify(inv)));
             return {
                 [invHeaderStr]: invstr,
@@ -30,9 +30,9 @@ export const zcapAuthenticator = async <C extends Capabilities, D>(client: C, de
             const props = {
                 invocationTarget: orbit,
             };
-            const inv = await client.invoke(props, "kepler://" + oid, randomId(), keplerContext);
+            const inv = await client.invoke(props, orbit, randomId(), keplerContext);
             const invBytes = new TextEncoder().encode(JSON.stringify(inv));
-            return { headers: { [invHeaderStr]: base64url.stringify(invBytes) }, oid }
+            return { [invHeaderStr]: base64url.stringify(invBytes) }
         }
     }
 }
@@ -56,12 +56,6 @@ export const startSession = async <C extends Capabilities, S extends Capabilitie
     // return authenticator for client
     return await zcapAuthenticator(sessionKey, delegation);
 }
-
-export const didVmToParams = (didVm: string, other: { [key: string]: string | number } = {}) => {
-    const [did, vm] = didVm.split("#");
-    return "did" + orbitParams({ ...other, did, vm })
-}
-
 
 export const sessionProps = (parentCapability: string, invoker: string, capabilityAction: string[] = ['list', 'get'], expiration: Date) => ({
     parentCapability, invoker, capabilityAction, expiration: expiration.toISOString()
