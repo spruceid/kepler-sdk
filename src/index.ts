@@ -3,7 +3,7 @@ import CID from 'cids';
 import multihashing from 'multihashing-async';
 import { Ipfs } from './ipfs';
 import { S3 } from './s3';
-export { makeKRI, getKRI } from './util';
+export { makeKRI, getKRI, makeOrbitId } from './util';
 export { zcapAuthenticator, startSession } from './zcap';
 export { tzStringAuthenticator } from './tzString';
 export { siweAuthenticator, startSIWESession } from './siwe';
@@ -47,11 +47,11 @@ export class Kepler {
         return new Ipfs(this.url, orbit, this.auth);
     }
 
-    public async new_id(): Promise<string> {
+    public async newPeer(): Promise<string> {
         return await fetch(this.url + "/peer/generate").then(async res => await res.text());
     }
 
-    public async id_addr(id: string): Promise<string> {
+    public async idAddr(id: string): Promise<string> {
         return await fetch(this.url + "/peer/relay").then(async res => await res.text() + "/p2p-circuit/p2p/" + id);
     }
 

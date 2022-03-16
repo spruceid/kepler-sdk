@@ -54,10 +54,10 @@ const createSiweAuthCreationMessage = (
         issuedAt: opts.nbf?.toISOString() ?? new Date().toISOString(),
         expirationTime: opts.exp?.toISOString() ?? new Date(Date.now() + 120000).toISOString(),
         resources: [`${orbit}#peer`],
-        uri: peer
+        uri: `peer:${peer}`
     }).toMessage()
 
-type SessionOptions = {
+export type SessionOptions = {
     nbf?: Date,
     exp?: Date
 };
