@@ -5,11 +5,13 @@ import { Ipfs } from './ipfs';
 import { S3 } from './s3';
 export { makeKRI, getKRI, makeOrbitId } from './util';
 export { zcapAuthenticator, startSession } from './zcap';
+import { Orbit } from './orbit';
 export { tzStringAuthenticator } from './tzString';
 export { siweAuthenticator, startSIWESession } from './siwe';
 export { Ipfs };
 export { S3 };
 export { Kepler as SimpleKepler } from './kepler';
+export { Orbit };
 
 export enum Action {
     get = 'GET',

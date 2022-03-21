@@ -33,7 +33,7 @@
   },
   "dependencies": {
     "@airgap/beacon-sdk": "^2.2.3",
-    "@spruceid/didkit-wasm": "0.1.9",
+    "@spruceid/didkit-wasm": "file:../didkit/lib/web/fat_pkg",
     "@spruceid/zcap-providers": "^0.1.1",
     "@taquito/signer": "^8.1.1",
     "@types/jest": "^26.0.22",

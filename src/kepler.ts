@@ -4,7 +4,6 @@ import { didkey, genJWK } from "@spruceid/zcap-providers";
 import { Orbit } from "./orbit";
 import { makeOrbitId } from "./util";
 
-const keplerUrl = "http://test.mydomain.com:8000";
 const defaultActions: string[] = ['put', 'get', 'list', 'del'];
 const oneHourInMs = 1000 * 60 * 60;
 const defaultSessionOpts: SessionOptions = { exp: new Date(Date.now() + oneHourInMs) };
@@ -14,22 +13,17 @@ type SessionOptions = {
     exp?: Date
 };
 
-const hosts = async () => await fetch(keplerUrl + '/peer/generate')
-    .then(res => res.text())
-    .then(async pid => fetch(keplerUrl + '/peer/relay')
-        .then(res => res.text())
-        .then(relay => `${pid}:${relay}/p2p-circuit/p2p/${pid}`)
-    );
-
 export class Kepler {
-    wallet: WalletProvider;
-    constructor(wallet: WalletProvider) {
-        this.wallet = wallet;
-    }
+    constructor(
+        private wallet: WalletProvider,
+        private keplerUrls: string[] = ["https://kepler.test.spruceid.xyz:443"],
+    ) {}
 
     async orbit(): Promise<Orbit> {
         const _didkit = await didkit;
 
+        // TODO: support multiple urls for kepler.
+        const keplerUrl = this.keplerUrls[0];
         const domain = window.location.hostname;
         const chainId = await this.wallet.getChainId().then(id => id.toString());
         const addr = await this.wallet.getAddress();
