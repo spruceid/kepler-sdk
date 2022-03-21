@@ -12,8 +12,9 @@ export const siweAuthenticator = async <S extends Signer, D>(orbit: string, clie
     const { h, delId } = getHeaderAndDelId(delegation);
 
     return {
-        content: async (orbit: string, cids: string[], action: Action): Promise<HeadersInit> => {
-            const auth = createSiweAuthContentMessage(orbit, pkh, action, cids, domain, chainId, delId);
+        content: async (orbit: string, service: string, path: string, fragment: string): Promise<HeadersInit> => {
+            const target = getKRI(orbit, service, path, fragment);
+            const auth = createSiweAuthContentMessage(orbit, target, pkh, domain, chainId, delId);
             const signature = await client.signMessage(auth);
             const invstr = base64url.stringify(new TextEncoder().encode(JSON.stringify([auth, signature])));
             return { [invHeaderStr]: invstr, ...h } as {}
@@ -30,13 +31,13 @@ export const siweAuthenticator = async <S extends Signer, D>(orbit: string, clie
 const statement = "Authorize an action on your Kepler Orbit";
 const version = "1";
 
-const createSiweAuthContentMessage = (orbit: string, address: string, action: Action, paths: string[], domain: string, chainId: string, del?: string) => {
+const createSiweAuthContentMessage = (orbit: string, target: string, address: string, domain: string, chainId: string, del?: string) => {
     const now = Date.now();
     return new SiweMessage({
         domain, address, statement, version, chainId,
         issuedAt: new Date(now).toISOString(),
         expirationTime: new Date(now + 10000).toISOString(),
-        resources: paths.map(path => getKRI(orbit, path, action.toLowerCase())),
+        resources: [target],
         uri: del ? `urn:siwe:kepler:{del}` : orbit
     }).toMessage()
 }

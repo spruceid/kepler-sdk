@@ -1,5 +1,5 @@
 import { DAppClient, SigningType } from '@airgap/beacon-sdk';
-import { Authenticator, Action, makeCid, makeKRI } from '.';
+import { Authenticator, Action, makeCid, makeKRI, getKRI } from '.';
 
 export const tzStringAuthenticator = async <D extends DAppClient>(client: D, domain: string): Promise<Authenticator> => {
     const { publicKey: pk, address: pkh } = await client.getActiveAccount().then(acc => {
@@ -10,8 +10,9 @@ export const tzStringAuthenticator = async <D extends DAppClient>(client: D, dom
     });
 
     return {
-        content: async (orbit: string, cids: string[], action: Action): Promise<HeadersInit> => {
-            const auth = createTzAuthContentMessage(orbit, pk, pkh, action, cids, domain);
+        content: async (orbit: string, service: string, path: string, fragment: string): Promise<HeadersInit> => {
+            const target = getKRI(orbit, service, path, fragment);
+            const auth = createTzAuthContentMessage(target, pk, pkh, domain);
             const { signature } = await client.requestSignPayload({
                 signingType: SigningType.MICHELINE,
                 payload: stringEncoder(auth)
@@ -29,11 +30,11 @@ export const tzStringAuthenticator = async <D extends DAppClient>(client: D, dom
     }
 }
 
-const createTzAuthContentMessage = (orbit: string, pk: string, pkh: string, action: Action, cids: string[], domain: string): string =>
-    `Tezos Signed Message: ${domain} ${(new Date()).toISOString()} ${pk} ${pkh} ${orbit} ${action} ${cids.join(' ')}`
+const createTzAuthContentMessage = (target: string, pk: string, pkh: string, domain: string): string =>
+    `Tezos Signed Message: ${domain} ${(new Date()).toISOString()} ${pk} ${pkh} ${target}`
 
 const createTzAuthCreationMessage = async (orbit: string, pk: string, pkh: string, domain: string, peer: string): Promise<string> =>
-    `Tezos Signed Message: ${domain} ${(new Date()).toISOString()} ${pk} ${pkh} ${orbit} CREATE ${peer}`
+    `Tezos Signed Message: ${domain} ${(new Date()).toISOString()} ${pk} ${pkh} ${orbit}#peer ${peer}`
 
 export const stringEncoder = (s: string): string => {
     const bytes = Buffer.from(s, 'utf8');
