@@ -1,4 +1,4 @@
-import { Authenticator, Action, makeCid, orbitParams } from '.';
+import { Authenticator, Action, makeCid, makeKRI, getKRI } from '.';
 import { base64url } from 'rfc4648';
 import { Capabilities, W3ID_SECURITY_V2, randomId, Delegation } from '@spruceid/zcap-providers';
 import { SiweMessage } from 'siwe';
@@ -17,26 +17,22 @@ export const getHeaderAndDelId = <D>(delegation?: Delegation<D> | SiweMessage) =
 export const zcapAuthenticator = async <C extends Capabilities, D>(client: C, delegation?: Delegation<D> | SiweMessage): Promise<Authenticator> => {
     const { h, delId } = getHeaderAndDelId(delegation);
     return {
-        content: async (orbit: string, cids: string[], action: Action): Promise<HeadersInit> => {
-            const props = invProps(orbit, actionToKey(action, cids));
-            const inv = await client.invoke(props, delId || ("kepler://" + orbit), randomId(), keplerContext);
+        content: async (orbit: string, service: string, path: string, fragment: string): Promise<HeadersInit> => {
+            const target = getKRI(orbit, service, path, fragment);
+            const inv = await client.invoke(invProps(target), delId || orbit, randomId(), keplerContext);
             const invstr = base64url.stringify(new TextEncoder().encode(JSON.stringify(inv)));
             return {
                 [invHeaderStr]: invstr,
                 ...h
             } as {}
         },
-        createOrbit: async (cids: string[], params: { [key: string]: number | string } = {}, method: string = 'did'): Promise<{ headers: HeadersInit, oid: string }> => {
-            const parameters = didVmToParams(client.id(), params);
-            const oid = await makeCid(new TextEncoder().encode(parameters));
-            const props = invProps(oid, {
-                create: {
-                    parameters, content: cids
-                }
-            });
-            const inv = await client.invoke(props, "kepler://" + oid, randomId(), keplerContext);
+        authorizePeer: async (orbit: string, peer: string): Promise<HeadersInit> => {
+            const props = {
+                invocationTarget: orbit,
+            };
+            const inv = await client.invoke(props, orbit, randomId(), keplerContext);
             const invBytes = new TextEncoder().encode(JSON.stringify(inv));
-            return { headers: { [invHeaderStr]: base64url.stringify(invBytes) }, oid }
+            return { [invHeaderStr]: base64url.stringify(invBytes) }
         }
     }
 }
@@ -61,41 +57,12 @@ export const startSession = async <C extends Capabilities, S extends Capabilitie
     return await zcapAuthenticator(sessionKey, delegation);
 }
 
-export const didVmToParams = (didVm: string, other: { [key: string]: string | number } = {}) => {
-    const [did, vm] = didVm.split("#");
-    return "did" + orbitParams({ ...other, did, vm })
-}
-
-
 export const sessionProps = (parentCapability: string, invoker: string, capabilityAction: string[] = ['list', 'get'], expiration: Date) => ({
     parentCapability, invoker, capabilityAction, expiration: expiration.toISOString()
 })
 
-enum ContentActionKeys {
-    get = 'get',
-    put = 'put',
-    del = 'del'
-}
-
-type CapContentAction = { [K in ContentActionKeys]?: string[] }
-type CapOrbitAction = 'list' | { create: { parameters: string, content: string[] } }
-
-const actionToKey = (action: Action, cids: string[]): CapContentAction | 'list' => {
-    switch (action) {
-        case Action.get:
-            return { [ContentActionKeys.get]: cids }
-        case Action.put:
-            return { [ContentActionKeys.put]: cids }
-        case Action.delete:
-            return { [ContentActionKeys.del]: cids }
-        case Action.list:
-            return 'list'
-    }
-}
-
-const invProps = (orbit: string, capabilityAction: CapContentAction | CapOrbitAction = 'list') => ({
-    invocationTarget: orbit,
-    capabilityAction
+const invProps = (invocationTarget: string) => ({
+    invocationTarget,
 })
 
 export const keplerContext = [W3ID_SECURITY_V2, { capabilityAction: { "@id": "sec:capabilityAction", "@type": "@json" } }];

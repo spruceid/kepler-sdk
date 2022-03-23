@@ -1,4 +1,4 @@
-import { Action, Authenticator, makeCid } from "./index";
+import { Action, Authenticator, makeCid, makeCidString } from "./index";
 import fetch from 'cross-fetch';
 
 export class Ipfs {
@@ -13,23 +13,25 @@ export class Ipfs {
     }
 
     public async get(cid: string, authenticate: boolean = true): Promise<Response> {
-        return await fetch(makeContentPath(this.url, this.orbit, cid), {
+        const oidCid = await makeCidString(this.orbitId);
+        return await fetch(makeContentPath(this.url, oidCid, cid), {
             method: "GET",
-            headers: authenticate ? { ...await this.auth.content(this.orbit, [cid], Action.get) } : undefined
+            headers: authenticate ? { ...await this.auth.content(this.orbit, 'ipfs', cid, 'get') } : undefined
         })
     }
 
     public async put(first: Blob, ...rest: Blob[]): Promise<Response> {
-        const auth = await this.auth.content(this.orbit, await Promise.all([first, ...rest].map(async (c) => await makeCid(new Uint8Array(await c.arrayBuffer())))), Action.put)
+        const oidCid = await makeCidString(this.orbitId);
+        const auth = await this.auth.content(this.orbit, 'ipfs', '', 'put')
         if (rest.length >= 1) {
-            return await fetch(makeOrbitPath(this.url, this.orbit), {
+            return await fetch(makeOrbitPath(this.url, oidCid), {
                 method: "PUT",
                 // @ts-ignore
                 body: await makeFormRequest(first, ...rest),
                 headers: auth
             })
         } else {
-            return await fetch(makeOrbitPath(this.url, this.orbit), {
+            return await fetch(makeOrbitPath(this.url, oidCid), {
                 method: "PUT",
                 body: first,
                 headers: { ...auth, ...{ "Content-Type": "application/json" } }
@@ -38,14 +40,19 @@ export class Ipfs {
     }
 
     public async del(cid: string): Promise<Response> {
-        return await fetch(makeContentPath(this.url, this.orbit, cid), {
+        const oidCid = await makeCidString(this.orbitId);
+        return await fetch(makeContentPath(this.url, oidCid, cid), {
             method: 'DELETE',
-            headers: await this.auth.content(this.orbit, [cid], Action.delete)
+            headers: await this.auth.content(this.orbit, 'ipfs', cid, 'del')
         })
     }
 
     public async list(): Promise<Response> {
-        return await fetch(makeOrbitPath(this.url, this.orbit), { method: 'GET', headers: await this.auth.content(this.orbit, [], Action.list) })
+        const oidCid = await makeCidString(this.orbitId);
+        return await fetch(makeOrbitPath(this.url, oidCid), {
+            method: 'GET',
+            headers: await this.auth.content(this.orbit, 'ipfs', '', 'list')
+        })
     }
 }
 

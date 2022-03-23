@@ -1,4 +1,4 @@
-import { Action, Authenticator, makeCid } from "./index";
+import { Action, Authenticator, makeCid, makeCidString } from "./index";
 import fetch from 'cross-fetch';
 
 export class S3 {
@@ -13,38 +13,46 @@ export class S3 {
     }
 
     public async get(key: string, authenticate: boolean = true, version?: string): Promise<Response> {
-        return await fetch(makeContentPath(this.url, this.orbit, key, version), {
+        const oidCid = await makeCidString(this.orbitId);
+        return await fetch(makeContentPath(this.url, oidCid, key), {
             method: "GET",
-            headers: authenticate ? { ...await this.auth.content(this.orbit, [key], Action.get) } : undefined
+            headers: authenticate ? { ...await this.auth.content(this.orbit, 's3', key, 'get') } : undefined
         })
     }
 
     public async head(key: string, authenticate: boolean = true, version?: string): Promise<Response> {
-        return await fetch(makeContentPath(this.url, this.orbit, key, version), {
+        const oidCid = await makeCidString(this.orbitId);
+        return await fetch(makeContentPath(this.url, oidCid, key), {
             method: "HEAD",
-            headers: authenticate ? { ...await this.auth.content(this.orbit, [key], Action.get) } : undefined
+            headers: authenticate ? { ...await this.auth.content(this.orbit, 's3', key, 'metadata') } : undefined
         })
     }
 
     public async put(key: string, value: Blob, metadata: { [key: string]: string }): Promise<Response> {
+        const oidCid = await makeCidString(this.orbitId);
         const cid = await makeCid(new Uint8Array(await value.arrayBuffer()));
-        const auth = await this.auth.content(this.orbit, [cid], Action.put)
-        return await fetch(makeContentPath(this.url, this.orbit, key), {
+        const auth = await this.auth.content(this.orbit, 's3', key, 'put')
+        return await fetch(makeContentPath(this.url, oidCid, key), {
             method: "PUT",
             body: value,
             headers: { ...auth, ...metadata }
         })
     }
 
-    public async del(cid: string, version?: string): Promise<Response> {
-        return await fetch(makeContentPath(this.url, this.orbit, cid, version), {
+    public async del(key: string, version?: string): Promise<Response> {
+        const oidCid = await makeCidString(this.orbitId);
+        return await fetch(makeContentPath(this.url, oidCid, key, version), {
             method: 'DELETE',
-            headers: await this.auth.content(this.orbit, [cid], Action.delete)
+            headers: await this.auth.content(this.orbit, 's3', key, 'del')
         })
     }
 
-    public async list(): Promise<Response> {
-        return await fetch(makeOrbitPath(this.url, this.orbit), { method: 'GET', headers: await this.auth.content(this.orbit, [], Action.list) })
+    public async list(prefix: string = ''): Promise<Response> {
+        const oidCid = await makeCidString(this.orbitId);
+        return await fetch(makeOrbitPath(this.url, oidCid), {
+            method: 'GET',
+            headers: await this.auth.content(this.orbit, 's3', prefix, 'list')
+        })
     }
 }
 
