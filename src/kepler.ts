@@ -27,7 +27,7 @@ export class Kepler {
         const chainId = await this.wallet.getChainId().then(id => id.toString());
         const addr = await this.wallet.getAddress();
         const oid = opts.orbit || makeOrbitId(`pkh:eip155:${chainId}:${addr}`, "default");
-        const actions = opts.actions || ['put', 'get', 'list', 'del'];
+        const actions = opts.actions || ['put', 'get', 'list', 'del', 'metadata'];
         const sessionOpts = opts.sessionOpts || { exp: new Date(Date.now() + 1000*60*60) };
 
         const sessionKey = await didkey(genJWK(_didkit), _didkit);
