@@ -1,10 +1,21 @@
 import { Authenticator, S3 } from ".";
 
-export class Orbit {
+type SessionOptions = {
+    nbf?: Date,
+    exp: Date,
+};
+
+export type ConnectionOptions = { orbit?: string, actions?: string[], sessionOpts?: SessionOptions };
+
+export class OrbitConnection {
     private s3: S3;
 
-    constructor(keplerUrl: string, oid: string, authn: Authenticator) {
+    constructor(keplerUrl: string, private oid: string, authn: Authenticator) {
         this.s3 = new S3(keplerUrl, oid, authn);
+    }
+
+    id(): string {
+        return this.oid;
     }
 
     async put(key: string, value: Blob): Promise<Response> {

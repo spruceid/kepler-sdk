@@ -60,7 +60,7 @@ const createSiweAuthCreationMessage = (
 
 export type SessionOptions = {
     nbf?: Date,
-    exp?: Date
+    exp?: Date,
 };
 
 const millisecondsFromNow = (ms: number) => new Date(Date.now() + ms);
