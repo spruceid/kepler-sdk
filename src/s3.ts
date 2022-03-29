@@ -1,5 +1,4 @@
 import { Action, Authenticator, makeCid, makeCidString } from "./index";
-import fetch from 'cross-fetch';
 
 export class S3 {
     constructor(

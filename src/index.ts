@@ -1,17 +1,15 @@
-import fetch, { Response } from 'cross-fetch';
 import CID from 'cids';
 import multihashing from 'multihashing-async';
 import { Ipfs } from './ipfs';
 import { S3 } from './s3';
 export { makeKRI, getKRI, makeOrbitId } from './util';
 export { zcapAuthenticator, startSession } from './zcap';
-import { OrbitConnection } from './orbit';
 export { tzStringAuthenticator } from './tzString';
 export { siweAuthenticator, startSIWESession } from './siwe';
 export { Ipfs };
 export { S3 };
 export { Kepler as SimpleKepler, KeplerConfig } from './kepler';
-export { OrbitConnection };
+export { OrbitConnection, ConnectionOptions, Request, Response, SessionOptions } from './orbit';
 
 export enum Action {
     get = 'GET',

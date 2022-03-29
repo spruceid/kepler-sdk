@@ -1,5 +1,4 @@
 import { SiweMessage } from 'siwe';
-import { Signer } from 'ethers';
 import { base64url } from 'rfc4648';
 import { Authenticator, Action, getKRI, makeKRI } from '.';
 import { Delegation } from '@spruceid/zcap-providers';

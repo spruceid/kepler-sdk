@@ -1,6 +1,6 @@
-import { SimpleKepler, OrbitConnection } from './';
-import fetch from 'cross-fetch';
+import { SimpleKepler, OrbitConnection, Response } from './';
 import Blob from 'fetch-blob';
+import fetch from 'node-fetch';
 import { Wallet } from 'ethers';
 
 function expectSuccess(response: Response): Response {
@@ -13,6 +13,12 @@ function expectUnauthorised(response: Response): Response {
     return response
 }
 
+function newWallet(): Wallet {
+    const wallet: Wallet = Wallet.createRandom();
+    wallet.getChainId = () => Promise.resolve(1);
+    return wallet;
+}
+
 describe('Kepler Client', () => {
     let orbit: OrbitConnection;
     const keplerConfig = { hosts: ["http://localhost:8000"] };
@@ -21,45 +27,102 @@ describe('Kepler Client', () => {
         (global as any).window = { location: { hostname: "example.com" } };
         (global as any).fetch = fetch;
 
-        const wallet: Wallet = Wallet.createRandom();
-        wallet.getChainId = () => Promise.resolve(1);
-        orbit = await new SimpleKepler(wallet, keplerConfig).orbit();
+        orbit = await new SimpleKepler(newWallet(), keplerConfig).orbit();
+    })
+
+    it('cannot put with unsupported mime-type', async () => {
+        let key = 'pdf';
+        let value = new ArrayBuffer(8);
+        try {
+            await orbit.put(key, value, {type: 'application/pdf'});
+        } catch {
+            return;
+        }
+        fail('function should fail due to unsupported mime-type');
+    })
+
+    it('cannot put non-blob without specifying mime-type', async () => {
+        let key = 'nonBlob';
+        let value = 'value';
+        try {
+            await orbit.put(key, value);
+        } catch {
+            return;
+        }
+        fail('function should fail due to unknown mime-type');
     })
 
     it('can put & get plaintext', async () => {
         let key = 'plaintext';
-        // @ts-ignore
-        await orbit.put(key, new Blob(['value'], {type: 'text/plain'}))
+        let value = 'value';
+        await orbit.put(key, value, {type: 'text/plain'})
             .then(expectSuccess)
             .then(() => orbit.get(key))
             .then(expectSuccess)
-            .then((response: Response) => response.text())
-            .then((value) => expect(value).toEqual('value'));
+            .then(({ data }) => expect(data).toEqual(value));
     })
 
     it('can put & get json', async () => {
         let key = 'json';
-        let obj = {some: 'object', with: 'properties'};
-        // @ts-ignore
-        await orbit.put(key, new Blob([JSON.stringify(obj)], {type: 'application/json'}))
+        let value = {some: 'object', with: 'properties'};
+        await orbit.put(key, value, { type: 'application/json' })
             .then(expectSuccess)
             .then(() => orbit.get(key))
             .then(expectSuccess)
-            .then((response: Response) => response.json())
-            .then((value) => expect(value).toEqual(obj));
+            .then(({ data }) => expect(data).toEqual(value));
     })
 
-    it('can put & get blob', async () => {
+    it('can put & get text blob', async () => {
         let key = 'blob';
-        let blob = new Blob(['value'], {type: 'text/plain'});
-        // @ts-ignore
+        let value = 'value';
+        let blob = new Blob([value], {type: 'text/plain'});
         await orbit.put(key, blob)
             .then(expectSuccess)
             .then(() => orbit.get(key))
             .then(expectSuccess)
-            .then((response: Response) => response.blob())
-            .then((blob) => blob.text())
-            .then((value) => expect(value).toEqual('value'));
+            .then(({ data }) => expect(data).toEqual(value));
+    })
+
+    it('can put & get json blob', async () => {
+        let key = 'blob';
+        let value = {some: 'object', with: 'properties'};
+        let blob = new Blob([JSON.stringify(value)], {type: 'application/json'});
+        await orbit.put(key, blob)
+            .then(expectSuccess)
+            .then(() => orbit.get(key))
+            .then(expectSuccess)
+            .then(({ data }) => expect(data).toEqual(value));
+    })
+
+    it('can put & get any blob', async () => {
+        let key = 'blob';
+        let blob = new Blob([new ArrayBuffer(8)], {type: 'image/gif'});
+        await orbit.put(key, blob)
+            .then(expectSuccess)
+            .then(() => orbit.get(key))
+            .then(expectSuccess)
+            .then(({ data }) => {
+                expect(data.type).toEqual('image/gif');
+                expect(data.arrayBuffer()).resolves.toEqual(new ArrayBuffer(8));
+            });
+    })
+
+    it('can stream an object from Kepler', async () => {
+        let key = 'plaintext';
+        let val = 'test'.repeat(1048576);
+        await orbit.put(key, val, {type: 'text/plain'})
+            .then(expectSuccess)
+            .then(() => orbit.get(key, { streamBody: true }))
+            .then(expectSuccess)
+            .then(async ({ data }) => {
+                if (!data) {
+                    return Promise.reject('response did not contain the data');
+                }
+                let output = '';
+                data.on('data', (chunk: string) => {output += chunk})
+                data.on('end', () => expect(output).toEqual(val))
+                data.on('error', fail)
+            })
     })
 
     it('can list & delete', async () => {
@@ -70,47 +133,39 @@ describe('Kepler Client', () => {
             .then(expectSuccess)
             .then(() => orbit.list())
             .then(expectSuccess)
-            .then((response) => response.json())
-            .then((list) => expect(list).toContain(key))
+            .then(({ data }) => expect(data).toContain(key))
             .then(() => orbit.delete(key))
             .then(expectSuccess)
             .then(() => orbit.list())
             .then(expectSuccess)
-            .then((response) => response.json())
-            .then((list) => expect(list).not.toContain(key))
+            .then(({ data }) => expect(data).not.toContain(key))
     })
 
     it('can retrieve content-type', async () => {
         let key = 'headContentType';
         // @ts-ignore
-        await orbit.put(key, new Blob(['data'], {type: 'image/gif'}))
+        await orbit.put(key, new Blob([new ArrayBuffer(8)], {type: 'image/gif'}))
             .then(expectSuccess)
             .then(() => orbit.head(key))
             .then(expectSuccess)
-            .then(({headers}) => headers.get('content-type'))
+            .then(({ headers }) => headers.get('content-type'))
             .then(cType => expect(cType).toEqual('image/gif'));
     })
 
     it('undelegated account cannot access a different orbit', async () => {
-        const undelegatedWallet: Wallet = Wallet.createRandom();
-        undelegatedWallet.getChainId = () => Promise.resolve(1);
-        await new SimpleKepler(undelegatedWallet, keplerConfig).orbit({ orbit: orbit.id() })
+        await new SimpleKepler(newWallet(), keplerConfig).orbit({ orbit: orbit.id() })
             .then(orbit => orbit.list())
             .then(expectUnauthorised);
     })
 
     it('expired session key cannot be used', async () => {
-        const timedOutWallet: Wallet = Wallet.createRandom();
-        timedOutWallet.getChainId = () => Promise.resolve(1);
-        await new SimpleKepler(timedOutWallet, keplerConfig).orbit({ sessionOpts: { exp: new Date(Date.now() - (1000 * 60 * 60)) } })
+        await new SimpleKepler(newWallet(), keplerConfig).orbit({ sessionOpts: { exp: new Date(Date.now() - (1000 * 60 * 60)) } })
             .then(orbit => orbit.list())
             .then(expectUnauthorised);
     })
     
     it('only allows properly authorised actions', async () => {
-        const wallet = Wallet.createRandom();
-        wallet.getChainId = async () => Promise.resolve(1);
-        const kepler = new SimpleKepler(wallet, keplerConfig);
+        const kepler = new SimpleKepler(newWallet(), keplerConfig);
         const write = await kepler.orbit({ actions: ['put', 'del'] });
         const read = await kepler.orbit({ actions: ['get', 'list'] });
 
@@ -120,22 +175,20 @@ describe('Kepler Client', () => {
 
         // writer can write
         // @ts-ignore
-        await write.put(key, new Blob([JSON.stringify(json)], { type: 'application/json' }))
+        await write.put(key, json, { type: 'application/json' })
             .then(expectSuccess);
 
         // reader can list
         await read.list()
             .then(expectSuccess)
-            .then(response => response.json())
-            .then(({ length }) => expect(length).toBe(1));
+            .then(({ data }) => expect(data.length).toBe(1));
         // reader can read
         await read.get(key)
             .then(expectSuccess)
-            .then(response => response.json())
-            .then(got => expect(got).toEqual(json));
+            .then(({ data }) => expect(data).toEqual(json));
         // reader cant write
         // @ts-ignore
-        await read.put(key, new Blob([JSON.stringify(json2)], { type: 'application/json' }))
+        await read.put(key, json2, { type: 'application/json' })
             .then(expectUnauthorised);
         // reader cant delete
         await read.delete(key)

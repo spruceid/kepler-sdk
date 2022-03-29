@@ -40,10 +40,10 @@ export class Kepler {
             if (status === 404) {
                 console.info("Orbit does not already exist. Creating...")
                 const siweAuthn = await siweAuthenticator(oid, this.wallet, domain, chainId);
-                let headers = await fetch(keplerUrl + '/peer/generate')
+                const headers = await fetch(keplerUrl + '/peer/generate')
                     .then(res => res.text())
                     .then(peerId => siweAuthn.authorizePeer(oid, peerId));
-                let oidCid = await makeCidString(oid);
+                const oidCid = await makeCidString(oid);
                 await fetch(keplerUrl + "/" + oidCid, {
                     method: 'POST',
                     headers,
