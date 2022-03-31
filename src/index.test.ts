@@ -204,4 +204,20 @@ describe('Kepler Client', () => {
         await write.delete(key)
             .then(expectSuccess);
     })
+
+    it('there is a one-to-one mapping between wallets and orbits', async () => {
+        const wallet = newWallet();
+        (global as any).window = { location: { hostname: "example1.com" } };
+        const orbit1 = await new Kepler(wallet, keplerConfig).orbit();
+        (global as any).window = { location: { hostname: "example2.com" } };
+        const orbit2 = await new Kepler(wallet, keplerConfig).orbit();
+
+        const key = 'key';
+        const value = 'value';
+        await orbit1.put(key, value, {type: 'text/plain'})
+            .then(expectSuccess)
+            .then(() => orbit2.get(key))
+            .then(expectSuccess)
+            .then(({ data }) => expect(data).toEqual(value))
+    })
 })
