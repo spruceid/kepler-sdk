@@ -1,4 +1,4 @@
-import { SimpleKepler, OrbitConnection, Response } from './';
+import { Kepler, OrbitConnection, Response } from './';
 import Blob from 'fetch-blob';
 import fetch from 'node-fetch';
 import { Wallet } from 'ethers';
@@ -27,7 +27,7 @@ describe('Kepler Client', () => {
         (global as any).window = { location: { hostname: "example.com" } };
         (global as any).fetch = fetch;
 
-        orbit = await new SimpleKepler(newWallet(), keplerConfig).orbit();
+        orbit = await new Kepler(newWallet(), keplerConfig).orbit();
     })
 
     it('cannot put with unsupported mime-type', async () => {
@@ -153,19 +153,19 @@ describe('Kepler Client', () => {
     })
 
     it('undelegated account cannot access a different orbit', async () => {
-        await new SimpleKepler(newWallet(), keplerConfig).orbit({ orbit: orbit.id() })
+        await new Kepler(newWallet(), keplerConfig).orbit({ orbit: orbit.id() })
             .then(orbit => orbit.list())
             .then(expectUnauthorised);
     })
 
     it('expired session key cannot be used', async () => {
-        await new SimpleKepler(newWallet(), keplerConfig).orbit({ sessionOpts: { exp: new Date(Date.now() - (1000 * 60 * 60)) } })
+        await new Kepler(newWallet(), keplerConfig).orbit({ sessionOpts: { exp: new Date(Date.now() - (1000 * 60 * 60)) } })
             .then(orbit => orbit.list())
             .then(expectUnauthorised);
     })
     
     it('only allows properly authorised actions', async () => {
-        const kepler = new SimpleKepler(newWallet(), keplerConfig);
+        const kepler = new Kepler(newWallet(), keplerConfig);
         const write = await kepler.orbit({ actions: ['put', 'del'] });
         const read = await kepler.orbit({ actions: ['get', 'list'] });
 

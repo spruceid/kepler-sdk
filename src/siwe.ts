@@ -1,8 +1,9 @@
 import { SiweMessage } from 'siwe';
 import { base64url } from 'rfc4648';
-import { Authenticator, Action, getKRI, makeKRI } from '.';
 import { Delegation } from '@spruceid/zcap-providers';
 import { getHeaderAndDelId } from './zcap';
+import { Authenticator } from './authenticator';
+import { getKRI } from './util';
 
 const invHeaderStr = "x-siwe-invocation";
 

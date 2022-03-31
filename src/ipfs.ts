@@ -1,4 +1,5 @@
-import { Action, Authenticator, makeCid, makeCidString } from "./index";
+import { Authenticator } from "./authenticator";
+import { makeCidString } from "./util";
 
 export class Ipfs {
     constructor(

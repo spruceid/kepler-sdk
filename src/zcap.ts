@@ -1,7 +1,8 @@
-import { Authenticator, Action, makeCid, makeKRI, getKRI } from '.';
 import { base64url } from 'rfc4648';
 import { Capabilities, W3ID_SECURITY_V2, randomId, Delegation } from '@spruceid/zcap-providers';
 import { SiweMessage } from 'siwe';
+import { getKRI } from './util';
+import { Authenticator } from './authenticator';
 
 const invHeaderStr = "x-kepler-invocation";
 

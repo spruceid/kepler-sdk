@@ -1,5 +1,6 @@
-import { Authenticator, S3 } from ".";
+import { S3 } from "./s3";
 import Blob from 'fetch-blob';
+import { Authenticator } from "./authenticator";
 
 export class OrbitConnection {
     private s3: S3;

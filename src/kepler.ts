@@ -1,8 +1,9 @@
-import { makeCidString, siweAuthenticator, startSIWESession, zcapAuthenticator } from ".";
 import didkit from '@spruceid/didkit-wasm';
 import { didkey, genJWK } from "@spruceid/zcap-providers";
 import { ConnectionOptions, OrbitConnection } from "./orbit";
-import { makeOrbitId } from "./util";
+import { siweAuthenticator, startSIWESession } from './siwe';
+import { makeCidString, makeOrbitId } from "./util";
+import { zcapAuthenticator } from './zcap';
 
 export type KeplerConfig = { hosts?: string[] };
 type DefiniteConfig = { hosts: string[] };

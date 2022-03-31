@@ -1,4 +1,5 @@
-import { Action, Authenticator, makeCid, makeCidString } from "./index";
+import { Authenticator } from "./authenticator";
+import { makeCid, makeCidString } from "./util";
 
 export class S3 {
     constructor(

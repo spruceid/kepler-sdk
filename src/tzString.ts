@@ -1,7 +1,8 @@
 import { DAppClient, SigningType } from '@airgap/beacon-sdk';
-import { Authenticator, Action, makeCid, makeKRI, getKRI } from '.';
+import { Authenticator } from './authenticator';
+import { getKRI } from './util';
 
-export const tzStringAuthenticator = async <D extends DAppClient>(client: D, domain: string): Promise<Authenticator> => {
+const tzStringAuthenticator = async <D extends DAppClient>(client: D, domain: string): Promise<Authenticator> => {
     const { publicKey: pk, address: pkh } = await client.getActiveAccount().then(acc => {
         if (acc === undefined) {
             throw new Error("No Active Account")
