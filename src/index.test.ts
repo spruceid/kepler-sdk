@@ -118,6 +118,8 @@ describe('Kepler Client', () => {
                 if (!data) {
                     return Promise.reject('response did not contain the data');
                 }
+                // Please note that this test is running with Node, and therefore is using the Node
+                // implementation of ReadableStream, which differs from the browser implementation.
                 let output = '';
                 data.on('data', (chunk: string) => {output += chunk})
                 data.on('end', () => expect(output).toEqual(val))
@@ -159,7 +161,7 @@ describe('Kepler Client', () => {
     })
 
     it('expired session key cannot be used', async () => {
-        await new Kepler(newWallet(), keplerConfig).orbit({ sessionOpts: { exp: new Date(Date.now() - (1000 * 60 * 60)) } })
+        await new Kepler(newWallet(), keplerConfig).orbit({ sessionOpts: { expirationTime: new Date(Date.now() - (1000 * 60 * 60)) } })
             .then(orbit => orbit.list())
             .then(expectUnauthorised);
     })

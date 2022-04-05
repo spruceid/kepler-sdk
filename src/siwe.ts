@@ -4,6 +4,8 @@ import { Delegation } from '@spruceid/zcap-providers';
 import { getHeaderAndDelId } from './zcap';
 import { Authenticator } from './authenticator';
 import { getKRI } from './util';
+import { WalletProvider } from './walletProvider';
+import { SessionOptions } from './orbit';
 
 const invHeaderStr = "x-siwe-invocation";
 
@@ -48,24 +50,19 @@ const createSiweAuthCreationMessage = (
     peer: string,
     domain: string,
     chainId: string,
-    opts: SessionOptions = { nbf: new Date(), exp: new Date(Date.now() + 120000) }
+    opts: SessionOptions = { notBefore: new Date(), expirationTime: new Date(Date.now() + 120000) }
 ) => new SiweMessage({
         domain, address, version, chainId,
         statement: 'Authorize this provider to host your Orbit',
-        issuedAt: opts.nbf?.toISOString() ?? new Date().toISOString(),
-        expirationTime: opts.exp?.toISOString() ?? new Date(Date.now() + 120000).toISOString(),
+        issuedAt: opts.notBefore?.toISOString() ?? new Date().toISOString(),
+        expirationTime: opts.expirationTime?.toISOString() ?? new Date(Date.now() + 120000).toISOString(),
         resources: [`${orbit}#peer`],
         uri: `peer:${peer}`
     }).toMessage()
 
-export type SessionOptions = {
-    nbf?: Date,
-    exp?: Date,
-};
+const minutesFromNow = (m: number) => new Date(Date.now() + m * 1000 * 60);
 
-const millisecondsFromNow = (ms: number) => new Date(Date.now() + ms);
-
-export const startSIWESession = async (orbit: string, domain: string, chainId: string, delegator: string, delegate: string, actions: string[] = ['get'], opts: SessionOptions = { exp: millisecondsFromNow(120000) }) => new SiweMessage({
+export const startSIWESession = async (orbit: string, domain: string, chainId: string, delegator: string, delegate: string, actions: string[] = ['get'], opts: SessionOptions = { expirationTime: minutesFromNow(60) }) => new SiweMessage({
     domain,
     address: delegator,
     statement: `Allow ${domain} to access your orbit using their temporary session key: ${delegate}`,
@@ -73,6 +70,6 @@ export const startSIWESession = async (orbit: string, domain: string, chainId: s
     resources: actions.map(action => `${orbit}#${action}`),
     version,
     chainId,
-    ...(opts.exp ? { expirationTime: opts.exp.toISOString() } : {}),
-    ...(opts.nbf ? { notBefore: opts.nbf.toISOString() } : {})
+    ...(opts.expirationTime ? { expirationTime: opts.expirationTime.toISOString() } : {}),
+    ...(opts.notBefore ? { notBefore: opts.notBefore.toISOString() } : {})
 })
