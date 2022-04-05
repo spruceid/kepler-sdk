@@ -33,7 +33,8 @@
     "typescript": "^4.2.3"
   },
   "dependencies": {
-    "@spruceid/didkit-wasm": "file:../didkit/lib/web/fat_pkg",
+    "@airgap/beacon-sdk": "^2.2.3",
+    "@spruceid/didkit-wasm": "file:./didkit",
     "@spruceid/zcap-providers": "^0.1.1",
     "cids": "^1.1.6",
     "fetch-blob": "^2.1.2",
