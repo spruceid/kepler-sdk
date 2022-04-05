@@ -1,4 +1,4 @@
-import { S3 } from "./s3";
+import { KV } from "./kv";
 import Blob from 'fetch-blob';
 import { Authenticator } from "./authenticator";
 
@@ -9,11 +9,11 @@ import { Authenticator } from "./authenticator";
  */
 export class OrbitConnection {
     private oid: string;
-    private s3: S3;
+    private kv: KV;
 
     /** @ignore */
     constructor(keplerUrl: string, oid: string, authn: Authenticator) {
-        this.s3 = new S3(keplerUrl, oid, authn);
+        this.kv = new KV(keplerUrl, oid, authn);
         this.oid = oid;
     }
 
@@ -66,7 +66,7 @@ export class OrbitConnection {
             value;
 
         // @ts-ignore
-        return this.s3.put(key, blob, {}).then(transformResponse);
+        return this.kv.put(key, blob, {}).then(transformResponse);
     }
 
     /** Retrieve an object from the connected orbit.
@@ -127,7 +127,7 @@ export class OrbitConnection {
             return { ok, status, statusText, headers, data };
         };
 
-        return this.s3.get(key).then(transformResponse)
+        return this.kv.get(key).then(transformResponse)
     }
 
     /** Delete an object from the connected orbit.
@@ -142,7 +142,7 @@ export class OrbitConnection {
             return { ok, status, statusText, headers }
         };
 
-        return this.s3.del(key).then(transformResponse)
+        return this.kv.del(key).then(transformResponse)
     }
 
     /** List objects in the connected orbit.
@@ -178,7 +178,7 @@ export class OrbitConnection {
             return { ok, status, statusText, headers, data };
         };
 
-        return this.s3.list().then(transformResponse)
+        return this.kv.list().then(transformResponse)
     }
 
     /** Retrieve metadata about an object from the connected orbit.
@@ -193,7 +193,7 @@ export class OrbitConnection {
             return { ok, status, statusText, headers }
         };
 
-        return this.s3.head(key).then(transformResponse)
+        return this.kv.head(key).then(transformResponse)
     }
 }
 

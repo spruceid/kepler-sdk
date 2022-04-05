@@ -1,7 +1,7 @@
 import { Authenticator } from "./authenticator";
 import { makeCid, makeCidString } from "./util";
 
-export class S3 {
+export class KV {
     constructor(
         private url: string,
         private orbitId: string,
