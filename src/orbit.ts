@@ -1,6 +1,6 @@
-import { KV } from "./kv";
-import Blob from 'fetch-blob';
 import { Authenticator } from "./authenticator";
+import { Blob } from "./blob";
+import { KV } from "./kv";
 
 /**
  * A connection to an orbit in a Kepler instance.

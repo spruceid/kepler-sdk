@@ -1,6 +1,10 @@
 import { Authenticator } from "./authenticator";
 import { makeCid, makeCidString } from "./util";
 
+if (typeof fetch === "undefined") {
+    const fetch = require('node-fetch');
+}
+
 export class KV {
     constructor(
         private url: string,

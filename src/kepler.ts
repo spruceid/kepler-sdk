@@ -6,6 +6,10 @@ import { makeCidString, makeOrbitId } from "./util";
 import { WalletProvider } from './walletProvider';
 import { zcapAuthenticator } from './zcap';
 
+if (typeof fetch === "undefined") {
+    const fetch = require('node-fetch');
+}
+
 /** Configuration for {@link Kepler}. */
 export type KeplerOptions = {
     /** The Kepler hosts that you wish to connect to.
@@ -76,7 +80,9 @@ export class Kepler {
                 console.info("Orbit does not already exist. Creating...")
                 const siweAuthn = await siweAuthenticator(oid, this.wallet, domain, chainId);
                 const headers = await fetch(keplerUrl + '/peer/generate')
+                    // @ts-ignore
                     .then(res => res.text())
+                    // @ts-ignore
                     .then(peerId => siweAuthn.authorizePeer(oid, peerId));
                 const oidCid = await makeCidString(oid);
                 await fetch(keplerUrl + "/" + oidCid, {
