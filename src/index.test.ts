@@ -1,176 +1,240 @@
-import { Kepler, startSession, makeOrbitId, siweAuthenticator, startSIWESession } from './';
-import { tz, didkey, Capabilities } from '@spruceid/zcap-providers';
-import * as didkit from '@spruceid/didkit-wasm-node';
-// import { Response } from 'cross-fetch';
-import Blob = require('fetch-blob');
-// import { Blob } from 'buffer';
+import { Kepler, OrbitConnection, Response } from "./";
+import Blob from "fetch-blob";
+import fetch from "node-fetch";
+import { Wallet } from "ethers";
 
-import { DAppClient } from '@airgap/beacon-sdk';
-import { InMemorySigner } from '@taquito/signer';
-import { b58cencode, prefix } from "@taquito/utils";
-import { randomBytes } from 'crypto';
-import { sessionProps, zcapAuthenticator } from './zcap';
-import { S3 } from './s3';
-import { Signer, Wallet } from 'ethers';
-import { SessionOptions } from './siwe';
-
-const allowlist = 'http://localhost:10000';
-const kepler = ['http://localhost:8000', 'http://localhost:9000'];
-
-
-const create = async (urls: string[], controller: Signer): Promise<string> => {
-    const oid = makeOrbitId(`pkh:eip155:1:${await controller.getAddress()}`, 'default');
-    const a = await siweAuthenticator(oid, controller, 'test.org', '1')
-    const hosts = await Promise.all(urls.map(async (url) => {
-        const k = new Kepler(url, a);
-        const id = await k.newPeer();
-        await k.createOrbit(oid, id).then(async r => {
-            const t = await r.text();
-            if (r.status !== 200) {
-                throw new Error(t)
-            }
-            return t
-        })
-    }))
-    return oid
+function expectSuccess(response: Response): Response {
+  expect(response.status).toBe(200);
+  return response;
 }
 
-const delegate = async (controller: Signer, app: string, action: string[], op?: SessionOptions) => {
-    const oid = makeOrbitId(`pkh:eip155:1:${await controller.getAddress()}`, 'default') + '/' + app;
-    return await didkey(genJWK(), didkit).then(async (dk) => await zcapAuthenticator(
-        dk,
-        await startSIWESession(oid, 'test.org', '1', await controller.getAddress(), dk.id(), action, op).then(async (s) => {
-            const sig = await controller.signMessage(s.toMessage());
-            s.signature = sig;
-            return s
-        })
-    ))
+function expectUnauthorised(response: Response): Response {
+  expect(response.status).toBe(401);
+  return response;
 }
 
-describe('Kepler Client', () => {
+function newWallet(): Wallet {
+  const wallet: Wallet = Wallet.createRandom();
+  wallet.getChainId = () => Promise.resolve(1);
+  return wallet;
+}
 
-    beforeAll(async () => {
-    })
+describe("Kepler Client", () => {
+  let orbit: OrbitConnection;
+  const keplerConfig = { hosts: ["http://localhost:8000"] };
 
-    it('only allows properly authorized actions', async () => {
-        const wallet = Wallet.createRandom();
-        const oid = await create(kepler, wallet);
+  beforeAll(async () => {
+    (global as any).window = { location: { hostname: "example.com" } };
+    (global as any).fetch = fetch;
 
-        // create orbit controller
-        const controller = await siweAuthenticator(oid, wallet, 'test.org', '1');
+    orbit = await new Kepler(newWallet(), keplerConfig).orbit();
+  });
 
-        // create session key
-        const sessionKey = await didkey(genJWK(), didkit);
-
-        // get authenticator for client
-        const write = new Kepler(kepler[0], await delegate(wallet, 'ipfs', ['put', 'del'])).orbit(oid);
-        const read = new Kepler(kepler[0], await delegate(wallet, 'ipfs', ['get', 'list'])).orbit(oid);
-
-        const json = { hello: 'hey' };
-        const json2 = { hello: 'hey2' };
-
-        // writer can write
-        // @ts-ignore
-        const uri = await write.put(new Blob([JSON.stringify(json)], { type: 'application/json' })).then(async res => {
-            expect(res.status).toEqual(200);
-            return res.text()
-        });
-        const [cid] = uri.split("/").slice(-1);
-
-        // reader can list
-        await expect(read.list().then(async res => await res.json())).resolves.toHaveProperty('length', 1);
-        // reader can read
-        await expect(read.get(cid).then(async (res) => await res.json())).resolves.toEqual(json)
-        // reader cant write
-        // @ts-ignore
-        await expect(read.put(new Blob([JSON.stringify(json2)], { type: 'application/json' }))).resolves.toHaveProperty('status', 401);
-        // reader cant delete
-        await expect(read.del(cid)).resolves.toHaveProperty('status', 401);
-
-        // writer cant list
-        await expect(write.list()).resolves.toHaveProperty('status', 401);
-        // writer cant read
-        await expect(write.get(cid)).resolves.toHaveProperty('status', 401);
-        // writer can delete
-        await expect(write.del(cid)).resolves.toHaveProperty('status', 200);
-    })
-
-    it('replicates in s3', async () => {
-        const wallet = Wallet.createRandom();
-        const oid = await create(kepler, wallet);
-
-        // create orbit controller
-        const controller = await siweAuthenticator(oid, wallet, 'test.org', '1');
-
-        const node1 = new S3(kepler[0], oid, controller);
-        // const node2 = new S3(kepler[1], oid, controller);
-
-        await new Promise(res => setTimeout(res, 4000));
-        const json = { hello: "there" };
-        // @ts-ignore
-        const res = await node1.put('key1', new Blob([JSON.stringify(json)], { type: 'application/json' }), { "my-header": "my header value" });
-        expect(res.status).toEqual(200);
-
-        const getRes1 = await node1.get('key1');
-
-        expect(getRes1.status).toEqual(200);
-        await expect(getRes1.json()).resolves.toEqual(json);
-        expect(getRes1.headers.get('my-header')).toEqual('my header value');
-
-        await new Promise(res => setTimeout(res, 4000));
-
-        // const getRes2 = await node2.get('key1', false);
-        // expect(getRes2.status).toEqual(200);
-        // await expect(getRes2.json()).resolves.toEqual(json);
-        // expect(getRes1.headers.get('my-header')).toEqual('my header value');
-    }, 60000)
-
-    it('doesnt allow expired authorizations', async () => {
-        const wallet = Wallet.createRandom();
-        const oid = await create(kepler, wallet);
-        //
-        // create orbit controller
-        const controller = await siweAuthenticator(oid, wallet, 'test.org', '1');
-
-        // get expired authenticator for client
-        const keplerClient = new Kepler(kepler[0], await delegate(wallet, 'ipfs', ['list'], { exp: new Date(Date.now() - 10) })).orbit(oid);
-        await expect(keplerClient.list()).resolves.toHaveProperty('status', 401);
-    })
-
-    it('only allows authorized invokers', async () => {
-        const wallet = Wallet.createRandom();
-        const oid = await create(kepler, wallet);
-
-        // create orbit controller
-        const controller = await siweAuthenticator(oid, wallet, 'test.org', '1');
-
-        const authd = new Kepler(kepler[0], await delegate(wallet, 'ipfs', ['list'])).orbit(oid);
-        const unauthd = [
-            // no delegation
-            await zcapAuthenticator(await didkey(genJWK(), didkit)),
-            // expired delegation
-            await delegate(wallet, 'ipfs', ['list'],  { exp: new Date(Date.now() - 10) }),
-        ].map(a => new Kepler(kepler[0], a).orbit(oid));
-
-        await expect(authd.list()).resolves.toHaveProperty('status', 200);
-        await Promise.all(unauthd.map(async k => await expect(k.list()).resolves.toHaveProperty('status', 401)))
-    })
-})
-
-const genSecret = () => b58cencode(
-    randomBytes(32),
-    prefix.edsk2
-)
-
-const genTzClient = (secret: string = genSecret()): DAppClient => {
-    const ims = new InMemorySigner(secret);
-    // @ts-ignore
-    return {
-        // @ts-ignore
-        getActiveAccount: async () => ({ publicKey: await ims.publicKey(), address: await ims.publicKeyHash() }),
-        // @ts-ignore
-        requestSignPayload: async ({ payload }) => ({ signature: await ims.sign(payload).then(res => res.prefixSig) })
+  it("cannot put with unsupported mime-type", async () => {
+    let key = "pdf";
+    let value = new ArrayBuffer(8);
+    try {
+      await orbit.put(key, value, { type: "application/pdf" });
+    } catch {
+      return;
     }
-}
+    fail("function should fail due to unsupported mime-type");
+  });
 
-const genJWK = (): JsonWebKey => JSON.parse(didkit.generateEd25519Key())
+  it("cannot put non-blob without specifying mime-type", async () => {
+    let key = "nonBlob";
+    let value = "value";
+    try {
+      await orbit.put(key, value);
+    } catch {
+      return;
+    }
+    fail("function should fail due to unknown mime-type");
+  });
+
+  it("can put & get plaintext", async () => {
+    let key = "plaintext";
+    let value = "value";
+    await orbit
+      .put(key, value, { type: "text/plain" })
+      .then(expectSuccess)
+      .then(() => orbit.get(key))
+      .then(expectSuccess)
+      .then(({ data }) => expect(data).toEqual(value));
+  });
+
+  it("can put & get json", async () => {
+    let key = "json";
+    let value = { some: "object", with: "properties" };
+    await orbit
+      .put(key, value, { type: "application/json" })
+      .then(expectSuccess)
+      .then(() => orbit.get(key))
+      .then(expectSuccess)
+      .then(({ data }) => expect(data).toEqual(value));
+  });
+
+  it("can put & get text blob", async () => {
+    let key = "blob";
+    let value = "value";
+    let blob = new Blob([value], { type: "text/plain" });
+    await orbit
+      .put(key, blob)
+      .then(expectSuccess)
+      .then(() => orbit.get(key))
+      .then(expectSuccess)
+      .then(({ data }) => expect(data).toEqual(value));
+  });
+
+  it("can put & get json blob", async () => {
+    let key = "blob";
+    let value = { some: "object", with: "properties" };
+    let blob = new Blob([JSON.stringify(value)], { type: "application/json" });
+    await orbit
+      .put(key, blob)
+      .then(expectSuccess)
+      .then(() => orbit.get(key))
+      .then(expectSuccess)
+      .then(({ data }) => expect(data).toEqual(value));
+  });
+
+  it("can put & get any blob", async () => {
+    let key = "blob";
+    let blob = new Blob([new ArrayBuffer(8)], { type: "image/gif" });
+    await orbit
+      .put(key, blob)
+      .then(expectSuccess)
+      .then(() => orbit.get(key))
+      .then(expectSuccess)
+      .then(({ data }) => {
+        expect(data.type).toEqual("image/gif");
+        expect(data.arrayBuffer()).resolves.toEqual(new ArrayBuffer(8));
+      });
+  });
+
+  it("can stream an object from Kepler", async () => {
+    let key = "plaintext";
+    let val = "test".repeat(1048576);
+    await orbit
+      .put(key, val, { type: "text/plain" })
+      .then(expectSuccess)
+      .then(() => orbit.get(key, { streamBody: true }))
+      .then(expectSuccess)
+      .then(async ({ data }) => {
+        if (!data) {
+          return Promise.reject("response did not contain the data");
+        }
+        // Please note that this test is running with Node, and therefore is using the Node
+        // implementation of ReadableStream, which differs from the browser implementation.
+        let output = "";
+        data.on("data", (chunk: string) => {
+          output += chunk;
+        });
+        data.on("end", () => expect(output).toEqual(val));
+        data.on("error", fail);
+      });
+  });
+
+  it("can list & delete", async () => {
+    let key = "listAndDelete";
+    let value = "value";
+    // @ts-ignore
+    await orbit
+      .put(key, new Blob([value], { type: "text/plain" }))
+      .then(expectSuccess)
+      .then(() => orbit.list())
+      .then(expectSuccess)
+      .then(({ data }) => expect(data).toContain(key))
+      .then(() => orbit.delete(key))
+      .then(expectSuccess)
+      .then(() => orbit.list())
+      .then(expectSuccess)
+      .then(({ data }) => expect(data).not.toContain(key));
+  });
+
+  it("can retrieve content-type", async () => {
+    let key = "headContentType";
+    // @ts-ignore
+    await orbit
+      .put(key, new Blob([new ArrayBuffer(8)], { type: "image/gif" }))
+      .then(expectSuccess)
+      .then(() => orbit.head(key))
+      .then(expectSuccess)
+      .then(({ headers }) => headers.get("content-type"))
+      .then((cType) => expect(cType).toEqual("image/gif"));
+  });
+
+  it("undelegated account cannot access a different orbit", async () => {
+    await new Kepler(newWallet(), keplerConfig)
+      .orbit({ orbit: orbit.id() })
+      .then((orbit) => orbit.list())
+      .then(expectUnauthorised);
+  });
+
+  it("expired session key cannot be used", async () => {
+    await new Kepler(newWallet(), keplerConfig)
+      .orbit({
+        sessionOpts: { expirationTime: new Date(Date.now() - 1000 * 60 * 60) },
+      })
+      .then((orbit) => orbit.list())
+      .then(expectUnauthorised);
+  });
+
+  it("only allows properly authorised actions", async () => {
+    const kepler = new Kepler(newWallet(), keplerConfig);
+    const write = await kepler.orbit({ actions: ["put", "del"] });
+    const read = await kepler.orbit({ actions: ["get", "list"] });
+
+    const key = "key";
+    const json = { hello: "hey" };
+    const json2 = { hello: "hey2" };
+
+    // writer can write
+    // @ts-ignore
+    await write
+      .put(key, json, { type: "application/json" })
+      .then(expectSuccess);
+
+    // reader can list
+    await read
+      .list()
+      .then(expectSuccess)
+      .then(({ data }) => expect(data.length).toBe(1));
+    // reader can read
+    await read
+      .get(key)
+      .then(expectSuccess)
+      .then(({ data }) => expect(data).toEqual(json));
+    // reader cant write
+    // @ts-ignore
+    await read
+      .put(key, json2, { type: "application/json" })
+      .then(expectUnauthorised);
+    // reader cant delete
+    await read.delete(key).then(expectUnauthorised);
+
+    // writer cant list
+    await write.list().then(expectUnauthorised);
+    // writer cant read
+    await write.get(key).then(expectUnauthorised);
+    // writer can delete
+    await write.delete(key).then(expectSuccess);
+  });
+
+  it("there is a one-to-one mapping between wallets and orbits", async () => {
+    const wallet = newWallet();
+    (global as any).window = { location: { hostname: "example1.com" } };
+    const orbit1 = await new Kepler(wallet, keplerConfig).orbit();
+    (global as any).window = { location: { hostname: "example2.com" } };
+    const orbit2 = await new Kepler(wallet, keplerConfig).orbit();
+
+    const key = "key";
+    const value = "value";
+    await orbit1
+      .put(key, value, { type: "text/plain" })
+      .then(expectSuccess)
+      .then(() => orbit2.get(key))
+      .then(expectSuccess)
+      .then(({ data }) => expect(data).toEqual(value));
+  });
+});

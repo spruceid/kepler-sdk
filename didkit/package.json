@@ -1,0 +1,23 @@
+{
+  "name": "@spruceid/didkit-wasm",
+  "collaborators": [
+    "Spruce Systems, Inc."
+  ],
+  "version": "0.1.0",
+  "files": [
+    "web/didkit_wasm_bg.wasm",
+    "web/didkit_wasm_bg..d.ts",
+    "web/didkit_wasm.js",
+    "web/didkit_wasm.d.ts",
+    "web/didkit_wasm_bg.js",
+    "node/didkit_wasm_bg.wasm",
+    "node/didkit_wasm_bg.d.ts",
+    "node/didkit_wasm.js",
+    "node/didkit_wasm.d.ts"
+  ],
+  "module": "web/didkit_wasm.js",
+  "types": "web/didkit_wasm.d.ts",
+  "sideEffects": false,
+  "main": "node/didkit_wasm.js",
+  "browser": "web/didkit_wasm.js"
+}
