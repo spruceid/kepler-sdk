@@ -5,7 +5,9 @@
   "license": "Apache-2.0",
   "scripts": {
     "build": "tsc -p .",
+    "fmt-check": "prettier --check src",
     "doc": "typedoc src/index.ts --excludePrivate",
+    "fmt": "prettier --write src",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
   },
   "files": [
@@ -28,6 +30,7 @@
     "jest": "^26.6.3",
     "jest-localstorage-mock": "^2.4.9",
     "node-fetch": "^2.6.7",
+    "prettier": "^2.6.2",
     "ts-jest": "^26.5.4",
     "ts-node": "^10.4.0",
     "typedoc": "^0.22.13",
