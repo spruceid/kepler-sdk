@@ -13,10 +13,10 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
 
-    - run: nvm use
-
     - name: Build
       run: |
+        . ~/.nvm/nvm.sh
+        nvm install
         yarn install
         yarn build
 
