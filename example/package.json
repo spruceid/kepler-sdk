@@ -4,7 +4,9 @@
   "description": "An example Dapp using the Kepler SDK.",
   "private": true,
   "scripts": {
-    "serve": "webpack serve",
+    "build-parent": "cd .. && yarn install && yarn build",
+    "install-dependencies": "yarn build-parent && yarn install",
+    "serve": "yarn install-dependencies && webpack serve",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
@@ -14,7 +16,7 @@
     "crypto-browserify": "^3.12.0",
     "ethers": "^5.6.2",
     "html-webpack-plugin": "^5.5.0",
-    "kepler-sdk": "file:/home/jward/work/kepler-sdk",
+    "kepler-sdk": "file:..",
     "path-browserify": "^1.0.1",
     "stream-browserify": "^3.0.0",
     "ts-loader": "^9.2.8",

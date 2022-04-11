@@ -29,15 +29,9 @@ cargo run
 
 ### Launch the Dapp
 
-
-Install the dependencies:
-```bash
-nvm install
-yarn install
-```
-
 Bundle and run the Dapp:
 ```bash
+nvm install
 yarn serve
 ```
 

@@ -370,7 +370,7 @@
   resolved "https://registry.yarnpkg.com/@multiformats/base-x/-/base-x-4.0.1.tgz#95ff0fa58711789d53aefb2590a8b7a4e715d121"
   integrity sha512-eMk0b9ReBbV23xXU693TAIrLyeO5iTgBZGSJfpqriG8UkYvr/hC9u9pyMlAakDNHWmbhMZCDs6KQO0jzKD8OTw==
 
-"@spruceid/didkit-wasm@file:../../../../../work/kepler-sdk/didkit":
+"@spruceid/didkit-wasm@file:../didkit":
   version "0.1.0"
 
 "@spruceid/zcap-providers@^0.1.1":
@@ -2255,11 +2255,11 @@ json-schema-traverse@^1.0.0:
   resolved "https://registry.yarnpkg.com/json-schema-traverse/-/json-schema-traverse-1.0.0.tgz#ae7bcb3656ab77a73ba5c49bf654f38e6b6860e2"
   integrity sha512-NM8/P9n3XjXhIZn1lLhkFaACTOURQXjWhV4BA/RnOv8xvgqtqpAX9IO4mRQxSx1Rlo4tqzeqb0sOlruaOy3dug==
 
-"kepler-sdk@file:../../../../../work/kepler-sdk":
+"kepler-sdk@file:..":
   version "0.11.0"
   dependencies:
     "@airgap/beacon-sdk" "^2.2.3"
-    "@spruceid/didkit-wasm" "file:../../../../../.cache/yarn/v6/npm-kepler-sdk-0.11.0-5d4e2618-014a-425d-a7ab-658a007249be-1649679109380/node_modules/kepler-sdk/didkit"
+    "@spruceid/didkit-wasm" "file:../../../../../.cache/yarn/v6/npm-kepler-sdk-0.11.0-31efb5c0-0790-4ef4-9554-23e1a6b37af8-1649680162359/node_modules/kepler-sdk/didkit"
     "@spruceid/zcap-providers" "^0.1.1"
     cids "^1.1.6"
     multihashing-async "^2.1.2"
