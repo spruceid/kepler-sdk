@@ -96,20 +96,20 @@ export class Kepler {
           domain,
           chainId
         );
-        const headers = await fetch(keplerUrl + "/peer/generate")
+        await fetch(keplerUrl + "/peer/generate")
           // @ts-ignore
           .then((res) => res.text())
           // @ts-ignore
-          .then((peerId) => siweAuthn.authorizePeer(oid, peerId));
-        const oidCid = await makeCidString(oid);
-        await fetch(keplerUrl + "/" + oidCid, {
-          method: "POST",
-          headers,
-          body: oid,
-        });
+          .then((peerId) => siweAuthn.authorizePeer(oid, peerId))
+          .then((headers) => invoke(keplerUrl, { headers }));
       }
     });
 
     return orbitConn;
   }
 }
+
+export const invoke = (
+  url: string,
+  params: { headers: HeadersInit; body?: Blob }
+) => fetch(url + "/invoke", { method: "POST", ...params });
