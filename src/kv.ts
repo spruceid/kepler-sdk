@@ -1,4 +1,5 @@
 import { Authenticator } from "./authenticator";
+import { invoke } from "./kepler";
 import { makeCid, makeCidString } from "./util";
 
 if (typeof fetch === "undefined") {
@@ -16,31 +17,17 @@ export class KV {
     return this.orbitId;
   }
 
-  public async get(
-    key: string,
-    authenticate: boolean = true,
-    version?: string
-  ): Promise<Response> {
+  public async get(key: string, version?: string): Promise<Response> {
     const oidCid = await makeCidString(this.orbitId);
-    return await fetch(makeContentPath(this.url, oidCid, key), {
-      method: "GET",
-      headers: authenticate
-        ? { ...(await this.auth.content(this.orbit, "s3", key, "get")) }
-        : undefined,
+    return await this.invoke({
+      headers: await this.auth.content(this.orbit, "s3", key, "get"),
     });
   }
 
-  public async head(
-    key: string,
-    authenticate: boolean = true,
-    version?: string
-  ): Promise<Response> {
+  public async head(key: string, version?: string): Promise<Response> {
     const oidCid = await makeCidString(this.orbitId);
-    return await fetch(makeContentPath(this.url, oidCid, key), {
-      method: "HEAD",
-      headers: authenticate
-        ? { ...(await this.auth.content(this.orbit, "s3", key, "metadata")) }
-        : undefined,
+    return await this.invoke({
+      headers: await this.auth.content(this.orbit, "s3", key, "metadata"),
     });
   }
 
@@ -52,8 +39,7 @@ export class KV {
     const oidCid = await makeCidString(this.orbitId);
     const cid = await makeCid(new Uint8Array(await value.arrayBuffer()));
     const auth = await this.auth.content(this.orbit, "s3", key, "put");
-    return await fetch(makeContentPath(this.url, oidCid, key), {
-      method: "PUT",
+    return await this.invoke({
       body: value,
       headers: { ...auth, ...metadata },
     });
@@ -61,31 +47,18 @@ export class KV {
 
   public async del(key: string, version?: string): Promise<Response> {
     const oidCid = await makeCidString(this.orbitId);
-    return await fetch(makeContentPath(this.url, oidCid, key, version), {
-      method: "DELETE",
+    return await this.invoke({
       headers: await this.auth.content(this.orbit, "s3", key, "del"),
     });
   }
 
   public async list(prefix: string = ""): Promise<Response> {
     const oidCid = await makeCidString(this.orbitId);
-    return await fetch(makeOrbitPath(this.url, oidCid), {
-      method: "GET",
+    return await this.invoke({
       headers: await this.auth.content(this.orbit, "s3", prefix, "list"),
     });
   }
+
+  invoke = (params: { headers: HeadersInit; body?: Blob }): Promise<Response> =>
+    invoke(this.url, params);
 }
-
-const makeOrbitPath = (url: string, orbit: string): string =>
-  url + "/" + orbit + "/s3";
-
-const makeContentPath = (
-  url: string,
-  orbit: string,
-  key: string,
-  version?: string
-): string =>
-  makeOrbitPath(url, orbit) +
-  "/" +
-  key +
-  (version ? `?version=${version}` : "");
