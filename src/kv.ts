@@ -20,14 +20,14 @@ export class KV {
   public async get(key: string, version?: string): Promise<Response> {
     const oidCid = await makeCidString(this.orbitId);
     return await this.invoke({
-      headers: await this.auth.content(this.orbit, "s3", key, "get"),
+      headers: await this.auth.content(this.orbit, "kv", key, "get"),
     });
   }
 
   public async head(key: string, version?: string): Promise<Response> {
     const oidCid = await makeCidString(this.orbitId);
     return await this.invoke({
-      headers: await this.auth.content(this.orbit, "s3", key, "metadata"),
+      headers: await this.auth.content(this.orbit, "kv", key, "metadata"),
     });
   }
 
@@ -38,7 +38,7 @@ export class KV {
   ): Promise<Response> {
     const oidCid = await makeCidString(this.orbitId);
     const cid = await makeCid(new Uint8Array(await value.arrayBuffer()));
-    const auth = await this.auth.content(this.orbit, "s3", key, "put");
+    const auth = await this.auth.content(this.orbit, "kv", key, "put");
     return await this.invoke({
       body: value,
       headers: { ...auth, ...metadata },
@@ -48,14 +48,14 @@ export class KV {
   public async del(key: string, version?: string): Promise<Response> {
     const oidCid = await makeCidString(this.orbitId);
     return await this.invoke({
-      headers: await this.auth.content(this.orbit, "s3", key, "del"),
+      headers: await this.auth.content(this.orbit, "kv", key, "del"),
     });
   }
 
   public async list(prefix: string = ""): Promise<Response> {
     const oidCid = await makeCidString(this.orbitId);
     return await this.invoke({
-      headers: await this.auth.content(this.orbit, "s3", prefix, "list"),
+      headers: await this.auth.content(this.orbit, "kv", prefix, "list"),
     });
   }
 
