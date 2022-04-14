@@ -2,6 +2,9 @@
 
 This module provides a convenient Typescript interface for accessing orbits in [Kepler](https://github.com/spruceid/kepler). 
 
+## Quickstart
+See the example dapp in `./example`.
+
 ## Installation
 
 `kepler-sdk` is available via NPM:
