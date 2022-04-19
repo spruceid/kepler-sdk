@@ -70,7 +70,7 @@ export class Kepler {
 
     const sessionKey = await didkey(genJWK(_didkit), _didkit);
     const sessionSiweMessage = await startSIWESession(
-      oid + "/s3",
+      oid + "/kv",
       domain,
       chainId,
       addr,
