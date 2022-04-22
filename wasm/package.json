@@ -1,0 +1,20 @@
+{
+  "name": "@spruceid/kepler-wasm",
+  "version": "0.1.0",
+  "files": [
+    "web/sdk_bg.wasm",
+    "web/sdk_bg.d.ts",
+    "web/sdk.js",
+    "web/sdk.d.ts",
+    "web/sdk_bg.js",
+    "node/sdk_bg.wasm",
+    "node/sdk_bg.d.ts",
+    "node/sdk.js",
+    "node/sdk.d.ts"
+  ],
+  "module": "web/sdk.js",
+  "types": "web/sdk.d.ts",
+  "sideEffects": false,
+  "main": "node/sdk.js",
+  "browser": "web/sdk.js"
+}

@@ -1,14 +1,11 @@
-import didkit from "@spruceid/didkit-wasm";
-import { didkey, genJWK } from "@spruceid/zcap-providers";
-import { ConnectionOptions, OrbitConnection, SessionOptions } from "./orbit";
-import { siweAuthenticator, startSIWESession } from "./siwe";
-import { makeCidString, makeOrbitId } from "./util";
+import { SessionConfig, defaultAuthn } from "./authenticator";
+import { hostOrbit, OrbitConnection } from "./orbit";
 import { WalletProvider } from "./walletProvider";
-import { zcapAuthenticator } from "./zcap";
 
-if (typeof fetch === "undefined") {
-  const fetch = require("node-fetch");
-}
+const fetch_ =
+(typeof fetch === "undefined") ?
+  require("node-fetch") : 
+    fetch;
 
 /** Configuration for {@link Kepler}. */
 export type KeplerOptions = {
@@ -19,21 +16,21 @@ export type KeplerOptions = {
    * Currently only a single host is supported, but for future compatibility this property is
    * expected to be a list. Only the first host in the list will be used.
    */
-  hosts?: string[];
+  hosts: string[];
 };
 
 /** An object for interacting with Kepler instances. */
 export class Kepler {
-  private config: Required<KeplerOptions>;
+  private config: KeplerOptions;
   private wallet: WalletProvider;
 
   /**
    * @param wallet The controller of the orbit that you wish to access.
    * @param config Optional configuration for Kepler.
    */
-  constructor(wallet: WalletProvider, config: KeplerOptions = {}) {
+  constructor(wallet: WalletProvider, config: KeplerOptions) {
     this.config = {
-      hosts: config.hosts || ["https://kepler.test.spruceid.xyz:443"],
+      hosts: config.hosts,
     };
     this.wallet = wallet;
   }
@@ -52,64 +49,31 @@ export class Kepler {
    *
    * @param opts Optional parameters to configure the orbit connection.
    */
-  async orbit(opts: ConnectionOptions = {}): Promise<OrbitConnection> {
-    const _didkit = await didkit;
-
+  async orbit(config: Partial<SessionConfig> = {}): Promise<OrbitConnection> {
     // TODO: support multiple urls for kepler.
     const keplerUrl = this.config.hosts[0];
-    const domain = window.location.hostname;
-    const chainId = await this.wallet.getChainId().then((id) => id.toString());
-    const addr = await this.wallet.getAddress();
-    const oid =
-      opts.orbit || makeOrbitId(`pkh:eip155:${chainId}:${addr}`, "default");
-    const actions = opts.actions || ["put", "get", "list", "del", "metadata"];
-    const sessionOpts: SessionOptions = {};
-    sessionOpts.expirationTime =
-      opts.sessionOpts?.expirationTime || new Date(Date.now() + 1000 * 60 * 60);
-    sessionOpts.notBefore = opts.sessionOpts?.notBefore;
+    const orbitConnection = await defaultAuthn(this.wallet, config)
+      .then(authn => new OrbitConnection(keplerUrl, authn));
 
-    const sessionKey = await didkey(genJWK(_didkit), _didkit);
-    const sessionSiweMessage = await startSIWESession(
-      oid + "/kv",
-      domain,
-      chainId,
-      addr,
-      sessionKey.id(),
-      actions,
-      sessionOpts
-    );
-    sessionSiweMessage.signature = await this.wallet.signMessage(
-      sessionSiweMessage.signMessage()
-    );
 
-    const orbitConn = await zcapAuthenticator(
-      sessionKey,
-      sessionSiweMessage
-    ).then((authn) => new OrbitConnection(keplerUrl, oid, authn));
-
-    await orbitConn.list().then(async ({ status }) => {
+    await orbitConnection.list().then(async ({ status }) => {
       if (status === 404) {
         console.info("Orbit does not already exist. Creating...");
-        const siweAuthn = await siweAuthenticator(
-          oid,
-          this.wallet,
-          domain,
-          chainId
-        );
-        await fetch(keplerUrl + "/peer/generate")
-          // @ts-ignore
-          .then((res) => res.text())
-          // @ts-ignore
-          .then((peerId) => siweAuthn.authorizePeer(oid, peerId))
-          .then((headers) => invoke(keplerUrl, { headers }));
+        await hostOrbit(this.wallet, keplerUrl, orbitConnection.id(), config.domain).then(({ok, statusText}) => {
+          if (!ok) throw `failed to create orbit: ${statusText}`    }      
+        
+        )
       }
     });
 
-    return orbitConn;
+    return orbitConnection;
   }
 }
 
 export const invoke = (
   url: string,
   params: { headers: HeadersInit; body?: Blob }
-) => fetch(url + "/invoke", { method: "POST", ...params });
+) => {
+  return fetch_(url + "/invoke", { method: "POST", ...params })
+}
+;

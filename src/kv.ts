@@ -1,33 +1,28 @@
 import { Authenticator } from "./authenticator";
 import { invoke } from "./kepler";
-import { makeCid, makeCidString } from "./util";
 
 if (typeof fetch === "undefined") {
   const fetch = require("node-fetch");
 }
 
 export class KV {
+  private orbitId: string;
   constructor(
     private url: string,
-    private orbitId: string,
     private auth: Authenticator
-  ) {}
-
-  public get orbit(): string {
-    return this.orbitId;
+  ) {
+    this.orbitId = auth.getOrbitId();
   }
 
   public async get(key: string, version?: string): Promise<Response> {
-    const oidCid = await makeCidString(this.orbitId);
     return await this.invoke({
-      headers: await this.auth.content(this.orbit, "kv", key, "get"),
+      headers: await this.auth.invocationHeaders("get", key)
     });
   }
 
   public async head(key: string, version?: string): Promise<Response> {
-    const oidCid = await makeCidString(this.orbitId);
     return await this.invoke({
-      headers: await this.auth.content(this.orbit, "kv", key, "metadata"),
+      headers: await this.auth.invocationHeaders("metadata", key)
     });
   }
 
@@ -36,26 +31,21 @@ export class KV {
     value: Blob,
     metadata: { [key: string]: string }
   ): Promise<Response> {
-    const oidCid = await makeCidString(this.orbitId);
-    const cid = await makeCid(new Uint8Array(await value.arrayBuffer()));
-    const auth = await this.auth.content(this.orbit, "kv", key, "put");
     return await this.invoke({
       body: value,
-      headers: { ...auth, ...metadata },
+      headers: { ...metadata, ...await this.auth.invocationHeaders("put", key) }
     });
   }
 
   public async del(key: string, version?: string): Promise<Response> {
-    const oidCid = await makeCidString(this.orbitId);
     return await this.invoke({
-      headers: await this.auth.content(this.orbit, "kv", key, "del"),
+      headers: await this.auth.invocationHeaders("del", key)
     });
   }
 
-  public async list(prefix: string = ""): Promise<Response> {
-    const oidCid = await makeCidString(this.orbitId);
+  public async list(prefix: string): Promise<Response> {
     return await this.invoke({
-      headers: await this.auth.content(this.orbit, "kv", prefix, "list"),
+      headers: await this.auth.invocationHeaders("list", prefix)
     });
   }
 
