@@ -1,5 +1,5 @@
 {
-  "name": "@spruceid/kepler-wasm",
+  "name": "kepler-wasm",
   "version": "0.1.0",
   "files": [
     "web/sdk_bg.wasm",
