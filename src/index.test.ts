@@ -25,23 +25,33 @@ function newWallet(): Wallet {
 
 describe("Authenticator", () => {
   it("invoke", async () => {
-    let a = await defaultAuthn(newWallet(), {expirationTime: '3000-01-01T00:00:00.000Z', issuedAt: '2022-01-01T00:00:00.000Z', domain});
+    let a = await defaultAuthn(newWallet(), {
+      expirationTime: "3000-01-01T00:00:00.000Z",
+      issuedAt: "2022-01-01T00:00:00.000Z",
+      domain,
+    });
     await a.invocationHeaders("get", "path");
-  })
+  });
 
   it("host", async () => {
     let wallet = newWallet();
-    await defaultAuthn(wallet, {expirationTime: '3000-01-01T00:00:00.000Z', issuedAt: '2022-01-01T00:00:00.000Z', domain})
-      .then(authn => new OrbitConnection(keplerUrl, authn))
-      .then(orbitConnection => hostOrbit(wallet, keplerUrl, orbitConnection.id(), domain))
+    await defaultAuthn(wallet, {
+      expirationTime: "3000-01-01T00:00:00.000Z",
+      issuedAt: "2022-01-01T00:00:00.000Z",
+      domain,
+    })
+      .then((authn) => new OrbitConnection(keplerUrl, authn))
+      .then((orbitConnection) =>
+        hostOrbit(wallet, keplerUrl, orbitConnection.id(), domain)
+      )
       .then(expectSuccess);
-  })
-})
+  });
+});
 
 describe("Kepler Client", () => {
   let orbit: OrbitConnection;
   const keplerConfig = { hosts: [keplerUrl] };
-  const orbitConfig = { domain};
+  const orbitConfig = { domain };
 
   beforeAll(async () => {
     orbit = await new Kepler(newWallet(), keplerConfig).orbit(orbitConfig);
@@ -161,7 +171,8 @@ describe("Kepler Client", () => {
         data.on("end", () => expect(output).toEqual(val));
         data.on("error", fail);
       });
-    await orbit.list('', {streamBody: true})
+    await orbit
+      .list("", { streamBody: true })
       .then(expectSuccess)
       .then(async ({ data }) => {
         if (!data) {
@@ -175,7 +186,7 @@ describe("Kepler Client", () => {
         data.on("end", () => {
           let list = JSON.parse(output);
           expect(list).toBeInstanceOf(Array);
-          expect(typeof list[0] === 'string').toBeTruthy();
+          expect(typeof list[0] === "string").toBeTruthy();
         });
       });
   });
@@ -200,27 +211,23 @@ describe("Kepler Client", () => {
   it("can list by prefix", async () => {
     let key = "aVeryUniquePrefix1";
     let value = "value";
-    await orbit
-      .put(key, value)
-      .then(expectSuccess);
+    await orbit.put(key, value).then(expectSuccess);
 
     key = "aVeryUniquePrefix2";
     value = "value";
-    await orbit
-      .put(key, value)
-      .then(expectSuccess);
+    await orbit.put(key, value).then(expectSuccess);
 
     key = "boring";
     value = "value";
-    await orbit
-      .put(key, value)
-      .then(expectSuccess);
-    
-    let everything: string[] = await orbit.list()
+    await orbit.put(key, value).then(expectSuccess);
+
+    let everything: string[] = await orbit
+      .list()
       .then(expectSuccess)
       .then(({ data }) => data);
-    
-    let veryUnique: string[] = await orbit.list('aVeryUnique')
+
+    let veryUnique: string[] = await orbit
+      .list("aVeryUnique")
       .then(expectSuccess)
       .then(({ data }) => data);
 
@@ -250,16 +257,23 @@ describe("Kepler Client", () => {
   it("expired session key cannot be used", async () => {
     await new Kepler(newWallet(), keplerConfig)
       .orbit({
-        expirationTime: new Date(Date.now() - 1000 * 60 * 60).toISOString() ,
-       ...orbitConfig})
+        expirationTime: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
+        ...orbitConfig,
+      })
       .then((orbit) => orbit.list())
       .then(expectUnauthorised);
   });
 
   it("only allows properly authorised actions", async () => {
     const kepler = new Kepler(newWallet(), keplerConfig);
-    const write = await kepler.orbit({ actions: ["put", "del"], ...orbitConfig });
-    const read = await kepler.orbit({ actions: ["get", "list"], ...orbitConfig });
+    const write = await kepler.orbit({
+      actions: ["put", "del"],
+      ...orbitConfig,
+    });
+    const read = await kepler.orbit({
+      actions: ["get", "list"],
+      ...orbitConfig,
+    });
 
     const key = "key";
     const json = { hello: "hey" };
@@ -267,9 +281,7 @@ describe("Kepler Client", () => {
 
     // writer can write
     // @ts-ignore
-    await write
-      .put(key, json)
-      .then(expectSuccess);
+    await write.put(key, json).then(expectSuccess);
 
     // reader can list
     await read
@@ -283,9 +295,7 @@ describe("Kepler Client", () => {
       .then(({ data }) => expect(data).toEqual(json));
     // reader cant write
     // @ts-ignore
-    await read
-      .put(key, json2)
-      .then(expectUnauthorised);
+    await read.put(key, json2).then(expectUnauthorised);
     // reader cant delete
     await read.delete(key).then(expectUnauthorised);
 
@@ -299,8 +309,12 @@ describe("Kepler Client", () => {
 
   it("there is a one-to-one mapping between wallets and orbits", async () => {
     const wallet = newWallet();
-    const orbit1 = await new Kepler(wallet, keplerConfig).orbit({ domain: "example1.com"});
-    const orbit2 = await new Kepler(wallet, keplerConfig).orbit({ domain: "example2.com"});
+    const orbit1 = await new Kepler(wallet, keplerConfig).orbit({
+      domain: "example1.com",
+    });
+    const orbit2 = await new Kepler(wallet, keplerConfig).orbit({
+      domain: "example2.com",
+    });
 
     const key = "key";
     const value = "value";

@@ -43,7 +43,7 @@ putBtn.onclick = async () => {
   let key = putKey.value;
   let value = putValue.value;
   putValue.value = "";
-  let { ok, statusText } = await orbitConnection.put(key, value );
+  let { ok, statusText } = await orbitConnection.put(key, value);
   putResult.style.color = ok ? "green" : "red";
   putResult.innerHTML = statusText;
 };

@@ -2,16 +2,16 @@ import wasmPromise from "kepler-wasm";
 import { WalletProvider } from "./walletProvider";
 
 export type SessionConfig = {
-  actions: string[],
-  address: string,
-  chainId: number,
-  domain: string,
-  issuedAt: string,
-  orbitId: string,
-  notBefore?: string,
-  expirationTime: string,
-  service: string,
-}
+  actions: string[];
+  address: string;
+  chainId: number;
+  domain: string;
+  issuedAt: string;
+  orbitId: string;
+  notBefore?: string;
+  expirationTime: string;
+  service: string;
+};
 
 export async function defaultAuthn(
   wallet: WalletProvider,
@@ -48,10 +48,20 @@ export class Authenticator {
         signature: await wallet.signMessage(preparedSession.siwe),
       }))
       .then(JSON.stringify)
-      .then(async (signedSession) => (await wasmPromise).completeSessionSetup(signedSession));
+      .then(async (signedSession) =>
+        (await wasmPromise).completeSessionSetup(signedSession)
+      );
     this.orbitId = config.orbitId;
   }
 
-  invocationHeaders = async (action: string, path: string ): Promise<HeadersInit> => this.session.then(async session => (await wasmPromise).invoke(session, path, action)).then(JSON.parse);
+  invocationHeaders = async (
+    action: string,
+    path: string
+  ): Promise<HeadersInit> =>
+    this.session
+      .then(async (session) =>
+        (await wasmPromise).invoke(session, path, action)
+      )
+      .then(JSON.parse);
   getOrbitId = (): string => this.orbitId;
 }

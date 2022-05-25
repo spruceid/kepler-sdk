@@ -2,10 +2,7 @@ import { SessionConfig, defaultAuthn } from "./authenticator";
 import { hostOrbit, OrbitConnection } from "./orbit";
 import { WalletProvider } from "./walletProvider";
 
-const fetch_ =
-(typeof fetch === "undefined") ?
-  require("node-fetch") : 
-    fetch;
+const fetch_ = typeof fetch === "undefined" ? require("node-fetch") : fetch;
 
 /** Configuration for {@link Kepler}. */
 export type KeplerOptions = {
@@ -52,17 +49,21 @@ export class Kepler {
   async orbit(config: Partial<SessionConfig> = {}): Promise<OrbitConnection> {
     // TODO: support multiple urls for kepler.
     const keplerUrl = this.config.hosts[0];
-    const orbitConnection = await defaultAuthn(this.wallet, config)
-      .then(authn => new OrbitConnection(keplerUrl, authn));
-
+    const orbitConnection = await defaultAuthn(this.wallet, config).then(
+      (authn) => new OrbitConnection(keplerUrl, authn)
+    );
 
     await orbitConnection.list().then(async ({ status }) => {
       if (status === 404) {
         console.info("Orbit does not already exist. Creating...");
-        await hostOrbit(this.wallet, keplerUrl, orbitConnection.id(), config.domain).then(({ok, statusText}) => {
-          if (!ok) throw `failed to create orbit: ${statusText}`    }      
-        
-        )
+        await hostOrbit(
+          this.wallet,
+          keplerUrl,
+          orbitConnection.id(),
+          config.domain
+        ).then(({ ok, statusText }) => {
+          if (!ok) throw `failed to create orbit: ${statusText}`;
+        });
       }
     });
 
@@ -74,6 +75,5 @@ export const invoke = (
   url: string,
   params: { headers: HeadersInit; body?: Blob }
 ) => {
-  return fetch_(url + "/invoke", { method: "POST", ...params })
-}
-;
+  return fetch_(url + "/invoke", { method: "POST", ...params });
+};

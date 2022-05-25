@@ -7,7 +7,7 @@
     "build": "tsc -p .",
     "fmt-check": "prettier --check src",
     "doc": "typedoc src/index.ts --excludePrivate",
-    "fmt": "prettier --write src",
+    "fmt": "prettier --write src example",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
   },
   "files": [

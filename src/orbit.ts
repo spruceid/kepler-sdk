@@ -4,14 +4,9 @@ import { KV } from "./kv";
 import { WalletProvider } from "./walletProvider";
 
 const Blob =
-(typeof window === "undefined") ?
-  require("fetch-blob") : 
-    window.Blob;
+  typeof window === "undefined" ? require("fetch-blob") : window.Blob;
 
-const fetch_ =
-(typeof fetch === "undefined") ?
-  require("node-fetch") : 
-    fetch;
+const fetch_ = typeof fetch === "undefined" ? require("node-fetch") : fetch;
 
 /**
  * A connection to an orbit in a Kepler instance.
@@ -45,7 +40,7 @@ export class OrbitConnection {
    * ```ts
    * await orbitConnection.put('a', 'value');
    * await orbitConnection.put('b', {x: 10});
-   * 
+   *
    * let blob: Blob = new Blob(['value'], {type: 'text/plain'});
    * await orbitConnection.put('c', blob);
    *
@@ -60,26 +55,27 @@ export class OrbitConnection {
    */
   async put(key: string, value: any, req?: Request): Promise<Response> {
     if (value === null || value === undefined) {
-      return Promise.reject(`TypeError: value of type ${typeof value} cannot be stored.`)
+      return Promise.reject(
+        `TypeError: value of type ${typeof value} cannot be stored.`
+      );
     }
 
     const transformResponse = (response: FetchResponse) => {
       const { ok, status, statusText, headers } = response;
       return { ok, status, statusText, headers };
     };
-    
+
     let blob: Blob;
     if (value instanceof Blob) {
       blob = value;
-    }
-    else if (typeof value === 'string') {
-      blob = new Blob([value], { type: 'text/plain' });
-    }
-    else if (value.constructor && value.constructor.name === 'Object') {
-      blob = new Blob([JSON.stringify(value)], { type: 'application/json' });
-    }
-    else {
-      return Promise.reject(`TypeError: value of type ${typeof value} cannot be stored.`)
+    } else if (typeof value === "string") {
+      blob = new Blob([value], { type: "text/plain" });
+    } else if (value.constructor && value.constructor.name === "Object") {
+      blob = new Blob([JSON.stringify(value)], { type: "application/json" });
+    } else {
+      return Promise.reject(
+        `TypeError: value of type ${typeof value} cannot be stored.`
+      );
     }
 
     // @ts-ignore
@@ -88,7 +84,7 @@ export class OrbitConnection {
 
   /** Retrieve an object from the connected orbit.
    *
-   * String and Object values, along with 
+   * String and Object values, along with
    * {@link https://developer.mozilla.org/en-US/docs/Web/API/Blob | Blobs}
    * of type `text/plain` or `application/json` are converted into their respective
    * types on retrieval:
@@ -98,7 +94,7 @@ export class OrbitConnection {
    *
    * let blob = new Blob(['value'], {type: 'text/plain'});
    * await orbitConnection.put('stringBlob', blob);
-   * 
+   *
    * let blob = new Blob([{x: 10}], {type: 'application/json'});
    * await orbitConnection.put('jsonBlob', blob);
    *
@@ -257,25 +253,45 @@ export type Response = {
 type FetchResponse = globalThis.Response;
 
 type HostConfig = {
-  address: string,
-  chainId: number,
-  domain: string,
-  issuedAt: string,
-  orbitId: string,
-  peerId: string,
+  address: string;
+  chainId: number;
+  domain: string;
+  issuedAt: string;
+  orbitId: string;
+  peerId: string;
 };
 
-export const hostOrbit = async (wallet: WalletProvider, keplerUrl: string, orbitId: string, domain: string = window.location.hostname): Promise<Response> => {
+export const hostOrbit = async (
+  wallet: WalletProvider,
+  keplerUrl: string,
+  orbitId: string,
+  domain: string = window.location.hostname
+): Promise<Response> => {
   const wasm = await wasmPromise;
   const address = await wallet.getAddress();
   const chainId = await wallet.getChainId();
   const issuedAt = new Date(Date.now()).toISOString();
-  const peerId = await fetch_(keplerUrl + '/peer/generate').then((res: FetchResponse) => res.text());
+  const peerId = await fetch_(keplerUrl + "/peer/generate").then(
+    (res: FetchResponse) => res.text()
+  );
   const config: HostConfig = {
-    address, chainId, domain, issuedAt, orbitId, peerId
+    address,
+    chainId,
+    domain,
+    issuedAt,
+    orbitId,
+    peerId,
   };
   const siwe = wasm.generateHostSIWEMessage(JSON.stringify(config));
   const signature = await wallet.signMessage(siwe);
-  const hostHeaders = wasm.host(JSON.stringify({siwe, signature}));
-  return fetch_(keplerUrl + '/delegate', { method: "POST", headers: JSON.parse(hostHeaders) }).then(({ ok, status, statusText, headers }: FetchResponse) => ({ ok, status, statusText, headers }));
+  const hostHeaders = wasm.host(JSON.stringify({ siwe, signature }));
+  return fetch_(keplerUrl + "/delegate", {
+    method: "POST",
+    headers: JSON.parse(hostHeaders),
+  }).then(({ ok, status, statusText, headers }: FetchResponse) => ({
+    ok,
+    status,
+    statusText,
+    headers,
+  }));
 };
