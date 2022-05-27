@@ -1,5 +1,5 @@
+import wasmPromise from "@spruceid/kepler-sdk-wasm";
 import { Authenticator } from "./authenticator";
-import wasmPromise from "kepler-wasm";
 import { KV } from "./kv";
 import { WalletProvider } from "./walletProvider";
 

@@ -1,4 +1,4 @@
-import wasmPromise from "kepler-wasm";
+import wasmPromise from "@spruceid/kepler-sdk-wasm";
 import { WalletProvider } from "./walletProvider";
 
 export type SessionConfig = {

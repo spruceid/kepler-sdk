@@ -74,6 +74,4 @@ export class Kepler {
 export const invoke = (
   url: string,
   params: { headers: HeadersInit; body?: Blob }
-) => {
-  return fetch_(url + "/invoke", { method: "POST", ...params });
-};
+) => fetch_(url + "/invoke", { method: "POST", ...params });

@@ -38,8 +38,8 @@
   },
   "dependencies": {
     "@airgap/beacon-sdk": "^2.2.3",
+    "@spruceid/kepler-sdk-wasm": "file:./wasm",
     "cids": "^1.1.6",
-    "kepler-wasm": "file:./wasm",
     "multihashing-async": "^2.1.2",
     "rfc4648": "^1.5.0",
     "siwe": "^0.1.4"

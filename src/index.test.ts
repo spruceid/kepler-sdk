@@ -25,12 +25,12 @@ function newWallet(): Wallet {
 
 describe("Authenticator", () => {
   it("invoke", async () => {
-    let a = await defaultAuthn(newWallet(), {
+    let authn = await defaultAuthn(newWallet(), {
       expirationTime: "3000-01-01T00:00:00.000Z",
       issuedAt: "2022-01-01T00:00:00.000Z",
       domain,
     });
-    await a.invocationHeaders("get", "path");
+    await authn.invocationHeaders("get", "path");
   });
 
   it("host", async () => {
