@@ -76,7 +76,7 @@ The `OrbitConnection` class provides a simple CRUD interface for Blob storage, f
 belonging to the connected ethereum account. It can be created from the `Kepler` object.
 
 ``` typescript
-const orbitConnection = await kepler.orbit();
+const orbitConnection: OrbitConnection | undefined = await kepler.orbit();
 ```
 
 Once created, an `OrbitConnection` instance can upload objects to the Orbit:
@@ -95,29 +95,29 @@ Download objects from the Orbit:
 const { data, ok } = await orbitConnection.get('my-content');
 
 if (ok) {
-    // const content = data.text();
+    // use the data
 }
 ```
 
-Return just the metadata of an object (a HEAD request):
+Return just the metadata of an object:
 
 ``` typescript
 const { headers, ok } = await orbitConnection.head('my-content');
 
 if (ok) {
-    // headers.get('content-type');
+    headers.get('content-type');
 }
 ```
 
-List all objects in the Orbit (returns an array of `string`s):
+List objects in the Orbit by prefix (returns an array of `string`s):
 
 ``` typescript
-const { data, ok } = await orbitConnection.list();
+const { data, ok } = await orbitConnection.list('prefix');
 
 if (ok) {
-    //for (key in data) {
-    //    console.log(key)
-    //}
+    for (key in data) {
+        console.log(key)
+    }
 }
 ```
 
@@ -143,21 +143,50 @@ const response: {
 } = await orbitConnection.get('my-content');
 ```
 
-Additionally the response has a data property which can be converted based on request parameters
-and the MIME type of the object:
+One major difference to the above-linked `Response` type is the `data` property. This property is only inhabited
+when calling `get` or `list`. If the request parameter `{ streamBody: true }` is provided, then `data` will be a
+`ReadableStream`:
 
 ```typescript
-orbitConnection.put('myPlainText', 'a string', { type: 'text/plain' })
-    .then(() => orbitConnection.get('myPlainText'))
-    .then(({ data }: { data?: string }) => console.log(data));
-
-orbitConnection.put('myJson', { x: 1, y: true }, { type: 'application/json' })
-    .then(() => orbitConnection.get('myJson'))
-    .then(({ data }: { data?: { x: number, y: boolean } }) => console.log(data));
-
-orbitConnection.put('myBlob', new Blob(...))
-    .then(() => orbitConnection.get('myBlob', { streamBody: true }))
+await orbit.list('prefix', { streamBody: true })
     .then(({ data }: { data?: ReadableStream }) => {
         // consume the stream
+    });
+
+await orbitConnection.put('myGif', new Blob([gifData], {'image/gif'}));
+await orbitConnection.get('myGif', { streamBody: true })
+    .then(({ data }: { data?: ReadableStream }) => {
+        // consume the stream
+    });
+```
+
+Otherwise, for the `list` function `data` will always be of type `string[]`, i.e. an array of keys.
+For the `get` function the type of `data` depends on the value that is being retrieved:
+
+```typescript
+await orbitConnection.put('myPlainText', 'a string');
+await orbitConnection.get('myPlainText')
+    .then(({ data }: { data?: string }) => console.log(data));
+// should log: 'a string'
+
+await orbitConnection.put('myJson', { x: 1, y: true });
+await orbitConnection.get('myJson')
+    .then(({ data }: { data?: { x: number, y: boolean } }) => console.log(data));
+// should log: '{x: 1, y: true}'
+
+await orbitConnection.put('myBlob', new Blob([{ x: 1, y: true }], {'application/json'}));
+await orbitConnection.get('myBlob')
+    .then(({ data }: { data?: { x: number, y: boolean } }) => console.log(data));
+// should log: '{x: 1, y: true}'
+
+await orbitConnection.put('myGif', new Blob([gifData], {'image/gif'}));
+await orbitConnection.get('myGif', { streamBody: true })
+    .then(({ data }: { data?: Blob }) => {
+        // use the Blob
+    });
+
+await orbit.list('prefix')
+    .then(({ data }: { data?: string[] }) => {
+        // use the list of keys
     });
 ```

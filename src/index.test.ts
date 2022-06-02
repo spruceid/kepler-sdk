@@ -1,7 +1,17 @@
 import { Kepler, OrbitConnection, Response } from "./";
 import Blob from "fetch-blob";
-import fetch from "node-fetch";
 import { Wallet } from "ethers";
+import { startSession, Authenticator } from "./authenticator";
+import { hostOrbit } from "./orbit";
+
+const keplerUrl = "http://localhost:8000";
+const domain = "example.com";
+
+function expectDefined(orbit: OrbitConnection | undefined): OrbitConnection {
+  expect(orbit).not.toBeUndefined();
+  // @ts-ignore
+  return orbit;
+}
 
 function expectSuccess(response: Response): Response {
   expect(response.status).toBe(200);
@@ -19,44 +29,78 @@ function newWallet(): Wallet {
   return wallet;
 }
 
+describe("Authenticator", () => {
+  it("invoke", async () => {
+    await startSession(newWallet(), {
+      expirationTime: "3000-01-01T00:00:00.000Z",
+      issuedAt: "2022-01-01T00:00:00.000Z",
+      domain,
+    })
+      .then((session) => new Authenticator(session))
+      .then((authn) => authn.invocationHeaders("get", "path"));
+  });
+
+  it("host", async () => {
+    let wallet = newWallet();
+    await startSession(wallet, {
+      expirationTime: "3000-01-01T00:00:00.000Z",
+      issuedAt: "2022-01-01T00:00:00.000Z",
+      domain,
+    })
+      .then((session) => hostOrbit(wallet, keplerUrl, session.orbitId, domain))
+      .then(expectSuccess);
+  });
+});
+
 describe("Kepler Client", () => {
   let orbit: OrbitConnection;
-  const keplerConfig = { hosts: ["http://localhost:8000"] };
+  const keplerConfig = { hosts: [keplerUrl] };
+  const orbitConfig = { domain };
 
   beforeAll(async () => {
-    (global as any).window = { location: { hostname: "example.com" } };
-    (global as any).fetch = fetch;
-
-    orbit = await new Kepler(newWallet(), keplerConfig).orbit();
+    orbit = await new Kepler(newWallet(), keplerConfig)
+      .orbit(orbitConfig)
+      .then(expectDefined);
   });
 
-  it("cannot put with unsupported mime-type", async () => {
-    let key = "pdf";
-    let value = new ArrayBuffer(8);
-    try {
-      await orbit.put(key, value, { type: "application/pdf" });
-    } catch {
-      return;
-    }
-    fail("function should fail due to unsupported mime-type");
-  });
-
-  it("cannot put non-blob without specifying mime-type", async () => {
-    let key = "nonBlob";
-    let value = "value";
+  it("cannot put null value", async () => {
+    let key = "null";
+    let value = null;
     try {
       await orbit.put(key, value);
     } catch {
       return;
     }
-    fail("function should fail due to unknown mime-type");
+    fail("function should fail due to storing a null");
+  });
+
+  it("cannot put undefined value", async () => {
+    let key = "undefined";
+    let value = undefined;
+    try {
+      await orbit.put(key, value);
+    } catch {
+      return;
+    }
+    fail("function should fail due to storing a null");
+  });
+
+  it("cannot put unsupported type", async () => {
+    let key = "date";
+    let value = new Date();
+    try {
+      await orbit.put(key, value);
+    } catch {
+      return;
+    }
+    fail("function should fail due to storing an unsupported type");
   });
 
   it("can put & get plaintext", async () => {
     let key = "plaintext";
     let value = "value";
     await orbit
-      .put(key, value, { type: "text/plain" })
+      .put(key, value)
       .then(expectSuccess)
       .then(() => orbit.get(key))
       .then(expectSuccess)
@@ -67,7 +111,7 @@ describe("Kepler Client", () => {
     let key = "json";
     let value = { some: "object", with: "properties" };
     await orbit
-      .put(key, value, { type: "application/json" })
+      .put(key, value)
       .then(expectSuccess)
       .then(() => orbit.get(key))
       .then(expectSuccess)
@@ -112,11 +156,11 @@ describe("Kepler Client", () => {
       });
   });
 
-  it("can stream an object from Kepler", async () => {
+  it("can stream objects and lists from Kepler", async () => {
     let key = "plaintext";
     let val = "test".repeat(1048576);
     await orbit
-      .put(key, val, { type: "text/plain" })
+      .put(key, val)
       .then(expectSuccess)
       .then(() => orbit.get(key, { streamBody: true }))
       .then(expectSuccess)
@@ -133,6 +177,24 @@ describe("Kepler Client", () => {
         data.on("end", () => expect(output).toEqual(val));
         data.on("error", fail);
       });
+    await orbit
+      .list("", { streamBody: true })
+      .then(expectSuccess)
+      .then(async ({ data }) => {
+        if (!data) {
+          return Promise.reject("response did not contain the data");
+        }
+        let output = "";
+        data.on("data", (chunk: string) => {
+          output += chunk;
+        });
+        data.on("error", fail);
+        data.on("end", () => {
+          let list = JSON.parse(output);
+          expect(list).toBeInstanceOf(Array);
+          expect(typeof list[0] === "string").toBeTruthy();
+        });
+      });
   });
 
   it("can list & delete", async () => {
@@ -140,7 +202,7 @@ describe("Kepler Client", () => {
     let value = "value";
     // @ts-ignore
     await orbit
-      .put(key, new Blob([value], { type: "text/plain" }))
+      .put(key, value)
       .then(expectSuccess)
       .then(() => orbit.list())
       .then(expectSuccess)
@@ -150,6 +212,33 @@ describe("Kepler Client", () => {
       .then(() => orbit.list())
       .then(expectSuccess)
       .then(({ data }) => expect(data).not.toContain(key));
+  });
+
+  it("can list by prefix", async () => {
+    let key = "aVeryUniquePrefix1";
+    let value = "value";
+    await orbit.put(key, value).then(expectSuccess);
+
+    key = "aVeryUniquePrefix2";
+    value = "value";
+    await orbit.put(key, value).then(expectSuccess);
+
+    key = "boring";
+    value = "value";
+    await orbit.put(key, value).then(expectSuccess);
+
+    let everything: string[] = await orbit
+      .list()
+      .then(expectSuccess)
+      .then(({ data }) => data);
+
+    let veryUnique: string[] = await orbit
+      .list("aVeryUnique")
+      .then(expectSuccess)
+      .then(({ data }) => data);
+
+    expect(veryUnique).toHaveLength(2);
+    expect(veryUnique.length).toBeLessThan(everything.length);
   });
 
   it("can retrieve content-type", async () => {
@@ -166,7 +255,8 @@ describe("Kepler Client", () => {
 
   it("undelegated account cannot access a different orbit", async () => {
     await new Kepler(newWallet(), keplerConfig)
-      .orbit({ orbit: orbit.id() })
+      .orbit({ orbitId: orbit.id(), ...orbitConfig })
+      .then(expectDefined)
       .then((orbit) => orbit.list())
       .then(expectUnauthorised);
   });
@@ -174,16 +264,28 @@ describe("Kepler Client", () => {
   it("expired session key cannot be used", async () => {
     await new Kepler(newWallet(), keplerConfig)
       .orbit({
-        sessionOpts: { expirationTime: new Date(Date.now() - 1000 * 60 * 60) },
+        expirationTime: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
+        ...orbitConfig,
       })
+      .then(expectDefined)
       .then((orbit) => orbit.list())
       .then(expectUnauthorised);
   });
 
   it("only allows properly authorised actions", async () => {
     const kepler = new Kepler(newWallet(), keplerConfig);
-    const write = await kepler.orbit({ actions: ["put", "del"] });
-    const read = await kepler.orbit({ actions: ["get", "list"] });
+    const write = await kepler
+      .orbit({
+        actions: ["put", "del"],
+        ...orbitConfig,
+      })
+      .then(expectDefined);
+    const read = await kepler
+      .orbit({
+        actions: ["get", "list"],
+        ...orbitConfig,
+      })
+      .then(expectDefined);
 
     const key = "key";
     const json = { hello: "hey" };
@@ -191,9 +293,7 @@ describe("Kepler Client", () => {
 
     // writer can write
     // @ts-ignore
-    await write
-      .put(key, json, { type: "application/json" })
-      .then(expectSuccess);
+    await write.put(key, json).then(expectSuccess);
 
     // reader can list
     await read
@@ -207,9 +307,7 @@ describe("Kepler Client", () => {
       .then(({ data }) => expect(data).toEqual(json));
     // reader cant write
     // @ts-ignore
-    await read
-      .put(key, json2, { type: "application/json" })
-      .then(expectUnauthorised);
+    await read.put(key, json2).then(expectUnauthorised);
     // reader cant delete
     await read.delete(key).then(expectUnauthorised);
 
@@ -223,15 +321,21 @@ describe("Kepler Client", () => {
 
   it("there is a one-to-one mapping between wallets and orbits", async () => {
     const wallet = newWallet();
-    (global as any).window = { location: { hostname: "example1.com" } };
-    const orbit1 = await new Kepler(wallet, keplerConfig).orbit();
-    (global as any).window = { location: { hostname: "example2.com" } };
-    const orbit2 = await new Kepler(wallet, keplerConfig).orbit();
+    const orbit1 = await new Kepler(wallet, keplerConfig)
+      .orbit({
+        domain: "example1.com",
+      })
+      .then(expectDefined);
+    const orbit2 = await new Kepler(wallet, keplerConfig)
+      .orbit({
+        domain: "example2.com",
+      })
+      .then(expectDefined);
 
     const key = "key";
     const value = "value";
     await orbit1
-      .put(key, value, { type: "text/plain" })
+      .put(key, value)
       .then(expectSuccess)
       .then(() => orbit2.get(key))
       .then(expectSuccess)

@@ -1,100 +1,99 @@
 <!DOCTYPE html>
 <html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Kepler Example</title>
+  </head>
+  <style>
+    .hidden {
+      display: none;
+    }
+    .list {
+      height: 100px;
+      width: 206px;
+      overflow: scroll;
+    }
+  </style>
 
-<head>
-  <meta charset="utf-8" />
-  <title>Kepler Example</title>
-</head>
-<style>
-  .hidden {
-    display: none;
-  }
-  .list {
-    
-    height: 100px;
-    width: 206px;
-    overflow: scroll;
-  }
-</style>
-
-<body>
-  <h1>Kepler Example</h1>
-  <h2>Connect Wallet</h2>
-  <button id="connectWalletBtn">Connect Wallet</button>
-  <div id="loadOrbit" class="hidden">
-    <h2>Load Orbit</h2>
-    <button id="loadOrbitBtn">Load Orbit</button>
-  </div>
-  <div id="actions" class="hidden">
-    <h2>Put</h2>
-    <table>
-      <tbody>
-        <tr>
-          <td>Key:</td>
-          <td><input id="putKey"></input></td>
-        </tr>
-        <tr>
-          <td>Value:</td>
-          <td><input id="putValue"></input></td>
-        </tr>
-      </tbody>
-      <tfoot>
-        <tr>
-          <td><button id="putBtn">Put</button></td>
-          <td id="putResult"></td>
-        </tr>
-      </tfoot>
-    </table>
-    <h2>Get</h2>
-    <table>
-      <tbody>
-        <tr>
-          <td>Key:</td>
-          <td><input id="getKey"></input></td>
-        </tr>
-        <tr>
-          <td>Value:</td>
-          <td id="getValue"></td>
-        </tr>
-      </tbody>
-      <tfoot>
-        <tr>
-          <td><button id="getBtn">Get</button></td>
-          <td id="getResult"></td>
-        </tr>
-      </tfoot>
-    </table>
-    <h2>List</h2>
-    <table>
-      <tbody>
-        <tr>
-          <td>Keys:</td>
-          <td><div class="list"><pre id="listValue"></pre></div></td>
-        </tr>
-      </tbody>
-      <tfoot>
-        <tr>
-          <td><button id="listBtn">List</button></td>
-          <td id="listResult"></td>
-        </tr>
-      </tfoot>
-    </table>
-    <h2>Delete</h2>
-    <table>
-      <tbody>
-        <tr>
-          <td>Key:</td>
-          <td><input id="deleteKey"></input></td>
-        </tr>
-      </tbody>
-      <tfoot>
-        <tr>
-          <td><button id="deleteBtn">Delete</button></td>
-          <td id="deleteResult"></td>
-        </tr>
-      </tfoot>
-    </table>
-  </div>
-</body>
-
+  <body>
+    <h1>Kepler Example</h1>
+    <h2>Connect Wallet</h2>
+    <button id="connectWalletBtn">Connect Wallet</button>
+    <div id="loadOrbit" class="hidden">
+      <h2>Load Orbit</h2>
+      <button id="loadOrbitBtn">Load Orbit</button>
+    </div>
+    <div id="actions" class="hidden">
+      <h2>Put</h2>
+      <table>
+        <tbody>
+          <tr>
+            <td>Key:</td>
+            <td><input id="putKey" /></td>
+          </tr>
+          <tr>
+            <td>Value:</td>
+            <td><input id="putValue" /></td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td><button id="putBtn">Put</button></td>
+            <td id="putResult"></td>
+          </tr>
+        </tfoot>
+      </table>
+      <h2>Get</h2>
+      <table>
+        <tbody>
+          <tr>
+            <td>Key:</td>
+            <td><input id="getKey" /></td>
+          </tr>
+          <tr>
+            <td>Value:</td>
+            <td id="getValue"></td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td><button id="getBtn">Get</button></td>
+            <td id="getResult"></td>
+          </tr>
+        </tfoot>
+      </table>
+      <h2>List</h2>
+      <table>
+        <tbody>
+          <tr>
+            <td>Keys:</td>
+            <td>
+              <div class="list"><pre id="listValue"></pre></div>
+            </td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td><button id="listBtn">List</button></td>
+            <td id="listResult"></td>
+          </tr>
+        </tfoot>
+      </table>
+      <h2>Delete</h2>
+      <table>
+        <tbody>
+          <tr>
+            <td>Key:</td>
+            <td><input id="deleteKey" /></td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td><button id="deleteBtn">Delete</button></td>
+            <td id="deleteResult"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </body>
 </html>

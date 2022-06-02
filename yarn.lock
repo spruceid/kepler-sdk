@@ -905,15 +905,8 @@
   dependencies:
     "@sinonjs/commons" "^1.7.0"
 
-"@spruceid/didkit-wasm@file:./didkit":
+"@spruceid/kepler-sdk-wasm@file:./wasm":
   version "0.1.0"
-
-"@spruceid/zcap-providers@^0.1.1":
-  version "0.1.1"
-  resolved "https://registry.npmjs.org/@spruceid/zcap-providers/-/zcap-providers-0.1.1.tgz"
-  integrity sha512-PvIefM/BOAZLzddMyAt5MiPH7iSdxtfNS7mtbpr7lc5fyF3eJvDu6IVMbLWfBA4xtRxq76EAiB1uwg4isgj+fA==
-  dependencies:
-    uuid "^8.3.2"
 
 "@stablelib/binary@^1.0.1":
   version "1.0.1"
@@ -4264,7 +4257,7 @@ util-deprecate@^1.0.1:
   resolved "https://registry.yarnpkg.com/util-deprecate/-/util-deprecate-1.0.2.tgz#450d4dc9fa70de732762fbd2d4a28981419a0ccf"
   integrity sha1-RQ1Nyfpw3nMnYvvS1KKJgUGaDM8=
 
-uuid@^8.3.0, uuid@^8.3.2:
+uuid@^8.3.0:
   version "8.3.2"
   resolved "https://registry.npmjs.org/uuid/-/uuid-8.3.2.tgz"
   integrity sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==

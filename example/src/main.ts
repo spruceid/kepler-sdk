@@ -25,7 +25,13 @@ let loadOrbitBtn = document.getElementById("loadOrbitBtn") as HTMLButtonElement;
 
 loadOrbitBtn.onclick = async () => {
   kepler = new Kepler(wallet, { hosts: ["http://localhost:8000"] });
-  orbitConnection = await kepler.orbit();
+  let o = await kepler.orbit();
+  if (o === undefined) {
+    console.error("unable to host orbit");
+    return;
+  }
+  orbitConnection = o;
+
   loadOrbitBtn.innerText = orbitConnection.id();
   loadOrbitBtn.disabled = true;
   actions.classList.remove("hidden");
@@ -43,9 +49,7 @@ putBtn.onclick = async () => {
   let key = putKey.value;
   let value = putValue.value;
   putValue.value = "";
-  let { ok, statusText } = await orbitConnection.put(key, value, {
-    type: "text/plain",
-  });
+  let { ok, statusText } = await orbitConnection.put(key, value);
   putResult.style.color = ok ? "green" : "red";
   putResult.innerHTML = statusText;
 };

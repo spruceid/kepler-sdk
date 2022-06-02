@@ -7,7 +7,7 @@
     "build": "tsc -p .",
     "fmt-check": "prettier --check src",
     "doc": "typedoc src/index.ts --excludePrivate",
-    "fmt": "prettier --write src",
+    "fmt": "prettier --write src example",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
   },
   "files": [
@@ -38,8 +38,7 @@
   },
   "dependencies": {
     "@airgap/beacon-sdk": "^2.2.3",
-    "@spruceid/didkit-wasm": "file:./didkit",
-    "@spruceid/zcap-providers": "^0.1.1",
+    "@spruceid/kepler-sdk-wasm": "file:./wasm",
     "cids": "^1.1.6",
     "multihashing-async": "^2.1.2",
     "rfc4648": "^1.5.0",
