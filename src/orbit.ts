@@ -1,4 +1,5 @@
 import wasmPromise from "@spruceid/kepler-sdk-wasm";
+import { HostConfig } from ".";
 import { Authenticator } from "./authenticator";
 import { KV } from "./kv";
 import { WalletProvider } from "./walletProvider";
@@ -251,15 +252,6 @@ export type Response = {
 };
 
 type FetchResponse = globalThis.Response;
-
-type HostConfig = {
-  address: string;
-  chainId: number;
-  domain: string;
-  issuedAt: string;
-  orbitId: string;
-  peerId: string;
-};
 
 export const hostOrbit = async (
   wallet: WalletProvider,

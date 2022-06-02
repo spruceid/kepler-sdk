@@ -2275,7 +2275,7 @@ json-schema-traverse@^1.0.0:
   version "0.11.0"
   dependencies:
     "@airgap/beacon-sdk" "^2.2.3"
-    "@spruceid/kepler-sdk-wasm" "file:../../../../../.cache/yarn/v6/npm-kepler-sdk-0.11.0-ae61e0bd-d240-4afc-a664-3487e6363aeb-1654081125818/node_modules/kepler-sdk/wasm"
+    "@spruceid/kepler-sdk-wasm" "file:../../../../../.cache/yarn/v6/npm-kepler-sdk-0.11.0-bdcf80ee-2243-4fd0-a47b-8ab472bcc29b-1654172079086/node_modules/kepler-sdk/wasm"
     cids "^1.1.6"
     multihashing-async "^2.1.2"
     rfc4648 "^1.5.0"

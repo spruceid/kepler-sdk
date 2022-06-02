@@ -1,26 +1,15 @@
 import wasmPromise from "@spruceid/kepler-sdk-wasm";
+import { SessionConfig, Session } from ".";
 import { WalletProvider } from "./walletProvider";
 
-export type SessionConfig = {
-  actions: string[];
-  address: string;
-  chainId: number;
-  domain: string;
-  issuedAt: string;
-  orbitId: string;
-  notBefore?: string;
-  expirationTime: string;
-  service: string;
-};
-
-export async function defaultAuthn(
+export async function startSession(
   wallet: WalletProvider,
   config?: Partial<SessionConfig>
-): Promise<Authenticator> {
+): Promise<Session> {
   let wasm = await wasmPromise;
   let address = config?.address ?? (await wallet.getAddress());
   let chainId = config?.chainId ?? (await wallet.getChainId());
-  return new Authenticator(wallet, {
+  return Promise.resolve({
     address,
     chainId,
     domain: config?.domain ?? window.location.hostname,
@@ -32,36 +21,33 @@ export async function defaultAuthn(
       new Date(Date.now() + 1000 * 60 * 60).toISOString(),
     actions: config?.actions ?? ["put", "get", "list", "del", "metadata"],
     orbitId: config?.orbitId ?? wasm.makeOrbitId(address, chainId),
-  });
+  })
+    .then(JSON.stringify)
+    .then(wasm.prepareSession)
+    .then(JSON.parse)
+    .then(async (preparedSession) => ({
+      ...preparedSession,
+      signature: await wallet.signMessage(preparedSession.siwe),
+    }))
+    .then(JSON.stringify)
+    .then(wasm.completeSessionSetup)
+    .then(JSON.parse);
 }
 
 export class Authenticator {
-  private session: Promise<string>;
   private orbitId: string;
-  constructor(wallet: WalletProvider, config: SessionConfig) {
-    this.session = Promise.resolve(config)
-      .then(JSON.stringify)
-      .then(async (config) => (await wasmPromise).prepareSession(config))
-      .then(JSON.parse)
-      .then(async (preparedSession) => ({
-        ...preparedSession,
-        signature: await wallet.signMessage(preparedSession.siwe),
-      }))
-      .then(JSON.stringify)
-      .then(async (signedSession) =>
-        (await wasmPromise).completeSessionSetup(signedSession)
-      );
-    this.orbitId = config.orbitId;
+  private serializedSession: string;
+  constructor(session: Session) {
+    this.orbitId = session.orbitId;
+    this.serializedSession = JSON.stringify(session);
   }
 
   invocationHeaders = async (
     action: string,
     path: string
   ): Promise<HeadersInit> =>
-    this.session
-      .then(async (session) =>
-        (await wasmPromise).invoke(session, path, action)
-      )
+    (await wasmPromise)
+      .invoke(this.serializedSession, path, action)
       .then(JSON.parse);
   getOrbitId = (): string => this.orbitId;
 }

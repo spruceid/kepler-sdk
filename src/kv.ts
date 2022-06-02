@@ -1,23 +1,16 @@
 import { Authenticator } from "./authenticator";
 import { invoke } from "./kepler";
 
-if (typeof fetch === "undefined") {
-  const fetch = require("node-fetch");
-}
-
 export class KV {
-  private orbitId: string;
-  constructor(private url: string, private auth: Authenticator) {
-    this.orbitId = auth.getOrbitId();
-  }
+  constructor(private url: string, private auth: Authenticator) {}
 
-  public async get(key: string, version?: string): Promise<Response> {
+  public async get(key: string): Promise<Response> {
     return await this.invoke({
       headers: await this.auth.invocationHeaders("get", key),
     });
   }
 
-  public async head(key: string, version?: string): Promise<Response> {
+  public async head(key: string): Promise<Response> {
     return await this.invoke({
       headers: await this.auth.invocationHeaders("metadata", key),
     });
@@ -37,7 +30,7 @@ export class KV {
     });
   }
 
-  public async del(key: string, version?: string): Promise<Response> {
+  public async del(key: string): Promise<Response> {
     return await this.invoke({
       headers: await this.auth.invocationHeaders("del", key),
     });

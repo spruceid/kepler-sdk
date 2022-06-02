@@ -1,11 +1,17 @@
 import { Kepler, OrbitConnection, Response } from "./";
 import Blob from "fetch-blob";
 import { Wallet } from "ethers";
-import { defaultAuthn } from "./authenticator";
+import { startSession, Authenticator } from "./authenticator";
 import { hostOrbit } from "./orbit";
 
 const keplerUrl = "http://localhost:8000";
 const domain = "example.com";
+
+function expectDefined(orbit: OrbitConnection | undefined): OrbitConnection {
+  expect(orbit).not.toBeUndefined();
+  // @ts-ignore
+  return orbit;
+}
 
 function expectSuccess(response: Response): Response {
   expect(response.status).toBe(200);
@@ -25,25 +31,23 @@ function newWallet(): Wallet {
 
 describe("Authenticator", () => {
   it("invoke", async () => {
-    let authn = await defaultAuthn(newWallet(), {
-      expirationTime: "3000-01-01T00:00:00.000Z",
-      issuedAt: "2022-01-01T00:00:00.000Z",
-      domain,
-    });
-    await authn.invocationHeaders("get", "path");
-  });
-
-  it("host", async () => {
-    let wallet = newWallet();
-    await defaultAuthn(wallet, {
+    await startSession(newWallet(), {
       expirationTime: "3000-01-01T00:00:00.000Z",
       issuedAt: "2022-01-01T00:00:00.000Z",
       domain,
     })
-      .then((authn) => new OrbitConnection(keplerUrl, authn))
-      .then((orbitConnection) =>
-        hostOrbit(wallet, keplerUrl, orbitConnection.id(), domain)
-      )
+      .then((session) => new Authenticator(session))
+      .then((authn) => authn.invocationHeaders("get", "path"));
+  });
+
+  it("host", async () => {
+    let wallet = newWallet();
+    await startSession(wallet, {
+      expirationTime: "3000-01-01T00:00:00.000Z",
+      issuedAt: "2022-01-01T00:00:00.000Z",
+      domain,
+    })
+      .then((session) => hostOrbit(wallet, keplerUrl, session.orbitId, domain))
       .then(expectSuccess);
   });
 });
@@ -54,7 +58,9 @@ describe("Kepler Client", () => {
   const orbitConfig = { domain };
 
   beforeAll(async () => {
-    orbit = await new Kepler(newWallet(), keplerConfig).orbit(orbitConfig);
+    orbit = await new Kepler(newWallet(), keplerConfig)
+      .orbit(orbitConfig)
+      .then(expectDefined);
   });
 
   it("cannot put null value", async () => {
@@ -250,6 +256,7 @@ describe("Kepler Client", () => {
   it("undelegated account cannot access a different orbit", async () => {
     await new Kepler(newWallet(), keplerConfig)
       .orbit({ orbitId: orbit.id(), ...orbitConfig })
+      .then(expectDefined)
       .then((orbit) => orbit.list())
       .then(expectUnauthorised);
   });
@@ -260,20 +267,25 @@ describe("Kepler Client", () => {
         expirationTime: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
         ...orbitConfig,
       })
+      .then(expectDefined)
       .then((orbit) => orbit.list())
       .then(expectUnauthorised);
   });
 
   it("only allows properly authorised actions", async () => {
     const kepler = new Kepler(newWallet(), keplerConfig);
-    const write = await kepler.orbit({
-      actions: ["put", "del"],
-      ...orbitConfig,
-    });
-    const read = await kepler.orbit({
-      actions: ["get", "list"],
-      ...orbitConfig,
-    });
+    const write = await kepler
+      .orbit({
+        actions: ["put", "del"],
+        ...orbitConfig,
+      })
+      .then(expectDefined);
+    const read = await kepler
+      .orbit({
+        actions: ["get", "list"],
+        ...orbitConfig,
+      })
+      .then(expectDefined);
 
     const key = "key";
     const json = { hello: "hey" };
@@ -309,12 +321,16 @@ describe("Kepler Client", () => {
 
   it("there is a one-to-one mapping between wallets and orbits", async () => {
     const wallet = newWallet();
-    const orbit1 = await new Kepler(wallet, keplerConfig).orbit({
-      domain: "example1.com",
-    });
-    const orbit2 = await new Kepler(wallet, keplerConfig).orbit({
-      domain: "example2.com",
-    });
+    const orbit1 = await new Kepler(wallet, keplerConfig)
+      .orbit({
+        domain: "example1.com",
+      })
+      .then(expectDefined);
+    const orbit2 = await new Kepler(wallet, keplerConfig)
+      .orbit({
+        domain: "example2.com",
+      })
+      .then(expectDefined);
 
     const key = "key";
     const value = "value";
