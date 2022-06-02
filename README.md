@@ -76,7 +76,7 @@ The `OrbitConnection` class provides a simple CRUD interface for Blob storage, f
 belonging to the connected ethereum account. It can be created from the `Kepler` object.
 
 ``` typescript
-const orbitConnection = await kepler.orbit();
+const orbitConnection: OrbitConnection | undefined = await kepler.orbit();
 ```
 
 Once created, an `OrbitConnection` instance can upload objects to the Orbit:
