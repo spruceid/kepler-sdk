@@ -4,6 +4,10 @@ import { invoke } from "./kepler";
 export class KV {
   constructor(private url: string, private auth: Authenticator) {}
 
+  public reconnect(newUrl: string) {
+    this.url = newUrl;
+  }
+
   public async get(key: string): Promise<Response> {
     return await this.invoke({
       headers: await this.auth.invocationHeaders("get", key),

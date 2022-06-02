@@ -1,18 +1,15 @@
+import wasmPromise, { HostConfig } from "@spruceid/kepler-sdk-wasm";
 import { SessionConfig } from ".";
 import { Authenticator, startSession } from "./authenticator";
-import { hostOrbit, OrbitConnection } from "./orbit";
+import { FetchResponse, OrbitConnection, Response } from "./orbit";
 import { WalletProvider } from "./walletProvider";
 
 const fetch_ = typeof fetch === "undefined" ? require("node-fetch") : fetch;
 
 /** Configuration for [[Kepler]]. */
 export type KeplerOptions = {
-  /** The Kepler hosts that you wish to connect to.
-   *
-   * Currently only a single host is supported, but for future compatibility this property is
-   * expected to be a list. Only the first host in the list will be used.
-   */
-  hosts: string[];
+  /** The Kepler host that you wish to connect to. */
+  host: string;
 };
 
 /** An object for interacting with Kepler instances. */
@@ -25,52 +22,59 @@ export class Kepler {
    * @param config Optional configuration for Kepler.
    */
   constructor(wallet: WalletProvider, config: KeplerOptions) {
-    this.config = {
-      hosts: config.hosts,
-    };
+    this.config = config;
     this.wallet = wallet;
   }
 
   /** Make a connection to an orbit.
    *
-   * This method handles the creation and connection to an orbit in Kepler. This method should
-   * usually be used without providing any ConnectionOptions:
+   * This method handles the connection to an orbit in Kepler. This method should
+   * usually be used without providing any SessionConfig:
    * ```ts
    * let orbitConnection = await kepler.orbit();
    * ```
-   * In this case the orbit ID will be derived from the wallet's address. The wallet will be
-   * asked to sign a message delegating access to a session key for 1 hour. If the orbit does not
-   * already exist in the Kepler instance, then the wallet will be asked to sign another message
-   * to permit the Kepler instance to host the orbit.
+   * In this case the orbit ID will be derived from the wallet's address.
+   *
+   * The wallet will be asked to sign a message delegating access to a session key for 1 hour.
    *
    * @param config Optional parameters to configure the orbit connection.
-   * @returns Returns undefined if the Kepler instance was unable to host the orbit.
    */
-  async orbit(
-    config: Partial<SessionConfig> = {}
-  ): Promise<OrbitConnection | undefined> {
-    // TODO: support multiple urls for kepler.
-    const keplerUrl = this.config.hosts[0];
-    let orbitConnection: OrbitConnection = await startSession(
-      this.wallet,
-      config
-    )
+  connect = (config: Partial<SessionConfig> = {}): Promise<OrbitConnection> =>
+    startSession(this.wallet, config)
       .then((session) => new Authenticator(session))
-      .then((authn) => new OrbitConnection(keplerUrl, authn));
+      .then((authn) => new OrbitConnection(this.config.host, authn));
 
-    return await orbitConnection.list().then(async ({ status }) => {
-      if (status === 404) {
-        console.info("Orbit does not already exist. Creating...");
-        let { ok } = await hostOrbit(
-          this.wallet,
-          keplerUrl,
-          orbitConnection.id(),
-          config.domain
-        );
-        return ok ? orbitConnection : undefined;
-      }
-      return orbitConnection;
-    });
+  async hostOrbit(config?: Partial<HostConfig>): Promise<Response> {
+    const wasm = await wasmPromise;
+
+    const address = config?.address ?? (await this.wallet.getAddress());
+    const chainId = config?.chainId ?? (await this.wallet.getChainId());
+    const config_: HostConfig = {
+      address,
+      chainId,
+      domain: config?.domain ?? window.location.hostname,
+      issuedAt: config?.issuedAt ?? new Date(Date.now()).toISOString(),
+      orbitId: config?.orbitId ?? wasm.makeOrbitId(address, chainId),
+      peerId:
+        config?.peerId ??
+        (await fetch_(this.config.host + "/peer/generate").then(
+          (res: FetchResponse) => res.text()
+        )),
+    };
+
+    const siwe = wasm.generateHostSIWEMessage(JSON.stringify(config_));
+    const signature = await this.wallet.signMessage(siwe);
+    const hostHeaders = wasm.host(JSON.stringify({ siwe, signature }));
+
+    return fetch_(this.config.host + "/delegate", {
+      method: "POST",
+      headers: JSON.parse(hostHeaders),
+    }).then(({ ok, status, statusText, headers }: FetchResponse) => ({
+      ok,
+      status,
+      statusText,
+      headers,
+    }));
   }
 }
 

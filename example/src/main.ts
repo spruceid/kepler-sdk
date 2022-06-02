@@ -24,13 +24,18 @@ let loadOrbit = document.getElementById("loadOrbit") as HTMLDivElement;
 let loadOrbitBtn = document.getElementById("loadOrbitBtn") as HTMLButtonElement;
 
 loadOrbitBtn.onclick = async () => {
-  kepler = new Kepler(wallet, { hosts: ["http://localhost:8000"] });
-  let o = await kepler.orbit();
-  if (o === undefined) {
+  kepler = new Kepler(wallet, { host: "http://localhost:8000" });
+  orbitConnection = await kepler.connect();
+
+  let ok = await orbitConnection
+    .list()
+    .then(
+      async ({ status }) => status !== 404 || (await kepler.hostOrbit()).ok
+    );
+  if (!ok) {
     console.error("unable to host orbit");
     return;
   }
-  orbitConnection = o;
 
   loadOrbitBtn.innerText = orbitConnection.id();
   loadOrbitBtn.disabled = true;

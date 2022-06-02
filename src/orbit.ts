@@ -1,13 +1,8 @@
-import wasmPromise from "@spruceid/kepler-sdk-wasm";
-import { HostConfig } from ".";
 import { Authenticator } from "./authenticator";
 import { KV } from "./kv";
-import { WalletProvider } from "./walletProvider";
 
 const Blob =
   typeof window === "undefined" ? require("fetch-blob") : window.Blob;
-
-const fetch_ = typeof fetch === "undefined" ? require("node-fetch") : fetch;
 
 /**
  * A connection to an orbit in a Kepler instance.
@@ -30,6 +25,11 @@ export class OrbitConnection {
    */
   id(): string {
     return this.orbitId;
+  }
+
+  /** Re-use the session to connect to the orbit at a different Kepler host. */
+  reconnect(newUrl: string) {
+    this.kv.reconnect(newUrl);
   }
 
   /** Store an object in the connected orbit.
@@ -251,39 +251,4 @@ export type Response = {
   data?: any;
 };
 
-type FetchResponse = globalThis.Response;
-
-export const hostOrbit = async (
-  wallet: WalletProvider,
-  keplerUrl: string,
-  orbitId: string,
-  domain: string = window.location.hostname
-): Promise<Response> => {
-  const wasm = await wasmPromise;
-  const address = await wallet.getAddress();
-  const chainId = await wallet.getChainId();
-  const issuedAt = new Date(Date.now()).toISOString();
-  const peerId = await fetch_(keplerUrl + "/peer/generate").then(
-    (res: FetchResponse) => res.text()
-  );
-  const config: HostConfig = {
-    address,
-    chainId,
-    domain,
-    issuedAt,
-    orbitId,
-    peerId,
-  };
-  const siwe = wasm.generateHostSIWEMessage(JSON.stringify(config));
-  const signature = await wallet.signMessage(siwe);
-  const hostHeaders = wasm.host(JSON.stringify({ siwe, signature }));
-  return fetch_(keplerUrl + "/delegate", {
-    method: "POST",
-    headers: JSON.parse(hostHeaders),
-  }).then(({ ok, status, statusText, headers }: FetchResponse) => ({
-    ok,
-    status,
-    statusText,
-    headers,
-  }));
-};
+export type FetchResponse = globalThis.Response;
