@@ -1,8 +1,12 @@
 import { Kepler, OrbitConnection, Response } from "./";
 import Blob from "fetch-blob";
+import fetch from "node-fetch";
 import { Wallet } from "ethers";
 import { startSession, Authenticator } from "./authenticator";
 import { hostOrbit } from "./orbit";
+
+(global as any).Blob = Blob;
+(global as any).fetch = fetch;
 
 const keplerUrl = "http://localhost:8000";
 const domain = "example.com";

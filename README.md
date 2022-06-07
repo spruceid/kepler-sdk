@@ -22,28 +22,10 @@ yarn add kepler-sdk
 The following webpack configuration is required:
 
 ```js
-const webpack = require('webpack');
-
 module.exports = {
-    plugins: [ 
-        new webpack.ProvidePlugin({
-            Buffer: ['buffer', 'Buffer'],
-        })
-    ],
-    resolve: {
-        fallback: {
-            "buffer": require.resolve("buffer/"),
-            "crypto": require.resolve("crypto-browserify"),
-            "stream": require.resolve("stream-browserify"),
-            "util": require.resolve("util/"),
-            fs: false,
-            path: false,
-        }
-    },
     experiments: {
         asyncWebAssembly: true,
     },
-    ...
 }
 ```
 

@@ -3,8 +3,6 @@ import { Authenticator, startSession } from "./authenticator";
 import { hostOrbit, OrbitConnection } from "./orbit";
 import { WalletProvider } from "./walletProvider";
 
-const fetch_ = typeof fetch === "undefined" ? require("node-fetch") : fetch;
-
 /** Configuration for [[Kepler]]. */
 export type KeplerOptions = {
   /** The Kepler hosts that you wish to connect to.
@@ -77,4 +75,4 @@ export class Kepler {
 export const invoke = (
   url: string,
   params: { headers: HeadersInit; body?: Blob }
-) => fetch_(url + "/invoke", { method: "POST", ...params });
+) => fetch(url + "/invoke", { method: "POST", ...params });
