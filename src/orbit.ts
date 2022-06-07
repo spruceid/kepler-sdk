@@ -4,11 +4,6 @@ import { Authenticator } from "./authenticator";
 import { KV } from "./kv";
 import { WalletProvider } from "./walletProvider";
 
-const Blob =
-  typeof window === "undefined" ? require("fetch-blob") : window.Blob;
-
-const fetch_ = typeof fetch === "undefined" ? require("node-fetch") : fetch;
-
 /**
  * A connection to an orbit in a Kepler instance.
  *
@@ -263,7 +258,7 @@ export const hostOrbit = async (
   const address = await wallet.getAddress();
   const chainId = await wallet.getChainId();
   const issuedAt = new Date(Date.now()).toISOString();
-  const peerId = await fetch_(keplerUrl + "/peer/generate").then(
+  const peerId = await fetch(keplerUrl + "/peer/generate").then(
     (res: FetchResponse) => res.text()
   );
   const config: HostConfig = {
@@ -277,7 +272,7 @@ export const hostOrbit = async (
   const siwe = wasm.generateHostSIWEMessage(JSON.stringify(config));
   const signature = await wallet.signMessage(siwe);
   const hostHeaders = wasm.host(JSON.stringify({ siwe, signature }));
-  return fetch_(keplerUrl + "/delegate", {
+  return fetch(keplerUrl + "/delegate", {
     method: "POST",
     headers: JSON.parse(hostHeaders),
   }).then(({ ok, status, statusText, headers }: FetchResponse) => ({

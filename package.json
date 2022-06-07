@@ -1,6 +1,6 @@
 {
   "name": "kepler-sdk",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "main": "dist/index.js",
   "license": "Apache-2.0",
   "scripts": {
@@ -37,11 +37,6 @@
     "typescript": "^4.2.3"
   },
   "dependencies": {
-    "@airgap/beacon-sdk": "^2.2.3",
-    "@spruceid/kepler-sdk-wasm": "file:./wasm",
-    "cids": "^1.1.6",
-    "multihashing-async": "^2.1.2",
-    "rfc4648": "^1.5.0",
-    "siwe": "^0.1.4"
+    "@spruceid/kepler-sdk-wasm": "file:./wasm"
   }
 }
