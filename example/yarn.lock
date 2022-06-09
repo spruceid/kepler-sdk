@@ -353,6 +353,9 @@
   resolved "https://registry.yarnpkg.com/@leichtgewicht/ip-codec/-/ip-codec-2.0.4.tgz#b2ac626d6cb9c8718ab459166d4bb405b8ffa78b"
   integrity sha512-Hcv+nVC0kZnQ3tD9GVu5xSMR4VVYOteQIr/hwFPVEvPdlXqgGEuRjiheChHgdM+JyqdgNcmzZOX/tnl0JOiI7A==
 
+"@spruceid/kepler-sdk-wasm@file:../wasm":
+  version "0.1.0"
+
 "@types/body-parser@*":
   version "1.19.2"
   resolved "https://registry.yarnpkg.com/@types/body-parser/-/body-parser-1.19.2.tgz#aea2059e28b7658639081347ac4fab3de166e6f0"
@@ -1742,6 +1745,11 @@ json-schema-traverse@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/json-schema-traverse/-/json-schema-traverse-1.0.0.tgz#ae7bcb3656ab77a73ba5c49bf654f38e6b6860e2"
   integrity sha512-NM8/P9n3XjXhIZn1lLhkFaACTOURQXjWhV4BA/RnOv8xvgqtqpAX9IO4mRQxSx1Rlo4tqzeqb0sOlruaOy3dug==
+
+"kepler-sdk@file:..":
+  version "0.12.0"
+  dependencies:
+    "@spruceid/kepler-sdk-wasm" "file:../../../../../.cache/yarn/v6/npm-kepler-sdk-0.12.0-22a60e84-699d-4f1a-8f4f-80e46169d3a4-1654770381004/node_modules/kepler-sdk/wasm"
 
 kind-of@^6.0.2:
   version "6.0.3"
