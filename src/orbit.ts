@@ -1,4 +1,4 @@
-import { host, generateHostSIWEMessage } from "@spruceid/kepler-sdk-wasm";
+import wasmPromise from "./wasm";
 import { HostConfig } from ".";
 import { Authenticator } from "./authenticator";
 import { KV } from "./kv";
@@ -264,6 +264,7 @@ export const hostOrbit = async (
   orbitId: string,
   domain: string = window.location.hostname
 ): Promise<Response> => {
+  const wasm = await wasmPromise;
   const address = await wallet.getAddress();
   const chainId = await wallet.getChainId();
   const issuedAt = new Date(Date.now()).toISOString();
@@ -278,9 +279,9 @@ export const hostOrbit = async (
     orbitId,
     peerId,
   };
-  const siwe = generateHostSIWEMessage(JSON.stringify(config));
+  const siwe = wasm.generateHostSIWEMessage(JSON.stringify(config));
   const signature = await wallet.signMessage(siwe);
-  const hostHeaders = host(JSON.stringify({ siwe, signature }));
+  const hostHeaders = wasm.host(JSON.stringify({ siwe, signature }));
   return fetch(keplerUrl + "/delegate", {
     method: "POST",
     headers: JSON.parse(hostHeaders),

@@ -4,7 +4,7 @@
   "main": "dist/index.js",
   "license": "Apache-2.0",
   "scripts": {
-    "build": "tsc -p .",
+    "build": "tsc -p . && cp -r src/wasm dist/",
     "fmt-check": "prettier --check src",
     "doc": "typedoc src/index.ts --excludePrivate",
     "fmt": "prettier --write src example",
@@ -35,8 +35,5 @@
     "ts-node": "^10.4.0",
     "typedoc": "^0.22.13",
     "typescript": "^4.2.3"
-  },
-  "dependencies": {
-    "@spruceid/kepler-sdk-wasm": "file:./wasm"
   }
 }

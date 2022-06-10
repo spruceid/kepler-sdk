@@ -1,4 +1,4 @@
-import { completeSessionSetup, invoke, makeOrbitId, prepareSession } from "@spruceid/kepler-sdk-wasm";
+import wasmPromise from "./wasm";
 import { SessionConfig, Session } from ".";
 import { WalletProvider } from "./walletProvider";
 
@@ -6,6 +6,7 @@ export async function startSession(
   wallet: WalletProvider,
   config?: Partial<SessionConfig>
 ): Promise<Session> {
+  const wasm = await wasmPromise;
   let address = config?.address ?? (await wallet.getAddress());
   let chainId = config?.chainId ?? (await wallet.getChainId());
   return Promise.resolve({
@@ -19,17 +20,17 @@ export async function startSession(
       config?.expirationTime ??
       new Date(Date.now() + 1000 * 60 * 60).toISOString(),
     actions: config?.actions ?? ["put", "get", "list", "del", "metadata"],
-    orbitId: config?.orbitId ?? makeOrbitId(address, chainId),
+    orbitId: config?.orbitId ?? wasm.makeOrbitId(address, chainId),
   })
     .then(JSON.stringify)
-    .then(prepareSession)
+    .then(wasm.prepareSession)
     .then(JSON.parse)
     .then(async (preparedSession) => ({
       ...preparedSession,
       signature: await wallet.signMessage(preparedSession.siwe),
     }))
     .then(JSON.stringify)
-    .then(completeSessionSetup)
+    .then(wasm.completeSessionSetup)
     .then(JSON.parse);
 }
 
@@ -45,7 +46,8 @@ export class Authenticator {
     action: string,
     path: string
   ): Promise<HeadersInit> =>
-      invoke(this.serializedSession, path, action)
+    Promise.resolve(wasmPromise)
+      .then(wasm => wasm.invoke(this.serializedSession, path, action))
       .then(JSON.parse);
 
   getOrbitId = (): string => this.orbitId;
