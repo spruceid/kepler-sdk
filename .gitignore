@@ -3,10 +3,9 @@ docs/
 .idea
 *.log
 tmp/
-
+example/dist/
 *.tern-port
 node_modules/
-dist/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
