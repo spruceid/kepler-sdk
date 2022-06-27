@@ -37,7 +37,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.hostOrbit = exports.OrbitConnection = void 0;
-var index_1 = require("./wasm/index");
+var index_js_1 = require("./wasm/index.js");
 var authenticator_1 = require("./authenticator");
 var kv_1 = require("./kv");
 /**
@@ -326,13 +326,13 @@ var hostOrbit = function (wallet, keplerUrl, orbitId, domain) {
                         orbitId: orbitId,
                         peerId: peerId,
                     };
-                    return [4 /*yield*/, index_1.generateHostSIWEMessage(JSON.stringify(config))];
+                    return [4 /*yield*/, index_js_1.generateHostSIWEMessage(JSON.stringify(config))];
                 case 4:
                     siwe = _a.sent();
                     return [4 /*yield*/, wallet.signMessage(siwe)];
                 case 5:
                     signature = _a.sent();
-                    return [4 /*yield*/, index_1.host(JSON.stringify({ siwe: siwe, signature: signature }))];
+                    return [4 /*yield*/, index_js_1.host(JSON.stringify({ siwe: siwe, signature: signature }))];
                 case 6:
                     hostHeaders = _a.sent();
                     return [2 /*return*/, fetch(keplerUrl + "/delegate", {

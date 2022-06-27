@@ -1,3 +1,15 @@
+/**
+ * @jest-environment jsdom
+ */
+
+// jsdom doesn't impl TextEncoder/TextDecoder.
+if (typeof TextEncoder === 'undefined') {
+ global.TextEncoder = require('util').TextEncoder;
+}
+if (typeof TextDecoder === 'undefined') {
+ global.TextDecoder = require('util').TextDecoder;
+}
+
 import { Kepler, OrbitConnection, Response } from "./";
 import Blob from "fetch-blob";
 import fetch from "node-fetch";

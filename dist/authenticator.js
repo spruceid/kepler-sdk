@@ -48,7 +48,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Authenticator = exports.startSession = void 0;
-var index_1 = require("./wasm/index");
+var index_js_1 = require("./wasm/index.js");
 function startSession(wallet, config) {
     var _a, _b, _c, _d, _e, _f, _g, _h;
     return __awaiter(this, void 0, void 0, function () {
@@ -90,14 +90,14 @@ function startSession(wallet, config) {
                     if (!((_h = config === null || config === void 0 ? void 0 : config.orbitId) !== null && _h !== void 0)) return [3 /*break*/, 7];
                     _o = _h;
                     return [3 /*break*/, 9];
-                case 7: return [4 /*yield*/, index_1.makeOrbitId(address, chainId)];
+                case 7: return [4 /*yield*/, index_js_1.makeOrbitId(address, chainId)];
                 case 8:
                     _o = _q.sent();
                     _q.label = 9;
                 case 9: return [2 /*return*/, _m.apply(_l, [(_p.orbitId = _o,
                             _p)])
                         .then(JSON.stringify)
-                        .then(index_1.prepareSession)
+                        .then(index_js_1.prepareSession)
                         .then(JSON.parse)
                         .then(function (preparedSession) { return __awaiter(_this, void 0, void 0, function () {
                         var _a;
@@ -113,7 +113,7 @@ function startSession(wallet, config) {
                         });
                     }); })
                         .then(JSON.stringify)
-                        .then(index_1.completeSessionSetup)
+                        .then(index_js_1.completeSessionSetup)
                         .then(JSON.parse)];
             }
         });
@@ -125,7 +125,7 @@ var Authenticator = /** @class */ (function () {
         var _this = this;
         this.invocationHeaders = function (action, path) { return __awaiter(_this, void 0, void 0, function () {
             return __generator(this, function (_a) {
-                return [2 /*return*/, index_1.invoke(this.serializedSession, path, action)
+                return [2 /*return*/, index_js_1.invoke(this.serializedSession, path, action)
                         .then(JSON.parse)];
             });
         }); };

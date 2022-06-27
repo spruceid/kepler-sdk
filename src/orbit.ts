@@ -1,4 +1,4 @@
-import { generateHostSIWEMessage, host } from "./wasm/index";
+import { generateHostSIWEMessage, host } from "./wasm/index.js";
 import { HostConfig } from ".";
 import { Authenticator } from "./authenticator";
 import { KV } from "./kv";

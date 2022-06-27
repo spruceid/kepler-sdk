@@ -1,4 +1,4 @@
-import { prepareSession, makeOrbitId, completeSessionSetup, invoke } from "./wasm/index";
+import { prepareSession, makeOrbitId, completeSessionSetup, invoke } from "./wasm/index.js";
 import { SessionConfig, Session } from ".";
 import { WalletProvider } from "./walletProvider";
 
