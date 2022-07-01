@@ -75,7 +75,8 @@ function startSession(wallet, config) {
                     _e.label = 6;
                 case 6:
                     chainId = _d;
-                    return [2 /*return*/, Promise.resolve(ssx_wasm_1.initialized).then(function () {
+                    return [2 /*return*/, Promise.resolve(ssx_wasm_1.initialized)
+                            .then(function () {
                             var _a, _b, _c, _d, _e, _f;
                             return ({
                                 address: address,
@@ -119,9 +120,8 @@ var Authenticator = /** @class */ (function () {
         this.invocationHeaders = function (action, path) { return __awaiter(_this, void 0, void 0, function () {
             var _this = this;
             return __generator(this, function (_a) {
-                return [2 /*return*/, ssx_wasm_1.initialized.then(function () {
-                        return ssx_wasm_1.kepler.invoke(_this.serializedSession, path, action);
-                    })
+                return [2 /*return*/, ssx_wasm_1.initialized
+                        .then(function () { return ssx_wasm_1.kepler.invoke(_this.serializedSession, path, action); })
                         .then(JSON.parse)];
             });
         }); };

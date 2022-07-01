@@ -23,7 +23,8 @@
     "transform": {}
   },
   "devDependencies": {
-    "@spruceid/ssx-wasm": "file:/home/jward/work/ssx-rs/wasm",
+    "@peculiar/webcrypto": "^1.4.0",
+    "@spruceid/ssx-wasm": "0.0.0-alpha.2",
     "@types/jest": "^26.0.22",
     "@types/node": "^16.11.6",
     "@types/node-fetch": "^2.6.1",
@@ -39,6 +40,6 @@
     "typescript": "^4.2.3"
   },
   "peerDependencies": {
-    "@spruceid/ssx-wasm": "file:/home/jward/work/ssx-rs/wasm"
+    "@spruceid/ssx-wasm": "0.0.0-alpha.2"
   }
 }

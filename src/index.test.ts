@@ -3,12 +3,17 @@
  */
 
 // jsdom doesn't impl TextEncoder/TextDecoder.
-if (typeof TextEncoder === 'undefined') {
- global.TextEncoder = require('util').TextEncoder;
+if (typeof TextEncoder === "undefined") {
+  global.TextEncoder = require("util").TextEncoder;
 }
-if (typeof TextDecoder === 'undefined') {
- global.TextDecoder = require('util').TextDecoder;
+if (typeof TextDecoder === "undefined") {
+  global.TextDecoder = require("util").TextDecoder;
 }
+
+// jsdom doesn't support web crypto
+import { Crypto } from "@peculiar/webcrypto";
+
+global.crypto = new Crypto();
 
 import { Kepler, OrbitConnection, Response } from "./";
 import Blob from "fetch-blob";

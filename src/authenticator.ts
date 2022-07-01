@@ -8,19 +8,20 @@ export async function startSession(
 ): Promise<Session> {
   let address = config?.address ?? (await wallet.getAddress());
   let chainId = config?.chainId ?? (await wallet.getChainId());
-  return Promise.resolve(initialized).then(() => ({
-    address,
-    chainId,
-    domain: config?.domain ?? window.location.hostname,
-    service: config?.service ?? "kv",
-    issuedAt: config?.issuedAt ?? new Date(Date.now()).toISOString(),
-    notBefore: config?.notBefore,
-    expirationTime:
-      config?.expirationTime ??
-      new Date(Date.now() + 1000 * 60 * 60).toISOString(),
-    actions: config?.actions ?? ["put", "get", "list", "del", "metadata"],
-    orbitId: config?.orbitId ?? k.makeOrbitId(address, chainId),
-  }))
+  return Promise.resolve(initialized)
+    .then(() => ({
+      address,
+      chainId,
+      domain: config?.domain ?? window.location.hostname,
+      service: config?.service ?? "kv",
+      issuedAt: config?.issuedAt ?? new Date(Date.now()).toISOString(),
+      notBefore: config?.notBefore,
+      expirationTime:
+        config?.expirationTime ??
+        new Date(Date.now() + 1000 * 60 * 60).toISOString(),
+      actions: config?.actions ?? ["put", "get", "list", "del", "metadata"],
+      orbitId: config?.orbitId ?? k.makeOrbitId(address, chainId),
+    }))
     .then(JSON.stringify)
     .then(k.prepareSession)
     .then(JSON.parse)
@@ -45,8 +46,8 @@ export class Authenticator {
     action: string,
     path: string
   ): Promise<HeadersInit> =>
-    initialized.then(()=>
-    k.invoke(this.serializedSession, path, action))
+    initialized
+      .then(() => k.invoke(this.serializedSession, path, action))
       .then(JSON.parse);
 
   getOrbitId = (): string => this.orbitId;
