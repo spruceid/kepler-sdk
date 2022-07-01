@@ -862,6 +862,9 @@
   dependencies:
     "@sinonjs/commons" "^1.7.0"
 
+"@spruceid/ssx-wasm@file:../../../../work/ssx-rs/wasm":
+  version "0.0.0-alpha.2"
+
 "@tootallnate/once@1":
   version "1.1.2"
   resolved "https://registry.npmjs.org/@tootallnate/once/-/once-1.1.2.tgz"

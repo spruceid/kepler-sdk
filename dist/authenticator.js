@@ -48,73 +48,66 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Authenticator = exports.startSession = void 0;
-var index_js_1 = require("./wasm/index.js");
+var ssx_wasm_1 = require("@spruceid/ssx-wasm");
 function startSession(wallet, config) {
-    var _a, _b, _c, _d, _e, _f, _g, _h;
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function () {
-        var address, _j, chainId, _k, _l, _m, _o;
-        var _p;
+        var address, _c, chainId, _d;
         var _this = this;
-        return __generator(this, function (_q) {
-            switch (_q.label) {
+        return __generator(this, function (_e) {
+            switch (_e.label) {
                 case 0:
                     if (!((_a = config === null || config === void 0 ? void 0 : config.address) !== null && _a !== void 0)) return [3 /*break*/, 1];
-                    _j = _a;
+                    _c = _a;
                     return [3 /*break*/, 3];
                 case 1: return [4 /*yield*/, wallet.getAddress()];
                 case 2:
-                    _j = (_q.sent());
-                    _q.label = 3;
+                    _c = (_e.sent());
+                    _e.label = 3;
                 case 3:
-                    address = _j;
+                    address = _c;
                     if (!((_b = config === null || config === void 0 ? void 0 : config.chainId) !== null && _b !== void 0)) return [3 /*break*/, 4];
-                    _k = _b;
+                    _d = _b;
                     return [3 /*break*/, 6];
                 case 4: return [4 /*yield*/, wallet.getChainId()];
                 case 5:
-                    _k = (_q.sent());
-                    _q.label = 6;
+                    _d = (_e.sent());
+                    _e.label = 6;
                 case 6:
-                    chainId = _k;
-                    _m = (_l = Promise).resolve;
-                    _p = {
-                        address: address,
-                        chainId: chainId,
-                        domain: (_c = config === null || config === void 0 ? void 0 : config.domain) !== null && _c !== void 0 ? _c : window.location.hostname,
-                        service: (_d = config === null || config === void 0 ? void 0 : config.service) !== null && _d !== void 0 ? _d : "kv",
-                        issuedAt: (_e = config === null || config === void 0 ? void 0 : config.issuedAt) !== null && _e !== void 0 ? _e : new Date(Date.now()).toISOString(),
-                        notBefore: config === null || config === void 0 ? void 0 : config.notBefore,
-                        expirationTime: (_f = config === null || config === void 0 ? void 0 : config.expirationTime) !== null && _f !== void 0 ? _f : new Date(Date.now() + 1000 * 60 * 60).toISOString(),
-                        actions: (_g = config === null || config === void 0 ? void 0 : config.actions) !== null && _g !== void 0 ? _g : ["put", "get", "list", "del", "metadata"]
-                    };
-                    if (!((_h = config === null || config === void 0 ? void 0 : config.orbitId) !== null && _h !== void 0)) return [3 /*break*/, 7];
-                    _o = _h;
-                    return [3 /*break*/, 9];
-                case 7: return [4 /*yield*/, index_js_1.makeOrbitId(address, chainId)];
-                case 8:
-                    _o = _q.sent();
-                    _q.label = 9;
-                case 9: return [2 /*return*/, _m.apply(_l, [(_p.orbitId = _o,
-                            _p)])
-                        .then(JSON.stringify)
-                        .then(index_js_1.prepareSession)
-                        .then(JSON.parse)
-                        .then(function (preparedSession) { return __awaiter(_this, void 0, void 0, function () {
-                        var _a;
-                        var _b;
-                        return __generator(this, function (_c) {
-                            switch (_c.label) {
-                                case 0:
-                                    _a = [__assign({}, preparedSession)];
-                                    _b = {};
-                                    return [4 /*yield*/, wallet.signMessage(preparedSession.siwe)];
-                                case 1: return [2 /*return*/, (__assign.apply(void 0, _a.concat([(_b.signature = _c.sent(), _b)])))];
-                            }
-                        });
-                    }); })
-                        .then(JSON.stringify)
-                        .then(index_js_1.completeSessionSetup)
-                        .then(JSON.parse)];
+                    chainId = _d;
+                    return [2 /*return*/, Promise.resolve(ssx_wasm_1.initialized).then(function () {
+                            var _a, _b, _c, _d, _e, _f;
+                            return ({
+                                address: address,
+                                chainId: chainId,
+                                domain: (_a = config === null || config === void 0 ? void 0 : config.domain) !== null && _a !== void 0 ? _a : window.location.hostname,
+                                service: (_b = config === null || config === void 0 ? void 0 : config.service) !== null && _b !== void 0 ? _b : "kv",
+                                issuedAt: (_c = config === null || config === void 0 ? void 0 : config.issuedAt) !== null && _c !== void 0 ? _c : new Date(Date.now()).toISOString(),
+                                notBefore: config === null || config === void 0 ? void 0 : config.notBefore,
+                                expirationTime: (_d = config === null || config === void 0 ? void 0 : config.expirationTime) !== null && _d !== void 0 ? _d : new Date(Date.now() + 1000 * 60 * 60).toISOString(),
+                                actions: (_e = config === null || config === void 0 ? void 0 : config.actions) !== null && _e !== void 0 ? _e : ["put", "get", "list", "del", "metadata"],
+                                orbitId: (_f = config === null || config === void 0 ? void 0 : config.orbitId) !== null && _f !== void 0 ? _f : ssx_wasm_1.kepler.makeOrbitId(address, chainId),
+                            });
+                        })
+                            .then(JSON.stringify)
+                            .then(ssx_wasm_1.kepler.prepareSession)
+                            .then(JSON.parse)
+                            .then(function (preparedSession) { return __awaiter(_this, void 0, void 0, function () {
+                            var _a;
+                            var _b;
+                            return __generator(this, function (_c) {
+                                switch (_c.label) {
+                                    case 0:
+                                        _a = [__assign({}, preparedSession)];
+                                        _b = {};
+                                        return [4 /*yield*/, wallet.signMessage(preparedSession.siwe)];
+                                    case 1: return [2 /*return*/, (__assign.apply(void 0, _a.concat([(_b.signature = _c.sent(), _b)])))];
+                                }
+                            });
+                        }); })
+                            .then(JSON.stringify)
+                            .then(ssx_wasm_1.kepler.completeSessionSetup)
+                            .then(JSON.parse)];
             }
         });
     });
@@ -124,8 +117,11 @@ var Authenticator = /** @class */ (function () {
     function Authenticator(session) {
         var _this = this;
         this.invocationHeaders = function (action, path) { return __awaiter(_this, void 0, void 0, function () {
+            var _this = this;
             return __generator(this, function (_a) {
-                return [2 /*return*/, index_js_1.invoke(this.serializedSession, path, action)
+                return [2 /*return*/, ssx_wasm_1.initialized.then(function () {
+                        return ssx_wasm_1.kepler.invoke(_this.serializedSession, path, action);
+                    })
                         .then(JSON.parse)];
             });
         }); };

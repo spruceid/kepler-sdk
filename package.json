@@ -4,7 +4,7 @@
   "main": "dist/index.js",
   "license": "Apache-2.0",
   "scripts": {
-    "build": "tsc -p . && cp -r src/wasm dist/",
+    "build": "tsc -p .",
     "fmt-check": "prettier --check src",
     "doc": "typedoc src/index.ts --excludePrivate",
     "fmt": "prettier --write src example",
@@ -23,6 +23,7 @@
     "transform": {}
   },
   "devDependencies": {
+    "@spruceid/ssx-wasm": "file:/home/jward/work/ssx-rs/wasm",
     "@types/jest": "^26.0.22",
     "@types/node": "^16.11.6",
     "@types/node-fetch": "^2.6.1",
@@ -36,5 +37,8 @@
     "ts-node": "^10.4.0",
     "typedoc": "^0.22.13",
     "typescript": "^4.2.3"
+  },
+  "peerDependencies": {
+    "@spruceid/ssx-wasm": "file:/home/jward/work/ssx-rs/wasm"
   }
 }
