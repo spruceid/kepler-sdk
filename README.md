@@ -1,6 +1,7 @@
 # Kepler Typescript SDK
 
-This module provides a convenient Typescript interface for accessing orbits in [Kepler](https://github.com/spruceid/kepler). 
+This module provides a convenient Typescript interface for accessing orbits in [Kepler](https://github.com/spruceid/kepler).
+**Currently this package will only work in the browser.**
 
 ## Quickstart
 See the example dapp in `./example`.
@@ -10,13 +11,13 @@ See the example dapp in `./example`.
 `kepler-sdk` is available via NPM:
 
 ``` sh
-npm install kepler-sdk
+npm install kepler-sdk @spruceid/ssx-wasm
 ```
 
 and Yarn:
 
 ``` sh
-yarn add kepler-sdk
+yarn add kepler-sdk @spruceid/ssx-wasm
 ```
 
 The following webpack configuration is required:
