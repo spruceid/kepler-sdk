@@ -51,24 +51,12 @@ export class Kepler {
     const keplerUrl = this.config.hosts[0];
     let orbitConnection: OrbitConnection = await startSession(
       this.wallet,
+      keplerUrl,
       config
     )
       .then((session) => new Authenticator(session))
       .then((authn) => new OrbitConnection(keplerUrl, authn));
-
-    return await orbitConnection.list().then(async ({ status }) => {
-      if (status === 404) {
-        console.info("Orbit does not already exist. Creating...");
-        let { ok } = await hostOrbit(
-          this.wallet,
-          keplerUrl,
-          orbitConnection.id(),
-          config.domain
-        );
-        return ok ? orbitConnection : undefined;
-      }
-      return orbitConnection;
-    });
+    return orbitConnection
   }
 }
 

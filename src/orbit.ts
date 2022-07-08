@@ -271,7 +271,7 @@ export const hostOrbit = async (
   };
   const siwe = wasm.generateHostSIWEMessage(JSON.stringify(config));
   const signature = await wallet.signMessage(siwe);
-  const hostHeaders = wasm.host(JSON.stringify({ siwe, signature }));
+  const hostHeaders = wasm.siweMessageHeaders(JSON.stringify({ siwe, signature }));
   return fetch(keplerUrl + "/delegate", {
     method: "POST",
     headers: JSON.parse(hostHeaders),
