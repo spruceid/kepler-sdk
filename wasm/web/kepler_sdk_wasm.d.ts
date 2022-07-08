@@ -13,11 +13,6 @@ export function makeOrbitId(address: string, chainId: number, name?: string): st
 */
 export function prepareSession(config: string): Promise<any>;
 /**
-* @param {string} config
-* @returns {string}
-*/
-export function completeSessionSetup(config: string): string;
-/**
 * @param {string} session
 * @param {string} path
 * @param {string} action
@@ -33,27 +28,7 @@ export function generateHostSIWEMessage(config: string): string;
 * @param {string} signedSIWEMessage
 * @returns {string}
 */
-export function host(signedSIWEMessage: string): string;
-
-/**
- * Configuration object for generating a Orbit Host Delegation SIWE message.
- */
-export type HostConfig = {
-  /** Ethereum address. */
-  address: string,
-  /** Chain ID. */
-  chainId: number,
-  /** Domain of the webpage. */
-  domain: string,
-  /** Current time for SIWE message. */
-  issuedAt: string,
-  /** The orbit that is the target resource of the delegation. */
-  orbitId: string,
-  /** The peer that is the target/invoker in the delegation. */
-  peerId: string,
-}
-
-
+export function siweMessageHeaders(signedSIWEMessage: string): string;
 
 /**
  * Configuration object for starting a Kepler session.
@@ -85,8 +60,8 @@ export type SessionConfig = {
  * A Kepler session.
  */
 export type Session = {
-  /** The delegation from the user to the session key. */
-  delegation: object,
+  /** The delegation reference from the user to the session key. */
+  delegation: string,
   /** The session key. */
   jwk: object,
   /** The orbit that the session key is permitted to perform actions against. */
@@ -95,6 +70,26 @@ export type Session = {
   service: string,
   /** The verification method of the session key. */
   verificationMethod: string,
+}
+
+
+
+/**
+ * Configuration object for generating a Orbit Host Delegation SIWE message.
+ */
+export type HostConfig = {
+  /** Ethereum address. */
+  address: string,
+  /** Chain ID. */
+  chainId: number,
+  /** Domain of the webpage. */
+  domain: string,
+  /** Current time for SIWE message. */
+  issuedAt: string,
+  /** The orbit that is the target resource of the delegation. */
+  orbitId: string,
+  /** The peer that is the target/invoker in the delegation. */
+  peerId: string,
 }
 
 
