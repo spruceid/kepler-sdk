@@ -27,6 +27,11 @@ function expectUnauthorised(response: Response): Response {
   return response;
 }
 
+function expectNotFound(response: Response): Response {
+  expect(response.status).toBe(404);
+  return response;
+}
+
 function newWallet(): Wallet {
   const wallet: Wallet = Wallet.createRandom();
   wallet.getChainId = () => Promise.resolve(1);
@@ -65,6 +70,11 @@ describe("Kepler Client", () => {
     orbit = await new Kepler(newWallet(), keplerConfig)
       .orbit(orbitConfig)
       .then(expectDefined);
+  });
+
+  it("cannot get non-existent file", async () => {
+    let key = "non-existent";
+    await orbit.get(key).then(expectNotFound);
   });
 
   it("cannot put null value", async () => {
