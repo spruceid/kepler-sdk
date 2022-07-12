@@ -3,6 +3,7 @@
 export const memory: WebAssembly.Memory;
 export function makeOrbitId(a: number, b: number, c: number, d: number, e: number, f: number): void;
 export function prepareSession(a: number, b: number): number;
+export function completeSessionSetup(a: number, b: number, c: number): void;
 export function invoke(a: number, b: number, c: number, d: number, e: number, f: number): number;
 export function generateHostSIWEMessage(a: number, b: number, c: number): void;
 export function siweMessageHeaders(a: number, b: number, c: number): void;

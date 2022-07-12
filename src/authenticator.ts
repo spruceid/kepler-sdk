@@ -1,11 +1,9 @@
 import wasmPromise from "@spruceid/kepler-sdk-wasm";
 import { SessionConfig, Session } from ".";
 import { WalletProvider } from "./walletProvider";
-import { hostOrbit } from './orbit';
 
 export async function startSession(
   wallet: WalletProvider,
-  endpoint: string,
   config?: Partial<SessionConfig>,
 ): Promise<Session> {
   const wasm = await wasmPromise;
@@ -33,41 +31,25 @@ export async function startSession(
       ...preparedSession,
       signature: await wallet.signMessage(preparedSession.siwe),
     }))
-    .then(async ({ siwe, signature, jwk, orbitId, service, verificationMethod }) =>
-    ({
-      jwk,
-      orbitId,
-      service,
-      verificationMethod,
-      delegation: await fetch(endpoint + '/delegate', {
-        headers: JSON.parse(wasm.siweMessageHeaders(JSON.stringify({ siwe, signature }))),
-        method: 'POST'
-      }).then(async (res) => {
-        const rt = await res.text()
-        if (res.ok) {
-          return rt
-        } else if (res.status === 404) {
-          const { ok, statusText } = await hostOrbit(wallet, endpoint, orbitId, domain);
-          if (ok) {
-            return await fetch(endpoint + '/delegate', {
-              headers: JSON.parse(wasm.siweMessageHeaders(JSON.stringify({ siwe, signature }))),
-              method: 'POST'
-            }).then(async (ires) => {
-              const t = await ires.text();
-              if (ires.ok) {
-                return t
-              } else {
-                throw new Error("Failed to open session: " + t)
-              }
-            })
-          } else {
-            throw new Error("Failed to open Orbit: " + statusText)
-          }
-        } else {
-          throw new Error("Failed to open session: " + rt)
-        }
-      })
-    } as Session))
+    .then(JSON.stringify)
+    .then(wasm.completeSessionSetup)
+    .then(JSON.parse)
+}
+
+export async function activateSession(session: Session, url: string): Promise<Authenticator> {
+  let res = await fetch(url + '/delegate', {
+    method: 'POST',
+    headers: session.delegationHeader
+  });
+
+  if (res.status === 200) {
+    return new Authenticator(session)
+  } else {
+    throw {
+      status: res.status,
+      msg: 'Failed to delegate to session key'
+    }
+  }
 }
 
 

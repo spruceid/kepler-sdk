@@ -35,7 +35,7 @@ function newWallet(): Wallet {
 
 describe("Authenticator", () => {
   it("invoke", async () => {
-    await startSession(newWallet(), keplerUrl, {
+    await startSession(newWallet(), {
       expirationTime: "3000-01-01T00:00:00.000Z",
       issuedAt: "2022-01-01T00:00:00.000Z",
       domain,
@@ -46,7 +46,7 @@ describe("Authenticator", () => {
 
   it("host", async () => {
     let wallet = newWallet();
-    await startSession(wallet, keplerUrl, {
+    await startSession(wallet, {
       expirationTime: "3000-01-01T00:00:00.000Z",
       issuedAt: "2022-01-01T00:00:00.000Z",
       domain,
@@ -263,11 +263,6 @@ describe("Kepler Client", () => {
 
   it("expired session key cannot be used", async () => {
     const kepler = new Kepler(newWallet(), keplerConfig);
-    // cant create an already expired session
-    expect(kepler.orbit({
-      expirationTime: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
-      ...orbitConfig,
-    })).rejects.toThrow()
 
     // cant use a session once it expires
     let o = await kepler.orbit({

@@ -13,6 +13,11 @@ export function makeOrbitId(address: string, chainId: number, name?: string): st
 */
 export function prepareSession(config: string): Promise<any>;
 /**
+* @param {string} config
+* @returns {string}
+*/
+export function completeSessionSetup(config: string): string;
+/**
 * @param {string} session
 * @param {string} path
 * @param {string} action
@@ -60,8 +65,10 @@ export type SessionConfig = {
  * A Kepler session.
  */
 export type Session = {
+  /** The delegation from the user to the session key. */
+  delegationHeader: { Authorization: string },
   /** The delegation reference from the user to the session key. */
-  delegation: string,
+  delegationCid: string,
   /** The session key. */
   jwk: object,
   /** The orbit that the session key is permitted to perform actions against. */
