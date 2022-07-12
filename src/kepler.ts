@@ -49,23 +49,27 @@ export class Kepler {
   ): Promise<OrbitConnection | undefined> {
     // TODO: support multiple urls for kepler.
     const keplerUrl = this.config.hosts[0];
-    const sessionInfo = await startSession(
-      this.wallet,
-      config
-    );
+    const sessionInfo = await startSession(this.wallet, config);
 
-    return await activateSession(sessionInfo, keplerUrl).catch(async ({ status, msg }) => {
-      if (status === 404) {
-        const { status: hostStatus, statusText } = await hostOrbit(this.wallet, keplerUrl, sessionInfo.orbitId, config.domain);
-        if (hostStatus === 200) {
-          return await activateSession(sessionInfo, keplerUrl)
+    return await activateSession(sessionInfo, keplerUrl)
+      .catch(async ({ status, msg }) => {
+        if (status === 404) {
+          const { status: hostStatus, statusText } = await hostOrbit(
+            this.wallet,
+            keplerUrl,
+            sessionInfo.orbitId,
+            config.domain
+          );
+          if (hostStatus === 200) {
+            return await activateSession(sessionInfo, keplerUrl);
+          } else {
+            throw new Error("Failed to open new Orbit: " + statusText);
+          }
         } else {
-          throw new Error('Failed to open new Orbit: ' + statusText)
+          throw new Error("Failed to delegate to session key: " + msg);
         }
-      } else {
-        throw new Error('Failed to delegate to session key: ' + msg)
-      }
-    }).then(authn => new OrbitConnection(keplerUrl, authn))
+      })
+      .then((authn) => new OrbitConnection(keplerUrl, authn));
   }
 }
 
