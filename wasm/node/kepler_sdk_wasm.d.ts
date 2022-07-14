@@ -33,7 +33,7 @@ export function generateHostSIWEMessage(config: string): string;
 * @param {string} signedSIWEMessage
 * @returns {string}
 */
-export function siweMessageHeaders(signedSIWEMessage: string): string;
+export function siweToDelegationHeaders(signedSIWEMessage: string): string;
 
 /**
  * Configuration object for starting a Kepler session.

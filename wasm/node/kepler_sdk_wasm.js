@@ -317,12 +317,12 @@ module.exports.generateHostSIWEMessage = function(config) {
 * @param {string} signedSIWEMessage
 * @returns {string}
 */
-module.exports.siweMessageHeaders = function(signedSIWEMessage) {
+module.exports.siweToDelegationHeaders = function(signedSIWEMessage) {
     try {
         const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
         const ptr0 = passStringToWasm0(signedSIWEMessage, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
         const len0 = WASM_VECTOR_LEN;
-        wasm.siweMessageHeaders(retptr, ptr0, len0);
+        wasm.siweToDelegationHeaders(retptr, ptr0, len0);
         var r0 = getInt32Memory0()[retptr / 4 + 0];
         var r1 = getInt32Memory0()[retptr / 4 + 1];
         var r2 = getInt32Memory0()[retptr / 4 + 2];
@@ -722,8 +722,8 @@ module.exports.__wbindgen_memory = function() {
     return addHeapObject(ret);
 };
 
-module.exports.__wbindgen_closure_wrapper8786 = function(arg0, arg1, arg2) {
-    const ret = makeMutClosure(arg0, arg1, 3538, __wbg_adapter_26);
+module.exports.__wbindgen_closure_wrapper8357 = function(arg0, arg1, arg2) {
+    const ret = makeMutClosure(arg0, arg1, 3391, __wbg_adapter_26);
     return addHeapObject(ret);
 };
 
