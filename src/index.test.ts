@@ -55,9 +55,7 @@ describe("Authenticator", () => {
       expirationTime: "3000-01-01T00:00:00.000Z",
       issuedAt: "2022-01-01T00:00:00.000Z",
       domain,
-    })
-      .then((session) => hostOrbit(wallet, keplerUrl, session.orbitId, domain))
-      .then(expectSuccess);
+    }).then((s) => expect(s).not.toBeUndefined());
   });
 });
 
@@ -268,21 +266,28 @@ describe("Kepler Client", () => {
   });
 
   it("undelegated account cannot access a different orbit", async () => {
-    await new Kepler(newWallet(), keplerConfig)
-      .orbit({ orbitId: orbit.id(), ...orbitConfig })
-      .then(expectDefined)
-      .then((orbit) => orbit.list())
-      .then(expectUnauthorised);
+    expect(
+      new Kepler(newWallet(), keplerConfig).orbit({
+        orbitId: orbit.id(),
+        ...orbitConfig,
+      })
+    ).rejects.toThrow();
   });
 
   it("expired session key cannot be used", async () => {
-    await new Kepler(newWallet(), keplerConfig)
+    const kepler = new Kepler(newWallet(), keplerConfig);
+
+    // cant use a session once it expires
+    let o = await kepler
       .orbit({
-        expirationTime: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
+        expirationTime: new Date(Date.now() + 2000).toISOString(),
         ...orbitConfig,
       })
       .then(expectDefined)
-      .then((orbit) => orbit.list())
+      .then(async (orbit) => {
+        await new Promise((r) => setTimeout(r, 3000));
+        return orbit.list();
+      })
       .then(expectUnauthorised);
   });
 

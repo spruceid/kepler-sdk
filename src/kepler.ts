@@ -1,5 +1,5 @@
 import { SessionConfig } from ".";
-import { Authenticator, startSession } from "./authenticator";
+import { startSession, activateSession } from "./authenticator";
 import { hostOrbit, OrbitConnection } from "./orbit";
 import { WalletProvider } from "./walletProvider";
 
@@ -49,26 +49,27 @@ export class Kepler {
   ): Promise<OrbitConnection | undefined> {
     // TODO: support multiple urls for kepler.
     const keplerUrl = this.config.hosts[0];
-    let orbitConnection: OrbitConnection = await startSession(
-      this.wallet,
-      config
-    )
-      .then((session) => new Authenticator(session))
-      .then((authn) => new OrbitConnection(keplerUrl, authn));
+    const sessionInfo = await startSession(this.wallet, config);
 
-    return await orbitConnection.list().then(async ({ status }) => {
-      if (status === 404) {
-        console.info("Orbit does not already exist. Creating...");
-        let { ok } = await hostOrbit(
-          this.wallet,
-          keplerUrl,
-          orbitConnection.id(),
-          config.domain
-        );
-        return ok ? orbitConnection : undefined;
-      }
-      return orbitConnection;
-    });
+    return await activateSession(sessionInfo, keplerUrl)
+      .catch(async ({ status, msg }) => {
+        if (status === 404) {
+          const { status: hostStatus, statusText } = await hostOrbit(
+            this.wallet,
+            keplerUrl,
+            sessionInfo.orbitId,
+            config.domain
+          );
+          if (hostStatus === 200) {
+            return await activateSession(sessionInfo, keplerUrl);
+          } else {
+            throw new Error("Failed to open new Orbit: " + statusText);
+          }
+        } else {
+          throw new Error("Failed to delegate to session key: " + msg);
+        }
+      })
+      .then((authn) => new OrbitConnection(keplerUrl, authn));
   }
 }
 
