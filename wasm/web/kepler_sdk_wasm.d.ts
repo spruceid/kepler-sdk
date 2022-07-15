@@ -39,8 +39,8 @@ export function siweToDelegationHeaders(signedSIWEMessage: string): string;
  * Configuration object for starting a Kepler session.
  */
 export type SessionConfig = {
-  /** Actions that the session key will be permitted to perform. */
-  actions: string[],
+  /** Actions that the session key will be permitted to perform, organized by service and path */
+  actions: { [key: string]: string[] },
   /** Ethereum address. */
   address: string,
   /** Chain ID. */

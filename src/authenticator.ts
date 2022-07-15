@@ -20,7 +20,7 @@ export async function startSession(
     expirationTime:
       config?.expirationTime ??
       new Date(Date.now() + 1000 * 60 * 60).toISOString(),
-    actions: config?.actions ?? ["put", "get", "list", "del", "metadata"],
+    actions: config?.actions ?? { '': ["put", "get", "list", "del", "metadata"] },
     orbitId: config?.orbitId ?? wasm.makeOrbitId(address, chainId),
   })
     .then(JSON.stringify)
