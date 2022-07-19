@@ -308,8 +308,8 @@ describe("Kepler Client", () => {
     // delegate access to all subpaths of 'path'
     const readOther = await kepler
       .orbit({
-        actions: { "path": ["get"] },
-        ...orbitConfig
+        actions: { path: ["get"] },
+        ...orbitConfig,
       })
       .then(expectDefined);
 
