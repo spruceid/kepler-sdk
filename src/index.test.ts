@@ -295,13 +295,20 @@ describe("Kepler Client", () => {
     const kepler = new Kepler(newWallet(), keplerConfig);
     const write = await kepler
       .orbit({
-        actions: ["put", "del"],
+        actions: { "": ["put", "del"] },
         ...orbitConfig,
       })
       .then(expectDefined);
     const read = await kepler
       .orbit({
-        actions: ["get", "list"],
+        actions: { "": ["get", "list"] },
+        ...orbitConfig,
+      })
+      .then(expectDefined);
+    // delegate access to all subpaths of 'path'
+    const readOther = await kepler
+      .orbit({
+        actions: { path: ["get"] },
         ...orbitConfig,
       })
       .then(expectDefined);
@@ -336,6 +343,9 @@ describe("Kepler Client", () => {
     await write.get(key).then(expectUnauthorised);
     // writer can delete
     await write.delete(key).then(expectSuccess);
+
+    // other reader cant read that path
+    await readOther.get(key).then(expectUnauthorised);
   });
 
   it("there is a one-to-one mapping between wallets and orbits", async () => {
