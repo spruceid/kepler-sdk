@@ -79,6 +79,8 @@ export type SessionConfig = {
   service: string,
   /** Optional parent delegations to inherit and attenuate */
   parents?: string[]
+  /** Optional jwk to delegate to */
+  jwk?: object
 }
 
 
