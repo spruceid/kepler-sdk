@@ -24,6 +24,8 @@ export async function startSession(
       "": ["put", "get", "list", "del", "metadata"],
     },
     orbitId: config?.orbitId ?? wasm.makeOrbitId(address, chainId),
+    parents: config?.parents,
+    jwk: config?.jwk,
   })
     .then(JSON.stringify)
     .then(wasm.prepareSession)
