@@ -2,12 +2,15 @@ import { Kepler, OrbitConnection, Response } from "./";
 import Blob from "fetch-blob";
 import fetch from "node-fetch";
 import { Wallet } from "ethers";
-import { startSession, Authenticator } from "./authenticator";
-import { hostOrbit } from "./orbit";
+import { startSession, Authenticator } from "../wrapper/src/authenticator";
+import wasmPromise from "@spruceid/kepler-sdk-wasm";
 
 (global as any).Blob = Blob;
 (global as any).fetch = fetch;
 
+const initWasm = async () => {
+  (global as any).keplerModule = await wasmPromise;
+};
 const keplerUrl = "http://localhost:8000";
 const domain = "example.com";
 
@@ -39,6 +42,10 @@ function newWallet(): Wallet {
 }
 
 describe("Authenticator", () => {
+  beforeAll(async () => {
+    await initWasm();
+  });
+
   it("invoke", async () => {
     await startSession(newWallet(), {
       expirationTime: "3000-01-01T00:00:00.000Z",

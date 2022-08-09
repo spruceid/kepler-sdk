@@ -1,4 +1,4 @@
-import { Kepler, OrbitConnection, WalletProvider } from "kepler-sdk";
+import { Kepler, OrbitConnection, WalletProvider } from "@spruceid/kepler-sdk";
 import { providers } from "ethers";
 
 let wallet: WalletProvider;

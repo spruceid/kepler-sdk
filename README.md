@@ -49,7 +49,7 @@ import { Kepler } from 'kepler-sdk';
 import { providers } from "ethers";
 
 const metamaskSigner = new providers.Web3Provider(window.ethereum).getSigner();
-const kepler = new Kepler(metamaskSigner);
+const kepler = new Kepler(metamaskSigner, { hosts: ["http://localhost:8000"] });
 ```
 
 ### OrbitConnection Interface

@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@spruceid/kepler-sdk": "file:..",
     "ethers": "^5.6.2",
     "html-webpack-plugin": "^5.5.0",
     "ts-loader": "^9.2.8",

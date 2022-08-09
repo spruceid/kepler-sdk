@@ -1,0 +1,17 @@
+{
+  "name": "@spruceid/kepler-sdk-wrapper",
+  "version": "0.1.0",
+  "main": "dist/index.js",
+  "license": "Apache-2.0",
+  "scripts": {
+    "build": "$PWD/build.sh",
+    "doc": "typedoc src/index.ts --excludePrivate"
+  },
+  "files": [
+    "/dist"
+  ],
+  "devDependencies": {
+    "typedoc": "^0.22.13",
+    "typescript": "^4.2.3"
+  }
+}
