@@ -5,7 +5,7 @@ import { generateHostSIWEMessage, siweToDelegationHeaders } from "./module";
 import { WalletProvider } from "./walletProvider";
 
 /**
- * A connection to an orbit in a Kepler instance.
+ * a connection to an orbit in a Kepler instance.
  *
  * This class provides methods for interacting with an orbit. Construct an instance of this class using {@link Kepler.orbit}.
  */

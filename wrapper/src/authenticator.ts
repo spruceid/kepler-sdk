@@ -71,9 +71,10 @@ export class Authenticator {
   }
 
   invocationHeaders = async (
+    service: string,
     action: string,
     path: string
   ): Promise<HeadersInit> =>
-    invoke(this.serializedSession, path, action).then(JSON.parse);
+    invoke(this.serializedSession, service, path, action).then(JSON.parse);
   getOrbitId = (): string => this.orbitId;
 }

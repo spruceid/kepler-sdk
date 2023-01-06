@@ -19,11 +19,12 @@ export function prepareSession(config: string): Promise<any>;
 export function completeSessionSetup(config: string): string;
 /**
 * @param {string} session
+* @param {string} service
 * @param {string} path
 * @param {string} action
 * @returns {Promise<any>}
 */
-export function invoke(session: string, path: string, action: string): Promise<any>;
+export function invoke(session: string, service: string, path: string, action: string): Promise<any>;
 /**
 * @param {string} config
 * @returns {string}
@@ -34,26 +35,6 @@ export function generateHostSIWEMessage(config: string): string;
 * @returns {string}
 */
 export function siweToDelegationHeaders(signedSIWEMessage: string): string;
-
-/**
- * Configuration object for generating a Orbit Host Delegation SIWE message.
- */
-export type HostConfig = {
-  /** Ethereum address. */
-  address: string,
-  /** Chain ID. */
-  chainId: number,
-  /** Domain of the webpage. */
-  domain: string,
-  /** Current time for SIWE message. */
-  issuedAt: string,
-  /** The orbit that is the target resource of the delegation. */
-  orbitId: string,
-  /** The peer that is the target/invoker in the delegation. */
-  peerId: string,
-}
-
-
 
 /**
  * Configuration object for starting a Kepler session.
@@ -101,6 +82,26 @@ export type Session = {
   service: string,
   /** The verification method of the session key. */
   verificationMethod: string,
+}
+
+
+
+/**
+ * Configuration object for generating a Orbit Host Delegation SIWE message.
+ */
+export type HostConfig = {
+  /** Ethereum address. */
+  address: string,
+  /** Chain ID. */
+  chainId: number,
+  /** Domain of the webpage. */
+  domain: string,
+  /** Current time for SIWE message. */
+  issuedAt: string,
+  /** The orbit that is the target resource of the delegation. */
+  orbitId: string,
+  /** The peer that is the target/invoker in the delegation. */
+  peerId: string,
 }
 
 
