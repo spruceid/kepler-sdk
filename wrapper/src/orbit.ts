@@ -3,6 +3,7 @@ import { Authenticator } from "./authenticator";
 import { KV } from "./kv";
 import { generateHostSIWEMessage, siweToDelegationHeaders } from "./module";
 import { WalletProvider } from "./walletProvider";
+import { Capabilities, CapSummary } from "./capabilities";
 
 /**
  * a connection to an orbit in a Kepler instance.
@@ -12,11 +13,13 @@ import { WalletProvider } from "./walletProvider";
 export class OrbitConnection {
   private orbitId: string;
   private kv: KV;
+  private caps: Capabilities;
 
   /** @ignore */
   constructor(keplerUrl: string, authn: Authenticator) {
     this.orbitId = authn.getOrbitId();
     this.kv = new KV(keplerUrl, authn);
+    this.caps = new Capabilities(keplerUrl, authn);
   }
 
   /** Get the id of the connected orbit.
@@ -214,6 +217,10 @@ export class OrbitConnection {
     };
 
     return this.kv.head(key).then(transformResponse);
+  }
+
+  async sessions(): Promise<CapSummary[]> {
+    return await this.caps.get("all");
   }
 }
 
