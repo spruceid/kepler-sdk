@@ -3,13 +3,14 @@ import Blob from "fetch-blob";
 import fetch from "node-fetch";
 import { Wallet } from "ethers";
 import { startSession, Authenticator } from "../wrapper/src/authenticator";
-import wasmPromise from "@spruceid/kepler-sdk-wasm";
+import wasmPromise, { initPanicHook } from "@spruceid/kepler-sdk-wasm";
 
 (global as any).Blob = Blob;
 (global as any).fetch = fetch;
 
 const initWasm = async () => {
   (global as any).keplerModule = await wasmPromise;
+  await initPanicHook();
 };
 const keplerUrl = "http://localhost:8000";
 const domain = "example.com";
@@ -53,7 +54,7 @@ describe("Authenticator", () => {
       domain,
     })
       .then((session) => new Authenticator(session))
-      .then((authn) => authn.invocationHeaders("get", "path"));
+      .then((authn) => authn.invocationHeaders("kv", "get", "path"));
   });
 
   it("host", async () => {
@@ -302,20 +303,20 @@ describe("Kepler Client", () => {
     const kepler = new Kepler(newWallet(), keplerConfig);
     const write = await kepler
       .orbit({
-        actions: { "": ["put", "del"] },
+        actions: { kv: { "": ["put", "del"] } },
         ...orbitConfig,
       })
       .then(expectDefined);
     const read = await kepler
       .orbit({
-        actions: { "": ["get", "list"] },
+        actions: { kv: { "": ["get", "list"] } },
         ...orbitConfig,
       })
       .then(expectDefined);
     // delegate access to all subpaths of 'path'
     const readOther = await kepler
       .orbit({
-        actions: { path: ["get"] },
+        actions: { kv: { path: ["get"] } },
         ...orbitConfig,
       })
       .then(expectDefined);
@@ -376,5 +377,11 @@ describe("Kepler Client", () => {
       .then(() => orbit2.get(key))
       .then(expectSuccess)
       .then(({ data }) => expect(data).toEqual(value));
+  });
+
+  it("can list the active sessions", async () => {
+    await orbit
+      .sessions()
+      .then((caps) => expect(Object.keys(caps).length).toBeGreaterThan(1));
   });
 });

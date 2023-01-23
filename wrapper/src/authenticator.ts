@@ -18,14 +18,14 @@ export async function startSession(
     address,
     chainId,
     domain,
-    service: config?.service ?? "kv",
     issuedAt: config?.issuedAt ?? new Date(Date.now()).toISOString(),
     notBefore: config?.notBefore,
     expirationTime:
       config?.expirationTime ??
       new Date(Date.now() + 1000 * 60 * 60).toISOString(),
     actions: config?.actions ?? {
-      "": ["put", "get", "list", "del", "metadata"],
+      kv: { "": ["put", "get", "list", "del", "metadata"] },
+      capabilities: { "": ["read"] },
     },
     orbitId: config?.orbitId ?? makeOrbitId(address, chainId),
     parents: config?.parents,
@@ -71,9 +71,10 @@ export class Authenticator {
   }
 
   invocationHeaders = async (
+    service: string,
     action: string,
     path: string
   ): Promise<HeadersInit> =>
-    invoke(this.serializedSession, path, action).then(JSON.parse);
+    invoke(this.serializedSession, service, path, action).then(JSON.parse);
   getOrbitId = (): string => this.orbitId;
 }
