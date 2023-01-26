@@ -10,15 +10,11 @@
     "fmt": "prettier --write src example wrapper",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
   },
-  "files": [
-    "/dist"
-  ],
+  "files": ["/dist"],
   "jest": {
     "preset": "ts-jest",
     "testEnvironment": "node",
-    "setupFiles": [
-      "jest-localstorage-mock"
-    ],
+    "setupFiles": ["jest-localstorage-mock"],
     "transform": {}
   },
   "devDependencies": {
@@ -37,7 +33,7 @@
     "typescript": "^4.6"
   },
   "dependencies": {
-    "@spruceid/kepler-sdk-wasm": "file:./wasm",
-    "@spruceid/kepler-sdk-wrapper": "file:./wrapper"
+    "kepler-sdk-wasm": "=0.1.0",
+    "kepler-sdk-wasm-wrapper": "=0.1.0"
   }
 }

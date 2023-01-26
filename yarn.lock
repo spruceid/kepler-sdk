@@ -862,9 +862,6 @@
   dependencies:
     "@sinonjs/commons" "^1.7.0"
 
-"@spruceid/kepler-sdk-wasm@file:./wasm":
-  version "0.1.0"
-
 "@spruceid/kepler-sdk-wrapper@file:./wrapper":
   version "0.1.0"
 
@@ -2768,6 +2765,11 @@ jsonc-parser@^3.0.0:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/jsonc-parser/-/jsonc-parser-3.1.0.tgz#73b8f0e5c940b83d03476bc2e51a20ef0932615d"
   integrity sha512-DRf0QjnNeCUds3xTjKlQQ3DpJD51GvDjJfnxUVWg6PZTo2otSm+slzNAxU/35hF8/oJIKoG9slq30JYOsF2azg==
+
+kepler-sdk-wasm@=0.1.0:
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/kepler-sdk-wasm/-/kepler-sdk-wasm-0.1.0.tgz#56229d09cf894ffc24aee2d87dc5c984721d71bf"
+  integrity sha512-BUvTFOnjOLelmJFIrMn0vvt9xblG1Ez3XVhfUgfR9nKNB8AlARD6obGmjvmVcfTP9O84muHKaS2WNbu4b/gaOA==
 
 kind-of@^3.0.2, kind-of@^3.0.3, kind-of@^3.2.0:
   version "3.2.2"

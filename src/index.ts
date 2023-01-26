@@ -16,7 +16,7 @@ import {
   OrbitConnection,
   SessionConfig,
 } from "@spruceid/kepler-sdk-wrapper";
-import wasmPromise from "@spruceid/kepler-sdk-wasm";
+import wasmPromise from "kepler-sdk-wasm";
 
 export class Kepler extends Kepler_ {
   /**
