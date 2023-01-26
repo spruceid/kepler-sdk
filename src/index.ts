@@ -8,14 +8,14 @@ export {
   HostConfig,
   Session,
   SessionConfig,
-} from "@spruceid/kepler-sdk-wrapper";
+} from "kepler-sdk-wasm-wrapper";
 import {
   Kepler as Kepler_,
   WalletProvider,
   KeplerOptions,
   OrbitConnection,
   SessionConfig,
-} from "@spruceid/kepler-sdk-wrapper";
+} from "kepler-sdk-wasm-wrapper";
 import wasmPromise from "kepler-sdk-wasm";
 
 export class Kepler extends Kepler_ {

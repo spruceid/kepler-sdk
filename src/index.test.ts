@@ -3,7 +3,7 @@ import Blob from "fetch-blob";
 import fetch from "node-fetch";
 import { Wallet } from "ethers";
 import { startSession, Authenticator } from "../wrapper/src/authenticator";
-import wasmPromise, { initPanicHook } from "@spruceid/kepler-sdk-wasm";
+import wasmPromise, { initPanicHook } from "kepler-sdk-wasm";
 
 (global as any).Blob = Blob;
 (global as any).fetch = fetch;
