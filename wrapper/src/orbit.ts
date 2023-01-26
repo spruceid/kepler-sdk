@@ -219,7 +219,7 @@ export class OrbitConnection {
     return this.kv.head(key).then(transformResponse);
   }
 
-  async sessions(): Promise<CapSummary[]> {
+  async sessions(): Promise<{ [cid: string]: CapSummary }> {
     return await this.caps.get("all");
   }
 }
