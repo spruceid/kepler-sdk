@@ -8,6 +8,8 @@ export {
   HostConfig,
   Session,
   SessionConfig,
+  activateSession,
+  hostOrbit,
 } from "@spruceid/kepler-sdk-wrapper";
 import {
   Kepler as Kepler_,
