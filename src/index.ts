@@ -8,6 +8,8 @@ export {
   HostConfig,
   Session,
   SessionConfig,
+  activateSession,
+  hostOrbit,
 } from "kepler-sdk-wasm-wrapper";
 import {
   Kepler as Kepler_,

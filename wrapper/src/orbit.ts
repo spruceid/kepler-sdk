@@ -49,7 +49,7 @@ export class OrbitConnection {
    *
    * @param key The key with which the object is indexed.
    * @param value The value to be stored.
-   * @param req Optional request parameters.
+   * @param req Optional request parameters. Request Headers can be passed via the `headers` property.
    * @returns A {@link Response} without the `data` property.
    */
   async put(key: string, value: any, req?: Request): Promise<Response> {
@@ -77,8 +77,7 @@ export class OrbitConnection {
       );
     }
 
-    // @ts-ignore
-    return this.kv.put(key, blob, {}).then(transformResponse);
+    return this.kv.put(key, blob, req?.headers || {}).then(transformResponse);
   }
 
   /** Retrieve an object from the connected orbit.
@@ -232,6 +231,8 @@ export class OrbitConnection {
 export type Request = {
   /** Request to receive the data as a {@link https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream | ReadableStream}. */
   streamBody?: boolean;
+  /** Add additional entries to the request HTTP Headers. */
+  headers?: { [key: string]: string };
 };
 
 /** Response from kepler requests.
