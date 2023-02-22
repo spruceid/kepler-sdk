@@ -1,6 +1,6 @@
 {
   "name": "kepler-sdk",
-  "version": "0.12.0",
+  "version": "0.12.1",
   "main": "dist/src/index.js",
   "license": "Apache-2.0",
   "scripts": {
@@ -34,6 +34,6 @@
   },
   "dependencies": {
     "kepler-sdk-wasm": "=0.1.0",
-    "kepler-sdk-wasm-wrapper": "=0.1.0"
+    "kepler-sdk-wasm-wrapper": "=0.1.1"
   }
 }
