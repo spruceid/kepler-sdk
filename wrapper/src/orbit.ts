@@ -226,7 +226,7 @@ export class OrbitConnection {
     let kr = await this.kv.list(prefix);
     if (!kr.ok) return [kr];
     // @ts-ignore
-    let keys: string[] = kr.data;
+    let keys: string[] = await kr.json();
     return await Promise.all(keys.map(key => this.delete(key)));
   }
 }

@@ -387,11 +387,10 @@ describe("Kepler Client", () => {
 
   it("can delete all contents", async () => {
     let rs = await orbit.deleteAll();
-    for r in rs {
-      expect(r).toEqual({ success: true });
+    for (const r in rs) {
+      expect(rs[r].ok).toEqual(true);
     }
-    let list = orbit.list();
+    let list = await orbit.list();
     expect(list.data).toHaveLength(0);
   });
-
 });
