@@ -221,6 +221,14 @@ export class OrbitConnection {
   async sessions(): Promise<{ [cid: string]: CapSummary }> {
     return await this.caps.get("all");
   }
+
+  async deleteAll(prefix: string = ""): Promise<Response[]> {
+    let kr = await this.kv.list(prefix);
+    if (!kr.ok) return [kr];
+    // @ts-ignore
+    let keys: string[] = kr.data;
+    return await Promise.all(keys.map(key => this.delete(key)));
+  }
 }
 
 /** Optional request parameters.
