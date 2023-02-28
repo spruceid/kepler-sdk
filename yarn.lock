@@ -2763,10 +2763,10 @@ jsonc-parser@^3.0.0:
   resolved "https://registry.yarnpkg.com/jsonc-parser/-/jsonc-parser-3.1.0.tgz#73b8f0e5c940b83d03476bc2e51a20ef0932615d"
   integrity sha512-DRf0QjnNeCUds3xTjKlQQ3DpJD51GvDjJfnxUVWg6PZTo2otSm+slzNAxU/35hF8/oJIKoG9slq30JYOsF2azg==
 
-kepler-sdk-wasm-wrapper@=0.1.1:
-  version "0.1.1"
-  resolved "https://registry.yarnpkg.com/kepler-sdk-wasm-wrapper/-/kepler-sdk-wasm-wrapper-0.1.1.tgz#52b1dd5a3e701e1fcf86b201672182953422f795"
-  integrity sha512-u8dbPIHhomrGtZBBM3gImqdjSAbssYaOi3qceAC1W3/JvsyElcU2WcQ75rft99RFZXkT6QzTQHOgBufpideBUw==
+kepler-sdk-wasm-wrapper@=0.1.2:
+  version "0.1.2"
+  resolved "https://registry.yarnpkg.com/kepler-sdk-wasm-wrapper/-/kepler-sdk-wasm-wrapper-0.1.2.tgz#3d64ff3d93dab8b33a325daebd8e643e75a0d345"
+  integrity sha512-FI346Q3HF0fsarBopNTSDgbKSOFo8tdo6E6Uj8KKqpPZI3/pULFFR7sh/afbU0YTZLncDnCJ4osgi+wfEMdO9A==
 
 kepler-sdk-wasm@=0.1.0:
   version "0.1.0"
