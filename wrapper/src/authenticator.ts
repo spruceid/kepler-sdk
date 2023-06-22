@@ -14,6 +14,7 @@ export async function startSession(
   const address = config?.address ?? (await wallet.getAddress());
   const chainId = config?.chainId ?? (await wallet.getChainId());
   const domain = config?.domain ?? window.location.hostname;
+
   return Promise.resolve({
     address,
     chainId,
@@ -47,7 +48,7 @@ export async function activateSession(
   session: Session,
   url: string
 ): Promise<Authenticator> {
-  let res = await fetch(url + "/delegate", {
+  const res = await fetch(url + "/delegate", {
     method: "POST",
     headers: session.delegationHeader,
   });

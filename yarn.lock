@@ -865,7 +865,7 @@
 "@spruceid/kepler-sdk-wasm@file:./wasm":
   version "0.1.0"
 
-"@spruceid/kepler-sdk-wrapper@file:./wrapper":
+"kepler-sdk-wasm-wrapper@file:./wrapper":
   version "0.1.0"
 
 "@tootallnate/once@1":

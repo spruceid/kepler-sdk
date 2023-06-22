@@ -5,7 +5,7 @@ export class Capabilities {
   constructor(private url: string, private auth: Authenticator) {}
 
   async get(query: string): Promise<{ [cid: string]: CapSummary }> {
-    let res = await this.invoke({
+    const res = await this.invoke({
       headers: await this.auth.invocationHeaders("capabilities", "read", query),
     });
     if (res.status == 200 && res.body !== null) {

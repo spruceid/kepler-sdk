@@ -38,6 +38,6 @@
   },
   "dependencies": {
     "@spruceid/kepler-sdk-wasm": "file:./wasm",
-    "@spruceid/kepler-sdk-wrapper": "file:./wrapper"
+    "kepler-sdk-wasm-wrapper": "file:./wrapper"
   }
 }

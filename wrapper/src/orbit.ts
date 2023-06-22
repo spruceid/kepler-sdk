@@ -164,6 +164,19 @@ export class OrbitConnection {
     return this.kv.del(key).then(transformResponse);
   }
 
+  /**
+   * Delete all objects with the specified key prefix from the connected orbit.
+   *
+   * @param prefix Optional key prefix for filtering the objects to remove. Removes all objects if not specified.
+   * @returns A Promise of an array of {@link Response} objects for each delete operation performed.
+   */
+  async deleteAll(prefix = ""): Promise<Response[]> {
+    const kr = await this.kv.list(prefix);
+    if (!kr.ok) return [kr];
+    const keys: string[] = await kr.json();
+    return await Promise.all(keys.map((key) => this.delete(key)));
+  }
+
   /** List objects in the connected orbit.
    *
    * The list of keys is retrieved as a list of strings:
@@ -185,7 +198,7 @@ export class OrbitConnection {
    * @param req Optional request parameters.
    * @returns A {@link Response} with the `data` property as a string[].
    */
-  async list(prefix: string = "", req?: Request): Promise<Response> {
+  async list(prefix = "", req?: Request): Promise<Response> {
     const request = req || {};
     const streamBody = request.streamBody || false;
 

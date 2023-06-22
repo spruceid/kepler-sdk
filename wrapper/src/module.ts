@@ -1,4 +1,6 @@
 import * as mod from "../../wasm";
+// import { kepler } from "@spruceid/ssx-sdk-wasm";
+// which wasm module do we use in kepler-sdk?
 
 type KeplerModule = typeof mod;
 const msg =

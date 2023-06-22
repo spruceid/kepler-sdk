@@ -356,14 +356,14 @@
 "@spruceid/kepler-sdk-wasm@file:../wasm":
   version "0.1.0"
 
-"@spruceid/kepler-sdk-wrapper@file:../wrapper":
+"kepler-sdk-wasm-wrapper@file:../wrapper":
   version "0.1.0"
 
 "@spruceid/kepler-sdk@file:..":
   version "0.12.0"
   dependencies:
     "@spruceid/kepler-sdk-wasm" "file:../../../../../.cache/yarn/v6/npm-@spruceid-kepler-sdk-0.12.0-b60b70ca-8686-4a4d-b330-ef4ca708ea3f-1659970174606/node_modules/@spruceid/kepler-sdk/wasm"
-    "@spruceid/kepler-sdk-wrapper" "file:../../../../../.cache/yarn/v6/npm-@spruceid-kepler-sdk-0.12.0-b60b70ca-8686-4a4d-b330-ef4ca708ea3f-1659970174606/node_modules/@spruceid/kepler-sdk/wrapper"
+    "kepler-sdk-wasm-wrapper" "file:../../../../../.cache/yarn/v6/npm-@spruceid-kepler-sdk-0.12.0-b60b70ca-8686-4a4d-b330-ef4ca708ea3f-1659970174606/node_modules/@spruceid/kepler-sdk/wrapper"
 
 "@types/body-parser@*":
   version "1.19.2"

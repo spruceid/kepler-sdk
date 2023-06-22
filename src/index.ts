@@ -10,14 +10,14 @@ export {
   SessionConfig,
   activateSession,
   hostOrbit,
-} from "@spruceid/kepler-sdk-wrapper";
+} from "kepler-sdk-wasm-wrapper";
 import {
   Kepler as Kepler_,
   WalletProvider,
   KeplerOptions,
   OrbitConnection,
   SessionConfig,
-} from "@spruceid/kepler-sdk-wrapper";
+} from "kepler-sdk-wasm-wrapper";
 import wasmPromise from "@spruceid/kepler-sdk-wasm";
 
 export class Kepler extends Kepler_ {
