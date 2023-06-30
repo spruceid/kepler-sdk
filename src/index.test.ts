@@ -384,4 +384,13 @@ describe("Kepler Client", () => {
       .sessions()
       .then((caps) => expect(Object.keys(caps).length).toBeGreaterThan(1));
   });
+
+  it("can delete all contents", async () => {
+    let rs = await orbit.deleteAll();
+    for (const r in rs) {
+      expect(rs[r].ok).toEqual(true);
+    }
+    let list = await orbit.list();
+    expect(list.data).toHaveLength(0);
+  });
 });
