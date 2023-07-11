@@ -1,12 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
-* Initialise console-error-panic-hook to improve debug output for panics.
-*
-* Run once on initialisation.
-*/
-export function initPanicHook(): void;
-/**
 * @param {string} address
 * @param {number} chainId
 * @param {string | undefined} name
