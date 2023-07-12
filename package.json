@@ -1,6 +1,6 @@
 {
   "name": "kepler-sdk",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "main": "dist/src/index.js",
   "license": "Apache-2.0",
   "scripts": {
